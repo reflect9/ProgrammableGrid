@@ -30,7 +30,7 @@ pg.problems = {
 		var value_title = _.map(value_pdf, function(node){
 			var article_el = $(node).parents(".gs_r");
 			var title = $(article_el).find("h3.gs_rt>a").text();
-			title = title.replace(/\W/g,"-");
+			// title = title.replace(/\W/g,"-");
 			return title;
 		});
 		var initial_nodes = [
@@ -77,13 +77,13 @@ pg.problems = {
 		var value_title = _.map(value_pdf, function(node){
 			var article_el = $(node).parents(".gs_r");
 			var title = $(article_el).find("h3.gs_rt>a").text();
-			title = title.replace(/\W/g,"-");
+			// title = title.replace(/\W/g,"-");
 			return title;
 		});
 		var value_pdf_modified = _.map(value_pdf, function(node, index) {
 			var article_el = $(node).parents(".gs_r");
 			var title = $(article_el).find("h3.gs_rt>a").text();
-			title = title.replace(/\W/g,"-");
+			// title = title.replace(/\W/g,"-");
 			var author_name = $(article_el).find(".gs_a").text();
 			first_author = author_name.replace(/[,-].*/g,"").replace(/ /g,"");
 			var year = author_name.match(/\d{4}/);
@@ -146,7 +146,7 @@ pg.problems = {
 		var value_pdf_modified = _.map(value_pdf, function(node, index) {
 			var article_el = $(node).parents(".gs_r");
 			var title = $(article_el).find("h3.gs_rt>a").text();
-			title = title.replace(/\W/g,"-");
+			// title = title.replace(/\W/g,"-");
 			var author_name = $(article_el).find(".gs_a").text();
 			first_author = author_name.replace(/[,-].*/g,"").replace(/ /g,"");
 			var year = author_name.match(/\d{4}/);
@@ -166,8 +166,8 @@ pg.problems = {
 			}
 		];
 		var goal_nodes = [
-			{	id:'download_text',
-				V:value_download_text,
+			{	id:'pdf_modified',
+				V:value_pdf_modified,
 				P:null,
 				I1:null,
 				I2:null,

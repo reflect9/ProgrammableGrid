@@ -26,6 +26,15 @@ var containsAll = function(outer,inner) {
 	});
 	return flag;
 };
+jQuery.fn.findQuerySelector = function(elements) {
+	var commonAncester = getCommonAncestorMultiple(elements);	// check whether all the output elements are within the input dom
+	if(commonAncester!==this && $(commonAncester).parents().hasElement(this.get(0))===false) return []; // if Input does not contain
+	var pathToAncester = $(commonAncester).pathWithNth(this); // find two step paths 1. Input->CommonAncester,  2. CommonAncester->O
+	var pathFromRepToLeaf = _.uniq(_.map(elements, function(o,i) { // collect paths from anscester's children to output nodes
+		return $(o).leafNodePath(commonAncester);	}));
+	if(pathFromRepToLeaf.length>1) return [];
+	return path = pathToAncester+" "+pathFromRepToLeaf[0];
+};
 jQuery.fn.fingerprint = function() {
 	var  childrenPrint = "";
 	if($(this).children().length>0)
@@ -505,6 +514,11 @@ function readSingleFile(evt) {
 	} else { 
 	  alert("Failed to load file");
 	}
+}
+
+function UserException(message) {
+   this.message = message;
+   this.name = "UserException";
 }
 
 

@@ -1,7 +1,7 @@
 var test = function(){
 	problem_nodes = pg.problems.scholar_extract_title();
 	result = pg.planner.task_extract(problem_nodes[0],problem_nodes[1]);
-	console.log(result);
+	return result;
 };
 
 pg.planner = {
@@ -10,10 +10,30 @@ pg.planner = {
 
 	},
 	task_extract: function(initial_nodes, goal_nodes){
-		// <jquery selector, attribute extraction, substring >
+		/* 	extract subtask knows the goal_nodes values exist in the single initial node.
+			First, it finds elements containing the goal values. Then it calls  and synthesize jQuery selector. 
+			This will create 
+			Second, it creates 
 
+			 <jquery selector, attribute(text) extraction, ?substring? >
+		*/
 
+		// inverse text extraction  :  from the values of goal_nodes, it extracts smallest elements containing them 
+		var goal_node = goal_nodes[0];
+		var el_containing_goal_text = _.map(goal_node.V, function(goal_text) {
+			return $("*:contains('"+ goal_text +"')").last();
+		});
+		// inverse selector
+		var enclosing_el = initial_nodes[0].V[0];
+		var path = $(enclosing_el).findQuerySelector(el_containing_goal_text);
 
+		// create nodes
+		var node_goal_el = {id:'goal_el', V:$(enclosing_el).find(path), I1:initial_nodes[0].id, I2:null, P:{type:'Selector',param:path} };
+		goal_node.I1 = node_goal_el.id;
+		goal_node.P = {type:'Attribute',param:'text'};
+
+		var nodes = _.union(initial_nodes, node_goal_el, goal_node);
+		return nodes;
 	},
 	task_filter: function(initial_nodes, goal_nodes){
 		// <extract, finding conditional>

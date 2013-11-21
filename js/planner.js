@@ -5,6 +5,9 @@ pg.planner = {
 	},
 	task_extract: function(initial_nodes, goal_nodes){
 		// <jquery selector, attribute extraction, substring >
+		
+
+		
 	},
 	task_filter: function(initial_nodes, goal_nodes){
 		// <extract, finding conditional>
@@ -14,6 +17,10 @@ pg.planner = {
 	},
 	task_compose: function(initial_nodes, goal_nodes){
 		// <composing function>
+		
+
+
+
 	},
 	
 

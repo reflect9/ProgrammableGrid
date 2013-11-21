@@ -20,16 +20,16 @@ pg.planner = {
 
 		// inverse text extraction  :  from the values of goal_nodes, it extracts smallest elements containing them 
 		var goal_node = goal_nodes[0];
+		var enclosing_el = initial_nodes[0].V[0];
 		var el_containing_goal_text = _.map(goal_node.V, function(goal_text) {
-			return $("*:contains('"+ goal_text +"')").last();
+			return $(enclosing_el).find("*:contains('"+ goal_text +"')").last();
 		});
 		// inverse selector
-		var enclosing_el = initial_nodes[0].V[0];
+		
 		var path = $(enclosing_el).findQuerySelector(el_containing_goal_text);
-
 		// create nodes
-		var node_goal_el = {id:'goal_el', V:$(enclosing_el).find(path), I1:initial_nodes[0].id, I2:null, P:{type:'Selector',param:path} };
-		goal_node.I1 = node_goal_el.id;
+		var node_goal_el = {id:'goal_el', V:$(enclosing_el).find(path), I1:initial_nodes[0], I2:null, P:{type:'Select',param:path} };
+		goal_node.I1 = node_goal_el;
 		goal_node.P = {type:'Attribute',param:'text'};
 
 		var nodes = _.union(initial_nodes, node_goal_el, goal_node);

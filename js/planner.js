@@ -17,10 +17,55 @@ pg.planner = {
 	},
 	task_compose: function(initial_nodes, goal_nodes){
 		// <composing function>
+		// Pre-condition
+		goal_nodes = goal_nodes[0];
+
+		if (!goal_nodes.V) return false;
+		num_el = goal_nodes.V.length;
+		_.each(initial_nodes, function(node, index) {
+			if (num_el !== node.V.length) {
+				return false;
+			}
+		});
+		// Figure out the separators
+		var separators = ['//', '-', '_', '\\+', ';', ':', ',', '\\.', '\\|', '\\|\\|', '@', '#', '$', '%', '\\^' ,'&' , '\\*'];
+		var targetIndex = 0;
+		var most = 0;
+
+		_.each(separators, function(sep, index) {
+			var reg = new RegExp(sep,"g");
+			var current = (goal_nodes.V[0].match(reg)||[]).length;
+			if (most < current) {
+				most = current;
+				targetIndex = index;
+			}
+		});
+	
+		var separator = separators[targetIndex];
+		var positions = [];
+		for (var i = 0; i < initial_nodes.length; i++) {
+			positions.push({index: i, position: goal_nodes.V[0].indexOf(initial_nodes[i].V[0])});
+
+		}
+		positions.sort(function (a, b) {
+		    if (a.position > b.position)
+		      return 1;
+		    if (a.position < b.position)
+		      return -1;
+		    // a must be equal to b
+		    return 0;
+		});
 		
-
-
-
+		_.each(goal_nodes.V, function(element, i1) {
+			var text = "";
+			_.each(positions, function(item, index) {
+			text = text + initial_nodes[item.index].V[i1] + separator;
+			});
+			text = text.substring(0, text.length - separator.length);
+			console.log(text);
+		})
+		
+		
 	},
 	
 

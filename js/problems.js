@@ -82,6 +82,17 @@ pg.problems = {
 			title = title.replace(/\W/g,"-");
 			return title;
 		});
+		var value_pdf_modified = _.map(value_pdf, function(node, index) {
+			var article_el = $(node).parents(".gs_r");
+			var title = $(article_el).find("h3.gs_rt>a").text();
+			title = title.replace(/\W/g,"-");
+			var author_name = $(article_el).find(".gs_a").text();
+			first_author = author_name.replace(/[,-].*/g,"").replace(/ /g,"");
+			var year = author_name.match(/\d{4}/);
+			var file_name = title+"-"+first_author+"-"+year;
+			$(node).attr("download",file_name);
+			return $(node).get(0);
+		}); 
 		var value_download_text = _.map(value_pdf_modified, function(node){
 			return $(node).attr("download");
 		});
@@ -114,6 +125,9 @@ pg.problems = {
 			}
 		];
 		// run planner
+		//if (!pg.planner) pg.planner = new 
+		pg.planner.task_compose(initial_nodes, goal_nodes);
+
 		return [initial_nodes, goal_nodes];
 
 	},

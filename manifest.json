@@ -1,0 +1,58 @@
+{
+
+  "name" : "Programmable Grid",
+  "version" : "1.0",
+  "description" : "Programmable Grid Project",
+  "background" : {
+    "scripts": ["js/lib/jquery.min.js",
+                "js/lib/underscore-min.js",
+                "js/lib/purl.js",
+                "background.js"]
+  },
+  "browser_action" :
+  {
+    "default_icon" : "grid-19.png",
+    "default_title" : "Open Grid!"
+  },
+  "content_scripts" : [
+    {
+      "matches" : ["<all_urls>"],
+      "js" : [	"js/lib/jquery.min.js",
+      			"js/lib/underscore-min.js",
+            "js/lib/async.js",
+            "js/utils.js",
+            "js/pg.js",
+            "js/node.js",
+            "js/operation.js",
+            "js/graph.js",
+            "js/language.js",
+            "js/synthesizer.js",
+            "js/planner.js",
+            "js/problems.js",
+            
+            "contentscript.js"
+      		],
+      "css": [  
+              ],
+      "run_at" : "document_idle",
+      "all_frames" : false
+    }
+  ],
+  "icons" : {
+    "48" : "grid-19.png",
+    "128" : "grid-19.png"
+  },
+  "permissions": [
+    "tabs",
+    "bookmarks",
+    "contextMenus",
+    "notifications",
+    "storage",
+    "http://*/*", "https://*/*",
+    "http://*/", "https://*/"
+  ],
+  "web_accessible_resources": [
+
+  ],
+  "manifest_version": 2
+}

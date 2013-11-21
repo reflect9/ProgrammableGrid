@@ -72,7 +72,7 @@ pg.problems = {
 			var article_el = $(node).parents(".gs_r");
 			var author_name = $(article_el).find(".gs_a").text();
 			var year = author_name.match(/\d{4}/);
-			return year;
+			return (year)?year[0]:year;
 		});
 		var value_title = _.map(value_pdf, function(node){
 			var article_el = $(node).parents(".gs_r");

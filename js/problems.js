@@ -27,18 +27,23 @@ pg.problems = {
 		var value_body = $("body");
 		var value_articles = $(".gs_r"); 
 		var value_pdf = $(".gs_md_wp"); 
-		
+		var value_title = _.map(value_pdf, function(node){
+			var article_el = $(node).parents(".gs_r");
+			var title = $(article_el).find("h3.gs_rt>a").text();
+			title = title.replace(/\W/g,"-");
+			return title;
+		});
 		var initial_nodes = [
 			{	id:'body',
-				V:value_body,
+				V:value_body.get(0),
 				P:null,
 				I1:null,
 				I2:null,
 			}
 		];
 		var goal_nodes = [
-			{	id:'download_text',
-				V:value_download_text,
+			{	id:'title_text',
+				V:value_title,
 				P:null,
 				I1:null,
 				I2:null,
@@ -124,6 +129,10 @@ pg.problems = {
 
 
 	'filter': function() {
+
+
+	},
+	'scholar': function() {
 		// initialize page and initial node set
 		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
 		if(window.location.href != BASE_URL) {
@@ -166,10 +175,6 @@ pg.problems = {
 		];
 		// run planner
 		return [initial_nodes, goal_nodes];
-
-	},
-	'scholar': function() {
-
 	}
 }
 

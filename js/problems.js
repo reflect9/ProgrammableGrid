@@ -33,6 +33,9 @@ pg.problems = {
 			$(node).attr("download",file_name);
 			return $(node).get(0);
 		}); 
+		var value_download_text = _.map(value_pdf_modified, function(node){
+			return $(node).attr("download");
+		});
 		var initial_nodes = [
 			{	id:'body',
 				V:value_body,
@@ -42,8 +45,8 @@ pg.problems = {
 			}
 		];
 		var goal_nodes = [
-			{	id:'pdf_modified',
-				V:value_pdf_modified,
+			{	id:'download_text',
+				V:value_download_text,
 				P:null,
 				I1:null,
 				I2:null,

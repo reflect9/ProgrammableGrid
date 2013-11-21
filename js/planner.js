@@ -1,18 +1,19 @@
 pg.planner = {
 	top_level_plan: function(initial_nodes, goal_nodes){
-		
+		// <extract, compose>
+
 	},
 	task_extract: function(initial_nodes, goal_nodes){
-
+		// <jquery selector, attribute extraction, substring >
 	},
 	task_filter: function(initial_nodes, goal_nodes){
-
+		// <extract, finding conditional>
 	},
 	task_aggregate: function(initial_nodes, goal_nodes){
-
+		// <extract, finding aggr. function>
 	},
 	task_compose: function(initial_nodes, goal_nodes){
-
+		// <composing function>
 	},
 	
 

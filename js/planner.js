@@ -1,3 +1,9 @@
+var test = function(){
+	problem_nodes = pg.problems.scholar_extract_title();
+	result = pg.planner.task_extract(problem_nodes[0],problem_nodes[1]);
+	console.log(result);
+};
+
 pg.planner = {
 	top_level_plan: function(initial_nodes, goal_nodes){
 		// <extract, compose>
@@ -5,9 +11,9 @@ pg.planner = {
 	},
 	task_extract: function(initial_nodes, goal_nodes){
 		// <jquery selector, attribute extraction, substring >
-		
 
-		
+
+
 	},
 	task_filter: function(initial_nodes, goal_nodes){
 		// <extract, finding conditional>
@@ -17,11 +23,12 @@ pg.planner = {
 	},
 	task_compose: function(initial_nodes, goal_nodes){
 		// <composing function>
-		
+
 
 
 
 	},
+
 	
 
 	// OLD CODE //

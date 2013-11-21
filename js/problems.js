@@ -35,7 +35,7 @@ pg.problems = {
 		});
 		var initial_nodes = [
 			{	id:'body',
-				V:value_body.get(0),
+				V:value_body.toArray(),
 				P:null,
 				I1:null,
 				I2:null,

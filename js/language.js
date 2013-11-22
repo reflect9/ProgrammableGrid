@@ -1,13 +1,13 @@
 pg.Methods = {
 	'Select': function(ctx) {
 		// ctx contains I1(input node 1), I2(input node2), param
-		var I=ctx.I1[0].V;
+		var I=ctx.I1.V[0];
 		var result = $.makeArray($(I).find(ctx.param));
 		return result;
 	},
 	'Attribute': function(ctx) {
 		var I=ctx.I1.V;
-		var result = _.map($(I).text());
+		var result = _.map(I, function(el){return $(el).text();});
 		return result;	
 	}
 

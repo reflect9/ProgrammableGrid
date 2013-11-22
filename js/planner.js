@@ -83,16 +83,21 @@ pg.planner = {
 		    return 0;
 		});
 		
+		order = _.map(positions, function(pos, index) {
+			return pos.index;
+		})
+
 		_.each(goal_nodes.V, function(element, i1) {
 			var text = "";
 			_.each(positions, function(item, index) {
 			text = text + initial_nodes[item.index].V[i1] + separator;
 			});
 			text = text.substring(0, text.length - separator.length);
-			console.log(text);
 		})
 		
-		
+		var node_goal = {V:goal_nodes.V, I:initial_nodes, A:null, P:{type:'Composer',param:{separator:separator, order: order}} };
+		var nodes = _.union(initial_nodes, goal_node);
+		return nodes;
 	},
 
 	

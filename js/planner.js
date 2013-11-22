@@ -7,7 +7,26 @@ var test = function(){
 pg.planner = {
 	top_level_plan: function(initial_nodes, goal_nodes){
 		// <extract, compose>
+		var goal_node = goal_nodes[0];
+		var titles = _.map(goal_node.V, function(el){ return $(el).attr('download').split('-')[0];}); 
+		var authors = _.map(goal_node.V, function(el){ return $(el).attr('download').split('-')[1];}); 
+		var years = _.map(goal_node.V, function(el){ return $(el).attr('download').split('-')[2];}); 
+		var node_title = {V:titles, I:null, A:null, P:null};
+		var node_authors = {V:authors, I:null, A:null, P:null};
+		var node_years = {V:years, I:null, A:null, P:null};
 
+		// extracting title, authors, years
+		var program_extract_title = pg.planner.task_extract(initial_nodes,[node_title]); 
+		var program_extract_authors = pg.planner.task_extract(initial_nodes,[node_authors]); 
+		var program_extract_years = pg.planner.task_extract(initial_nodes,[node_years]); 
+
+		// composing part
+		var program_composing_all = pg.planner.task_compose([node_title,node_authors,node_years],[goal_nodes]);
+
+
+
+		return _.union(program_extract_title, program_extract_authors, program_extract_years, program_composing_all);
+		
 	},
 	task_extract: function(initial_nodes, goal_nodes){
 		/* 	extract subtask knows the goal_nodes values exist in the single initial node.
@@ -28,8 +47,8 @@ pg.planner = {
 		
 		var path = $(enclosing_el).findQuerySelector(el_containing_goal_text);
 		// create nodes
-		var node_goal_el = {V:$(enclosing_el).find(path), I:initial_nodes, I2:null, P:{type:'Select',param:path} };
-		goal_node.I1 = node_goal_el;
+		var node_goal_el = {V:$(enclosing_el).find(path), I:initial_nodes, A:null, P:{type:'Select',param:path} };
+		goal_node.I = [node_goal_el];
 		goal_node.P = {type:'Attribute',param:'text'};
 
 		var nodes = _.union(initial_nodes, node_goal_el, goal_node);

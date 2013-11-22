@@ -34,19 +34,17 @@ pg.problems = {
 			return title;
 		});
 		var initial_nodes = [
-			{	id:'body',
-				V:value_body.toArray(),
+			{	V:value_body.toArray(),
 				P:null,
-				I1:null,
-				I2:null,
+				I:null,
+				A:null,
 			}
 		];
 		var goal_nodes = [
-			{	id:'title_text',
-				V:value_title,
+			{	V:value_title,
 				P:null,
-				I1:null,
-				I2:null,
+				I:null,
+				A:null,
 			}
 		];
 		// run planner
@@ -96,31 +94,27 @@ pg.problems = {
 			return $(node).attr("download");
 		});
 		var initial_nodes = [
-			{	id:'title_text',
-				V:value_title,
+			{	V:value_title,
 				P:null,
-				I1:null,
-				I2:null,
+				I:null,
+				A:null,
 			},
-			{	id:'author_text',
-				V:value_author,
+			{	V:value_author,
 				P:null,
-				I1:null,
-				I2:null,
+				I:null,
+				A:null,
 			},
-			{	id:'year_text',
-				V:value_year,
+			{	V:value_year,
 				P:null,
-				I1:null,
-				I2:null,
+				I:null,
+				A:null,
 			}
 		];
 		var goal_nodes = [
-			{	id:'download_text',
-				V:value_download_text,
+			{	V:value_download_text,
 				P:null,
-				I1:null,
-				I2:null,
+				I:null,
+				A:null,
 			}
 		];
 		// run planner
@@ -162,19 +156,17 @@ pg.problems = {
 			return $(node).attr("download");
 		});
 		var initial_nodes = [
-			{	id:'body',
-				V:value_body,
+			{	V:value_body,
 				P:null,
-				I1:null,
-				I2:null,
+				I:null,
+				A:null,
 			}
 		];
 		var goal_nodes = [
-			{	id:'pdf_modified',
-				V:value_pdf_modified,
+			{	V:value_pdf_modified,
 				P:null,
-				I1:null,
-				I2:null,
+				I:null,
+				A:null,
 			}
 		];
 		// run planner
@@ -192,8 +184,8 @@ nodes:[
 			operation:{
 				type: 'Action:Hide',
 				description: 'Trigger when page is loaded.',
-				I1: undefined,
-				I2: undefined,
+				I: undefined,
+				A: undefined,
 				param:''
 			}
      	},
@@ -204,8 +196,8 @@ nodes:[
 			operation: {
 				type: 'Transform:Map:StringExpr:JoinSingleArgBackward',
 				description : 'desc',
-				I1: 'top',
-				I2: undefined,
+				I: 'top',
+				A: undefined,
 				param:''
 			}
      	},
@@ -217,8 +209,8 @@ nodes:[
 			operation: {
 				type: 'Select:Attribute',
 				description : 'desc',
-				I1: 'left',
-				I2: undefined,
+				I: 'left',
+				A: undefined,
 				param:''
 			}
      	}

@@ -28,7 +28,7 @@ pg.planner = {
 		
 		var path = $(enclosing_el).findQuerySelector(el_containing_goal_text);
 		// create nodes
-		var node_goal_el = {id:'goal_el', V:$(enclosing_el).find(path), I1:initial_nodes[0], I2:null, P:{type:'Select',param:path} };
+		var node_goal_el = {V:$(enclosing_el).find(path), I:initial_nodes, I2:null, P:{type:'Select',param:path} };
 		goal_node.I1 = node_goal_el;
 		goal_node.P = {type:'Attribute',param:'text'};
 

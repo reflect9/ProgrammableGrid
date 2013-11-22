@@ -8,9 +8,9 @@ pg.planner = {
 	top_level_plan: function(initial_nodes, goal_nodes){
 		// <extract, compose>
 		var goal_node = goal_nodes[0];
-		var titles = _.map(goal_node.V, function(el){ return $(el).attr('download').split('-')[0];}); 
-		var authors = _.map(goal_node.V, function(el){ return $(el).attr('download').split('-')[1];}); 
-		var years = _.map(goal_node.V, function(el){ return $(el).attr('download').split('-')[2];}); 
+		var titles = _.map(goal_node.V, function(el){ return $(el).attr('download').split('^')[0];}); 
+		var authors = _.map(goal_node.V, function(el){ return $(el).attr('download').split('^')[1];}); 
+		var years = _.map(goal_node.V, function(el){ return $(el).attr('download').split('^')[2];}); 
 		var node_title = {V:titles, I:null, A:null, P:null};
 		var node_authors = {V:authors, I:null, A:null, P:null};
 		var node_years = {V:years, I:null, A:null, P:null};
@@ -21,7 +21,10 @@ pg.planner = {
 		var program_extract_years = pg.planner.task_extract(initial_nodes,[node_years]); 
 
 		// composing part
-		var program_composing_all = pg.planner.task_compose([node_title,node_authors,node_years],[goal_nodes]);
+		var all_text = _.map(goal_node.V, function(el) { return $(el).attr('download'); });
+		var node_all_text = {V:all_text, I:null, A:null, P:null};
+
+		var program_composing_all = pg.planner.task_compose([node_title,node_authors,node_years],[node_all_text]);
 
 
 
@@ -63,11 +66,11 @@ pg.planner = {
 	task_compose: function(initial_nodes, goal_nodes){
 		// <composing function>
 		// Pre-condition
-		goal_nodes = goal_nodes[0];
+		goal_node = goal_nodes[0];
 
 
-		if (!goal_nodes.V) return false;
-		num_el = goal_nodes.V.length;
+		if (!goal_node.V) return false;
+		num_el = goal_node.V.length;
 		_.each(initial_nodes, function(node, index) {
 			if (num_el !== node.V.length) {
 				return false;
@@ -80,7 +83,7 @@ pg.planner = {
 
 		_.each(separators, function(sep, index) {
 			var reg = new RegExp(sep,"g");
-			var current = (goal_nodes.V[0].match(reg)||[]).length;
+			var current = (goal_node.V[0].match(reg)||[]).length;
 			if (most < current) {
 				most = current;
 				targetIndex = index;
@@ -90,7 +93,7 @@ pg.planner = {
 		var separator = separators[targetIndex];
 		var positions = [];
 		for (var i = 0; i < initial_nodes.length; i++) {
-			positions.push({index: i, position: goal_nodes.V[0].indexOf(initial_nodes[i].V[0])});
+			positions.push({index: i, position: goal_node.V[0].indexOf(initial_nodes[i].V[0])});
 
 		}
 		positions.sort(function (a, b) {
@@ -106,7 +109,7 @@ pg.planner = {
 			return pos.index;
 		})
 
-		_.each(goal_nodes.V, function(element, i1) {
+		_.each(goal_node.V, function(element, i1) {
 			var text = "";
 			_.each(positions, function(item, index) {
 			text = text + initial_nodes[item.index].V[i1] + separator;
@@ -114,8 +117,8 @@ pg.planner = {
 			text = text.substring(0, text.length - separator.length);
 		})
 		
-		var node_goal = {V:goal_nodes.V, I:initial_nodes, A:null, P:{type:'Composer',param:{separator:separator, order: order}} };
-		var nodes = _.union(initial_nodes, goal_node);
+		var node_goal = {V:goal_node.V, I:initial_nodes, A:null, P:{type:'Composer',param:{separator:separator, order: order}} };
+		var nodes = _.union(initial_nodes, node_goal);
 		return nodes;
 	},
 

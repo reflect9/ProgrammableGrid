@@ -11,12 +11,6 @@ NODE_TYPE_JS = 'javascript';
 
 
 pg.problems = {
-	'scholar_extract': function() { 
-	},
-	'scholar_extract_author': function() { 
-	},
-	'scholar_extract_year': function() { 
-	},
 	'scholar_extract_title': function() {
 		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
 		if(window.location.href != BASE_URL) {
@@ -146,9 +140,11 @@ pg.problems = {
 			var title = $(article_el).find("h3.gs_rt>a").text();
 			// title = title.replace(/\W/g,"-");
 			var author_name = $(article_el).find(".gs_a").text();
-			first_author = author_name.replace(/[,-].*/g,"").replace(/ /g,"");
-			var year = author_name.match(/\d{4}/);
-			var file_name = title+"-"+first_author+"-"+year;
+			// first_author = author_name.replace(/[,-].*/g,"").replace(/ /g,"");
+			first_author = author_name;
+			// var year = author_name.match(/\d{4}/);
+			var year = author_name;
+			var file_name = title+"^"+first_author+"^"+year;
 			$(node).attr("download",file_name);
 			return $(node).get(0);
 		}); 

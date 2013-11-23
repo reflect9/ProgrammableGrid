@@ -103,6 +103,98 @@ pg.planner = {
 		
 	},
 	methods: {
+		/*	RULE [extract-text]
+			precondition:  goal_node consists of text variables existing in one of the initial nodes.
+			org. prob.	:  (enclosing element e.g. web page) --?--> (text list)
+			sub-prob. 	A. (enclosing element) --[extract-element]--> (smaller elements containing the text list)
+						B. (smaller elements) --[attribute]--> (text' list: not exactly the same)
+						C. (text' list) --[string-transform]--> (text list)
+			E.g. in Rule 1, sub-prob B.   Or, extracting simplified title from google scholar page   
+		*/ 
+		extract_text: {
+			pre: function(initial_nodes, goal_nodes) {
+				// The texts in the goal node must exist in one of the initial_nodes' content.
+				goal_node = goal_nodes[0];
+				if (!isStringList(goal_node.V)) return false;
+				for (var initial_node in initial_nodes) {
+					if (!isDOMList(initial_node.V)) continue;
+					
+					for (var text in goal_node.V) {
+						if (!initial_node.V.CONTAINS(text)) continue;
+					}
+					return true;
+				});
+				return false;
+			},
+			eff: function(initial_nodes, goal_nodes) {
+				result = extract_element(initial_nodes, goal_nodes);
+				if (result) initial_nodes = _.union(result);
+
+				result = attribute(initial_nodes, goal_nodes);
+				if (result) initial_nodes = _.union(result);
+
+				result = string_transform(initial_nodes, goal_nodes);
+				if (result) initial_nodes = _.union(result);
+			},
+			sub_tasks: ['extract_element', 'attribute', 'string_transform'],
+		},
+
+		/* RULE. [modify-element-attributes]  
+			precondition:  goal_node has element existing in one of the initial nodes, but with different attribute values.
+			org. prob.	:  (enclosing element e.g. web page) --?--> (modified elements)
+			sub-prob.	A. (enclosing element) --[extract-element]--> (elements to modify) 
+							B. (enclosing element) --[extract-text]--> (intermediate values) 
+						C. (elements to modify, intermediate values) --[modify-attribute]--> (modified elements)
+			E.g. user selected page elements and modified (text/download/src/href/style) attributes.  
+		*/
+		modify_element_attribute: {
+			pre: function(initial_nodes, goal_nodes) {
+				// Initial_node value must contails all the goal_node values 
+				for (var initial_node in initial_nodes) {
+					goal_node = goal_nodes[0];
+
+					if (!isDOMList(initial_node.V) || !isDOMList(goal_node.V)) continue;
+					if (initial_node.V.length !== goal_node.V.length) continue;
+
+					// Check if the two list of elements have identical attribute values except for one/multiple attributes
+					// and get those attributes's name.
+					var bingo = true;
+					var diff_attribute = null;
+					for (var i = 0; i < initial_node.V.length; i++) {
+						var i_element = initial_node.V[i];
+						var o_element = goal_node.V[i];
+						// check difference here
+						var diff = true;
+						var diff_attribute = null; // the differing attribute
+
+						if (diff) {  // if there are any difference
+							if (diff_attribute === null) {
+								diff_attribute = new_diff_attribute;
+							} else if (diff_attribute !== new_diff_attribute) { // if the differing attribute across elements is inconsistent
+								bingo = false;
+							}
+							
+						} else {
+							bingo = false;
+						}
+					}
+					if (bingo) return true;
+					else continue;
+				});
+				return false;
+			},
+			eff: function(initial_nodes, goal_nodes) {
+				result = extract_element(initial_nodes, goal_nodes);
+				if (result) initial_nodes = _.union(result);
+
+				result = extract_text(initial_nodes, goal_nodes);
+				if (result) initial_nodes = _.union(result);
+
+				result = modify_text(initial_nodes, goal_nodes);
+				if (result) initial_nodes = _.union(result);
+			},
+			sub_tasks: ['extract_element', 'extract_text', 'modify_text'],
+		},
 		extract_text: {
 			pre: function(initial_nodes, goal_nodes) {
 				

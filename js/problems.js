@@ -9,6 +9,7 @@ NODE_TYPE_VARIABLE = 'variable';
 NODE_TYPE_ACTION = 'action';
 NODE_TYPE_JS = 'javascript';
 
+pg.backup_page = $("html").clone().get(0);
 
 pg.problems = {
 	'scholar_extract_title': function() {

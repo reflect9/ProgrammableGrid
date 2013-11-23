@@ -5,33 +5,30 @@ var test = function(){
 };
 
 pg.planner = {
-	top_level_plan: function(initial_nodes, goal_nodes){
-		var goal_node = goal_nodes[0];
-
+	plan: function(Is, O){
 		// HTN Planning Algorithm
-		if (initial_nodes === null || goal_nodes === null || initial_nodes.V === null || goal_nodes.V === null) return false;
+		if (Is === null || O === null || Is.V === null || O.V === null) return false;
 
 		// Get all the doable action (either primitive or non-primitive)
-		doable_actions = [];
-		for (var action in action_list) {
-			if (action.precondition(initial_nodes, goal_nodes)) {
-				doable_actions.push(action);
+		doable_methods = [];
+		for (var method in pg.planner.methods.values) {
+			if (method.pre(Is, O)) {
+				doable_methods.push(method);
 			}
 		}
 
-		if (doable.length == 0) return false;
+		if (doable_methods.length == 0) return false;
 
 		// Shuffle the array for the non-deterministicity
-		o = doable_actions;
+		o = doable_methods;
 		for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
-		doable_actions = o;
+		doable_methods = o;
 
-		// Try to execute each doable action
-		for (var action in doable_actions) {
-			result = action.execute(initial_nodes, goal_nodes);
+		// Try to execute each doable method
+		for (var method in doable_methods) {
+			result = method.eff(I, O);
 			if (result !== null) return result;
 		}
-
 		return false;
 
 
@@ -40,7 +37,7 @@ pg.planner = {
 		// 		creates intermediate nodes and run specific sub-tasks for the nodes    
 
 		/* RULE. [modify-element-attributes]  
-			precondition:  goal_node has element existing in one of the initial nodes, but with different attribute values.
+			precondition:  O has element existing in one of the initial nodes, but with different attribute values.
 			org. prob.	:  (enclosing element e.g. web page) --?--> (modified elements)
 			sub-prob.	A. (enclosing element) --[extract-element]--> (elements to modify) 
 							B. (enclosing element) --[extract-text]--> (intermediate values) 
@@ -50,7 +47,7 @@ pg.planner = {
 
 
 		/*	RULE [extract-text]
-			precondition:  goal_node consists of text variables existing in one of the initial nodes.
+			precondition:  O consists of text variables existing in one of the initial nodes.
 			org. prob.	:  (enclosing element e.g. web page) --?--> (text list)
 			sub-prob. 	A. (enclosing element) --[extract-element]--> (smaller elements containing the text list)
 						B. (smaller elements) --[attribute]--> (text' list: not exactly the same)
@@ -59,7 +56,7 @@ pg.planner = {
 		*/ 
 
 		/*	RULE [compose-text]      b
-			precondition: goal_node values are ... the initial nodes,
+			precondition: O values are ... the initial nodes,
 			original prob. 	: (unfiltered list) --?--> (filtered list)
 			sub-prob. 	A. (un)  	
 
@@ -68,7 +65,7 @@ pg.planner = {
 
 
 		/*	RULE [filter]
-			precondition: goal_node values are subset of values of one of the initial nodes,
+			precondition: O values are subset of values of one of the initial nodes,
 			original prob. 	: (unfiltered list) --?--> (filtered list)
 			sub-prob. 	A. (un)  	
 
@@ -76,7 +73,7 @@ pg.planner = {
 
 
 
-		// RULE 2. if goal_node (which is text) exists in the initial_nodes,   
+		// RULE 2. if goal_node (which is text) exists in the I,   
 		var all_text = _.map(goal_node.V, function(el) { return $(el).attr('download'); });
 
 		var titles = _.map(goal_node.V, function(el){ return $(el).attr('download').split('^')[0];}); 
@@ -87,9 +84,9 @@ pg.planner = {
 		var node_years = {V:years, I:null, A:null, P:null};
 
 		// extracting title, authors, years
-		var program_extract_title = pg.planner.task_extract(initial_nodes,[node_title]); 
-		var program_extract_authors = pg.planner.task_extract(initial_nodes,[node_authors]); 
-		var program_extract_years = pg.planner.task_extract(initial_nodes,[node_years]); 
+		var program_extract_title = pg.planner.task_extract(I,[node_title]); 
+		var program_extract_authors = pg.planner.task_extract(I,[node_authors]); 
+		var program_extract_years = pg.planner.task_extract(I,[node_years]); 
 
 		// composing part
 		
@@ -112,31 +109,36 @@ pg.planner = {
 			E.g. in Rule 1, sub-prob B.   Or, extracting simplified title from google scholar page   
 		*/ 
 		extract_text: {
-			pre: function(initial_nodes, goal_nodes) {
-				// The texts in the goal node must exist in one of the initial_nodes' content.
-				goal_node = goal_nodes[0];
-				if (!isStringList(goal_node.V)) return false;
-				for (var initial_node in initial_nodes) {
-					if (!isDOMList(initial_node.V)) continue;
-					
-					for (var text in goal_node.V) {
-						if (!initial_node.V.CONTAINS(text)) continue;
-					}
-					return true;
-				});
-				return false;
+			pre: function(I, O) {
+				// The texts in the goal node must exist in one of the I' content.
+				if (!isStringList(O.V)) return false;
+				if (!isDOMList(I.V) ) return false;
+				if (I.V.length != 1) return false;
+				for (i in O.V) {
+					if ($(I.V[0]).text().indexOf(O.V[i])==-1) return false;
+				}
+				return true;
 			},
-			eff: function(initial_nodes, goal_nodes) {
-				result = extract_element(initial_nodes, goal_nodes);
-				if (result) initial_nodes = _.union(result);
+			eff: function(I, O) {
+				var el_I = I.V[0];
+				var el_containing_O = _.map(O.V, function(o_t) {
+					return $(el_I).find("*.contains('"+o_t+"')").last();
+				},this);
+				var text_containing_O = _.map(el_containing_O, function(el) { return $(el).text(); });
+				
+				// create intermediate nodes
+				var n_inter_1 = {I:undefined, V:el_containing_O, P:undefined};
+				var n_inter_2 = {I:undefined, V:text_containing_O, P:undefined};
+				//sub-prob 	A. (enclosing element) --[extract-element]--> (smaller elements containing the text list)
+				result_A = extract_element.eff(I, n_inter_1);
+				//			B. (smaller elements) --[attribute]--> (text' list: not exactly the same)
+				result_B = attribute.eff(n_inter_1, n_inter_2);
+				//			C. (text' list) --[string-transform]--> (text list)
+				result_C = string_transform.eff(n_inter_3, O);
 
-				result = attribute(initial_nodes, goal_nodes);
-				if (result) initial_nodes = _.union(result);
-
-				result = string_transform(initial_nodes, goal_nodes);
-				if (result) initial_nodes = _.union(result);
+				if(result_A &&result_B &&result_C) return _.union(result_A,result_B,result_C);
+				else return false;
 			},
-			sub_tasks: ['extract_element', 'attribute', 'string_transform'],
 		},
 
 		/* RULE. [modify-element-attributes]  
@@ -148,55 +150,75 @@ pg.planner = {
 			E.g. user selected page elements and modified (text/download/src/href/style) attributes.  
 		*/
 		modify_element_attribute: {
-			pre: function(initial_nodes, goal_nodes) {
+			pre: function(I, O) {
 				// Initial_node value must contails all the goal_node values 
-				for (var initial_node in initial_nodes) {
-					goal_node = goal_nodes[0];
-
-					if (!isDOMList(initial_node.V) || !isDOMList(goal_node.V)) continue;
-					if (initial_node.V.length !== goal_node.V.length) continue;
-
-					// Check if the two list of elements have identical attribute values except for one/multiple attributes
-					// and get those attributes's name.
-					var bingo = true;
-					var diff_attribute = null;
-					for (var i = 0; i < initial_node.V.length; i++) {
-						var i_element = initial_node.V[i];
-						var o_element = goal_node.V[i];
-						// check difference here
-						var diff = true;
-						var diff_attribute = null; // the differing attribute
-
-						if (diff) {  // if there are any difference
-							if (diff_attribute === null) {
-								diff_attribute = new_diff_attribute;
-							} else if (diff_attribute !== new_diff_attribute) { // if the differing attribute across elements is inconsistent
-								bingo = false;
-							}
-							
-						} else {
-							bingo = false;
-						}
-					}
-					if (bingo) return true;
-					else continue;
+				if (!isDOMList(I.V) || !isDOMList(O.V)) return false;
+				if (I.V.length!=1) return false;
+				var JQuery_path_to_O = _.map(O.V, function(o) {
+					return $(o).pathWithNth("html");
 				});
+				var original_el = _.map(JQuery_path_to_O, function(path) {
+					return $(I).find(path).get(0);
+				});
+				if (original_el.length == JQuery_path_to_O.length) {
+					if (isDOMList(original_el) return true;
+				} 
 				return false;
+
+
+				// Check if the two list of elements have identical attribute values except for one/multiple attributes
+				// and get those attributes's name.
+				// var bingo = true;
+				// var diff_attribute = null;
+				// for (var i = 0; i < O.V.length; i++) {
+				// 	var i_element = I.V[0];
+				// 	var o_element = O.V[i];
+				// 	$(i_element)
+
+
+				// 	var diff = true;
+				// 	if (diff) {  // if there are any difference
+				// 		if ($(i_element).text() === null) {
+				// 			diff_attribute = new_diff_attribute;
+				// 		} else if (diff_attribute !== new_diff_attribute) { // if the differing attribute across elements is inconsistent
+				// 			bingo = false;
+				// 		}
+						
+				// 	} else {
+				// 		bingo = false;
+				// 	}
+				// }
+				// if (bingo) return true;
+				// else continue;
+				
 			},
-			eff: function(initial_nodes, goal_nodes) {
-				result = extract_element(initial_nodes, goal_nodes);
-				if (result) initial_nodes = _.union(result);
+			eff: function(I, O) {
+				// retrieve the original page DOM 
+				var backup_I = (pg.backup_page)? pg.backup_page: $("html").get(0);
 
-				result = extract_text(initial_nodes, goal_nodes);
-				if (result) initial_nodes = _.union(result);
+				var JQuery_path_to_modified_elements = _.map(O.V, function(o) {
+					return $(o).pathWithNth("html");  // get JQuery selector path to those output elements
+				});
+				var original_el = _.map(JQuery_path_to_modified_elements, function(path) {
+					return $(backup_I).find(path).get(0); // retrieve original elements from backup I
+				});
+				var n_inter_1 = {I:undefined, V:original_el, P:undefined};
+				var n_inter_1 = {I:undefined, V:original_el, P:undefined};
+				
 
-				result = modify_text(initial_nodes, goal_nodes);
-				if (result) initial_nodes = _.union(result);
+
+
+				result = extract_element(I, O);
+				if (result) I = _.union(result);
+
+				result = extract_text(I, O);
+				if (result) I = _.union(result);
+
+				result = modify_text(I, O);
+				if (result) I = _.union(result);
 			},
 			sub_tasks: ['extract_element', 'extract_text', 'modify_text'],
 		},
-	}, 	// END OF METHOS
-	actions: {
 		extract_element: {
 			/*	
 				(enclosing element. e.g. Web Page) -> (list of sub-elements)
@@ -210,6 +232,7 @@ pg.planner = {
 				var JQueryPath = $(enclosing_el).findQuerySelector(el_containing_goal_text);
 				O.I = [I];
 				O.P = P:{type:'Select',param:JQueryPath};
+				return _.union(I,O);
 			}
 		},
 		attribute_text: {

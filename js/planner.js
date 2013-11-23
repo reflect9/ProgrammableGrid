@@ -343,12 +343,109 @@ pg.planner = {
 
 		},
 		filter: {
+			// (list of object) -> (list of subtexts)  
+			pre: function(I, O) {
+				if (I.V.length<=O.V.length) {	
+					console.log("length of inputs must be bigger than that of outputs"); 	
+					return false;	
+				}
+				if (!containsAll(I.V, O.V)) {
+					return false;
+				}
+				if (I.V.length == 0 || O.V.length == 0) {
+					return false;
+				}
+				if (!_.isString(I.V[0]) && !_.isNumber(I.V[0])) {
+					return false;
+				}
+			},
+			eff: function(I, O) {
+				var goal_node;
+				if (_.isString(I.V[0]) {
+					indexs = []; // the index of input values corresponding to the output values
+					for (var value : O.V) {
+						indexs.push(I.V.indexOf(value))
+					}
+					indexs.sort();
+					// get bag of word
+					var bagOfWords = {};
+					for (var value : I.O) {
+						var words = value.split(" ");
+						for (var word in words) {
+							if (!(word in bagOfWords)) {
+								bagOfWords[word] = word;
+							}
+						}
+					}
 
-			
+					// find the words that may be filter criteria
+					key_words = [];
+					for (var word in bagOfWords) {
+						match_indexs = []
+						for (var i = 0; i < I.V.length; i++) {
+							if (value.contains(word)) {
+								match_indexs.push(i);
+							}
+						}
+						match_indexs.sort();
+						if (JSON.stringify(indexs) == JSON.stringify(match_indexs)) {
+							key_words.push(word)
+						}
+					}
+					if (key_words.length == 0) {
+						return null;
+					}
+					node_goal = {V:O.V, I:I, A:null, P:{type:'Filter',param:{type: "String_Contain", arg: key_words[0]}} };
+				} else {
+					// check equal
+					unique = O.V[0];
+					fail = false;
+					for (var value in O.V) {
+						if (value !== unique) {
+							fail = true;
+						}
+					}
+					if (!fail) {
+						node_goal = {V:O.V, I:I, A:null, P:{type:'Filter',param:{type: "==", arg: oV[0]}} };
+					}
+					// check inequality
+					iV = I.V.sort();
+					oV = O.V.sort();
+					iL = iV.length;
+					oL = oV.length;
+
+					if (JSON.stringify(iV.splice(0,oL)) == JSON.stringify(oV)) {
+						// less and equal
+						node_goal = {V:O.V, I:I, A:null, P:{type:'Filter',param:{type: "<=", arg: oV[oV.length - 1]}} };
+					} else if (JSON.stringify(iV.splice(iL - oL,iL)) == JSON.stringify(oV)) {
+						// greater and equal
+						node_goal = {V:O.V, I:I, A:null, P:{type:'Filter',param:{type: ">=", arg: oV[0]}} };
+					}
+
+					// check odd and even
+					odd_count = 0;
+					even_count = 0;
+					for (var value in oV) {
+						if (value % 2 == 1) {
+							odd_count++;
+						} else {
+							even_count++;
+						}
+					}
+					if (odd_count == oL) {
+						// Odd number filter
+						node_goal = {V:O.V, I:I, A:null, P:{type:'Filter',param:{type: "odd", arg: null}} };
+					}
+
+					if (even_count == oL) {
+						// Even number filter
+						node_goal = {V:O.V, I:I, A:null, P:{type:'Filter',param:{type: "even", arg: null}} };
+					}
+				}
+				var nodes = _.union(I, node_goal);
+				return nodes;	
+			}	
 		}
-
-			
-
 	},	// END OF ACTIONS //
 	
 

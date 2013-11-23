@@ -6,8 +6,52 @@ var test = function(){
 
 pg.planner = {
 	top_level_plan: function(initial_nodes, goal_nodes){
-		// <extract, compose>
 		var goal_node = goal_nodes[0];
+
+		// BACKWARD SEARCH
+		// 		creates intermediate nodes and run specific sub-tasks for the nodes    
+
+		/* RULE. [modify-element-attributes]  
+			precondition:  goal_node has element existing in one of the initial nodes, but with different attribute values.
+			org. prob.	:  (enclosing element e.g. web page) --?--> (modified elements)
+			sub-prob.	A. (enclosing element) --[extract-element]--> (elements to modify) 
+							B. (enclosing element) --[extract-text]--> (intermediate values) 
+						C. (elements to modify, intermediate values) --[modify-attribute]--> (modified elements)
+			E.g. user selected page elements and modified (text/download/src/href/style) attributes.  
+		*/
+
+
+		/*	RULE [extract-text]
+			precondition:  goal_node consists of text variables existing in one of the initial nodes.
+			org. prob.	:  (enclosing element e.g. web page) --?--> (text list)
+			sub-prob. 	A. (enclosing element) --[extract-element]--> (smaller elements containing the text list)
+						B. (smaller elements) --[attribute]--> (text' list: not exactly the same)
+						C. (text' list) --[string-transform]--> (text list)
+			E.g. in Rule 1, sub-prob B.   Or, extracting simplified title from google scholar page   
+	
+		*/ 
+
+		/*	RULE [compose-text]
+			precondition: goal_node values are ... the initial nodes,
+			original prob. 	: (unfiltered list) --?--> (filtered list)
+			sub-prob. 	A. (un)  	
+
+		*/
+
+
+
+		/*	RULE [filter]
+			precondition: goal_node values are subset of values of one of the initial nodes,
+			original prob. 	: (unfiltered list) --?--> (filtered list)
+			sub-prob. 	A. (un)  	
+
+		*/
+
+
+
+		// RULE 2. if goal_node (which is text) exists in the initial_nodes,   
+		var all_text = _.map(goal_node.V, function(el) { return $(el).attr('download'); });
+
 		var titles = _.map(goal_node.V, function(el){ return $(el).attr('download').split('^')[0];}); 
 		var authors = _.map(goal_node.V, function(el){ return $(el).attr('download').split('^')[1];}); 
 		var years = _.map(goal_node.V, function(el){ return $(el).attr('download').split('^')[2];}); 
@@ -21,7 +65,7 @@ pg.planner = {
 		var program_extract_years = pg.planner.task_extract(initial_nodes,[node_years]); 
 
 		// composing part
-		var all_text = _.map(goal_node.V, function(el) { return $(el).attr('download'); });
+		
 		var node_all_text = {V:all_text, I:null, A:null, P:null};
 
 		var program_composing_all = pg.planner.task_compose([node_title,node_authors,node_years],[node_all_text]);

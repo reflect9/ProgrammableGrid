@@ -31,7 +31,7 @@ pg.planner = {
 	
 		*/ 
 
-		/*	RULE [compose-text]
+		/*	RULE [compose-text]      b
 			precondition: goal_node values are ... the initial nodes,
 			original prob. 	: (unfiltered list) --?--> (filtered list)
 			sub-prob. 	A. (un)  	
@@ -75,97 +75,146 @@ pg.planner = {
 		return _.union(program_extract_title, program_extract_authors, program_extract_years, program_composing_all);
 		
 	},
-	task_extract: function(initial_nodes, goal_nodes){
-		/* 	extract subtask knows the goal_nodes values exist in the single initial node.
-			First, it finds elements containing the goal values. Then it calls  and synthesize jQuery selector. 
-			This will create 
-			Second, it creates 
+	methods: {
+		extract_text: {
+			pre: function(initial_nodes, goal_nodes) {
+				
+			},
+			eff: function(initial_nodes, goal_nodes){
+				/* 	
 
-			 <jquery selector, attribute(text) extraction, ?substring? >
-		*/
+					extract subtask knows the goal_nodes values exist in the single initial node.
+					First, it finds elements containing the goal values. Then it calls  and synthesize jQuery selector. 
+					This will create 
+					Second, it creates 
 
-		// inverse text extraction  :  from the values of goal_nodes, it extracts smallest elements containing them 
-		var goal_node = goal_nodes[0];
-		var enclosing_el = initial_nodes[0].V[0];
-		var el_containing_goal_text = _.map(goal_node.V, function(goal_text) {
-			return $(enclosing_el).find("*:contains('"+ goal_text +"')").last();
-		});
-		// inverse selector
-		
-		var path = $(enclosing_el).findQuerySelector(el_containing_goal_text);
-		// create nodes
-		var node_goal_el = {V:$(enclosing_el).find(path), I:initial_nodes, A:null, P:{type:'Select',param:path} };
-		goal_node.I = [node_goal_el];
-		goal_node.P = {type:'Attribute',param:'text'};
+					 <jquery selector, attribute(text) extraction, ?substring? >
+				*/
 
-		var nodes = _.union(initial_nodes, node_goal_el, goal_node);
-		return nodes;
-	},
-	task_filter: function(initial_nodes, goal_nodes){
-		// <extract, finding conditional>
-	},
-	task_aggregate: function(initial_nodes, goal_nodes){
-		// <extract, finding aggr. function>
-	},
-	task_compose: function(initial_nodes, goal_nodes){
-		// <composing function>
-		// Pre-condition
-		goal_node = goal_nodes[0];
+				// inverse text extraction  :  from the values of goal_nodes, it extracts smallest elements containing them 
+				var goal_node = goal_nodes[0];
+				var enclosing_el = initial_nodes[0].V[0];
+				var el_containing_goal_text = _.map(goal_node.V, function(goal_text) {
+					return $(enclosing_el).find("*:contains('"+ goal_text +"')").last();
+				});
+				// inverse selector
+				
+				var path = $(enclosing_el).findQuerySelector(el_containing_goal_text);
+				// create nodes
+				var node_goal_el = {V:$(enclosing_el).find(path), I:initial_nodes, A:null, P:{type:'Select',param:path} };
+				goal_node.I = [node_goal_el];
+				goal_node.P = {type:'Attribute',param:'text'};
 
-
-		if (!goal_node.V) return false;
-		num_el = goal_node.V.length;
-		_.each(initial_nodes, function(node, index) {
-			if (num_el !== node.V.length) {
-				return false;
+				var nodes = _.union(initial_nodes, node_goal_el, goal_node);
+				return nodes;
 			}
-		});
-		// Figure out the separators
-		var separators = ['//', '-', '_', '\\+', ';', ':', ',', '\\.', '\\|', '\\|\\|', '@', '#', '$', '%', '\\^' ,'&' , '\\*'];
-		var targetIndex = 0;
-		var most = 0;
+		},
+		filter: function(initial_nodes, goal_nodes){
+			// <extract, finding conditional>
+		},
+		aggregate: function(initial_nodes, goal_nodes){
+			// <extract, finding aggr. function>
+		},
 
-		_.each(separators, function(sep, index) {
-			var reg = new RegExp(sep,"g");
-			var current = (goal_node.V[0].match(reg)||[]).length;
-			if (most < current) {
-				most = current;
-				targetIndex = index;
+
+	}, 	// END OF METHOS
+	actions: {
+		extract_element:  {
+			/*	
+				(enclosing element. e.g. Web Page) -> (list of sub-elements)
+			*/
+			pre: function(initial_node, goal_node) {
+				// initial_node value must contails all the goal_node values 
+				return isDOM(initial_node.V[0]) && isDOMList(goal_node.V) && containsAll(initial_node.V[0],goal_node.V);
+			},
+			eff: function(initial_node, goal_node){
+				// find a consistent jquery paths selecting the goal_node values (and possibly more)
+				var JQueryPath = $(enclosing_el).findQuerySelector(el_containing_goal_text);
+				// create nodes
+				var node_goal_el = {V:$(enclosing_el).find(JQueryPath), I:initial_nodes, A:null, P:{type:'Select',param:JQueryPath} };
+				goal_node.I = [node_goal_el];
+				goal_node.P = {type:'Attribute',param:'text'};
+				var nodes = _.union(initial_nodes, node_goal_el, goal_node);
+				return nodes;
 			}
-		});
-	
-		var separator = separators[targetIndex];
-		var positions = [];
-		for (var i = 0; i < initial_nodes.length; i++) {
-			positions.push({index: i, position: goal_node.V[0].indexOf(initial_nodes[i].V[0])});
+		},
+		extract_text: {
+			pre: function(initial_node, goal_node) {
+				// initial_node value must contails all the goal_node values 
+				return isDOM(initial_node.V[0]) && isStringList(goal_node.V) && containsText(initial_node.V[0].text(), goal_node.V);
+			},
+			eff: function(initial_node, goal_node){
+				// find a consistent jquery paths selecting the goal_node values (and possibly more)
+				var JQueryPath = $(enclosing_el).findQuerySelector(el_containing_goal_text);
+				// create nodes
+				var node_goal_el = {V:$(enclosing_el).find(JQueryPath), I:initial_nodes, A:null, P:{type:'Select',param:JQueryPath} };
+				goal_node.I = [node_goal_el];
+				goal_node.P = {type:'Attribute',param:'text'};
+				var nodes = _.union(initial_nodes, node_goal_el, goal_node);
+				return nodes;
+			}
 
-		}
-		positions.sort(function (a, b) {
-		    if (a.position > b.position)
-		      return 1;
-		    if (a.position < b.position)
-		      return -1;
-		    // a must be equal to b
-		    return 0;
-		});
-		
-		order = _.map(positions, function(pos, index) {
-			return pos.index;
-		})
+		},
+		compose: function(initial_nodes, goal_node){
+			// <composing function>
+			// Pre-condition
+			
 
-		_.each(goal_node.V, function(element, i1) {
-			var text = "";
-			_.each(positions, function(item, index) {
-			text = text + initial_nodes[item.index].V[i1] + separator;
+			if (!goal_node.V) return false;
+			num_el = goal_node.V.length;
+			_.each(initial_nodes, function(node, index) {
+				if (num_el !== node.V.length) {
+					return false;
+				}
 			});
-			text = text.substring(0, text.length - separator.length);
-		})
-		
-		var node_goal = {V:goal_node.V, I:initial_nodes, A:null, P:{type:'Composer',param:{separator:separator, order: order}} };
-		var nodes = _.union(initial_nodes, node_goal);
-		return nodes;
-	},
+			// Figure out the separators
+			var separators = ['//', '-', '_', '\\+', ';', ':', ',', '\\.', '\\|', '\\|\\|', '@', '#', '$', '%', '\\^' ,'&' , '\\*'];
+			var targetIndex = 0;
+			var most = 0;
 
+			_.each(separators, function(sep, index) {
+				var reg = new RegExp(sep,"g");
+				var current = (goal_node.V[0].match(reg)||[]).length;
+				if (most < current) {
+					most = current;
+					targetIndex = index;
+				}
+			});
+		
+			var separator = separators[targetIndex];
+			var positions = [];
+			for (var i = 0; i < initial_nodes.length; i++) {
+				positions.push({index: i, position: goal_node.V[0].indexOf(initial_nodes[i].V[0])});
+
+			}
+			positions.sort(function (a, b) {
+			    if (a.position > b.position)
+			      return 1;
+			    if (a.position < b.position)
+			      return -1;
+			    // a must be equal to b
+			    return 0;
+			});
+			
+			order = _.map(positions, function(pos, index) {
+				return pos.index;
+			})
+
+			_.each(goal_node.V, function(element, i1) {
+				var text = "";
+				_.each(positions, function(item, index) {
+				text = text + initial_nodes[item.index].V[i1] + separator;
+				});
+				text = text.substring(0, text.length - separator.length);
+			})
+			
+			var node_goal = {V:goal_node.V, I:initial_nodes, A:null, P:{type:'Composer',param:{separator:separator, order: order}} };
+			var nodes = _.union(initial_nodes, node_goal);
+			return nodes;
+		}
+
+
+	},	// END OF ACTIONS //
 	
 
 	// OLD CODE //

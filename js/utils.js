@@ -19,6 +19,12 @@ jQuery.fn.containsString = function(str) {
 	if($(this).attr('src') && $(this).attr('src').indexOf(str)!=-1) return true;
 	return false;
 };
+var containsText = function(outerText,innerText) {
+	for (i in innerText) {
+		if(outerText.indexOf(innerText[i])==-1) return false;
+	}
+	return true;
+};
 var containsAll = function(outer,inner) {
 	var flag = true;
 	_.each(inner, function(el) {

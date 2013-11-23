@@ -195,143 +195,159 @@ pg.planner = {
 			},
 			sub_tasks: ['extract_element', 'extract_text', 'modify_text'],
 		},
-		extract_text: {
-			pre: function(initial_nodes, goal_nodes) {
-				
-			},
-			eff: function(initial_nodes, goal_nodes){
-				/* 	
-
-					extract subtask knows the goal_nodes values exist in the single initial node.
-					First, it finds elements containing the goal values. Then it calls  and synthesize jQuery selector. 
-					This will create 
-					Second, it creates 
-
-					 <jquery selector, attribute(text) extraction, ?substring? >
-				*/
-
-				// inverse text extraction  :  from the values of goal_nodes, it extracts smallest elements containing them 
-				var goal_node = goal_nodes[0];
-				var enclosing_el = initial_nodes[0].V[0];
-				var el_containing_goal_text = _.map(goal_node.V, function(goal_text) {
-					return $(enclosing_el).find("*:contains('"+ goal_text +"')").last();
-				});
-				// inverse selector
-				
-				var path = $(enclosing_el).findQuerySelector(el_containing_goal_text);
-				// create nodes
-				var node_goal_el = {V:$(enclosing_el).find(path), I:initial_nodes, A:null, P:{type:'Select',param:path} };
-				goal_node.I = [node_goal_el];
-				goal_node.P = {type:'Attribute',param:'text'};
-
-				var nodes = _.union(initial_nodes, node_goal_el, goal_node);
-				return nodes;
-			}
-		},
-		filter: function(initial_nodes, goal_nodes){
-			// <extract, finding conditional>
-		},
-		aggregate: function(initial_nodes, goal_nodes){
-			// <extract, finding aggr. function>
-		},
-
-
 	}, 	// END OF METHOS
 	actions: {
-		extract_element:  {
+		extract_element: {
 			/*	
 				(enclosing element. e.g. Web Page) -> (list of sub-elements)
 			*/
-			pre: function(initial_node, goal_node) {
-				// initial_node value must contails all the goal_node values 
-				return isDOM(initial_node.V[0]) && isDOMList(goal_node.V) && containsAll(initial_node.V[0],goal_node.V);
+			pre: function(I, O) {
+				// I value must contails all the O values 
+				return isDOM(I.V[0]) && isDOMList(O.V) && containsAll(I.V[0],O.V);
 			},
-			eff: function(initial_node, goal_node){
-				// find a consistent jquery paths selecting the goal_node values (and possibly more)
+			eff: function(I, O){
+				// find a consistent jquery paths selecting the O values (and possibly more)
 				var JQueryPath = $(enclosing_el).findQuerySelector(el_containing_goal_text);
-				// create nodes
-				var node_goal_el = {V:$(enclosing_el).find(JQueryPath), I:initial_nodes, A:null, P:{type:'Select',param:JQueryPath} };
-				goal_node.I = [node_goal_el];
-				goal_node.P = {type:'Attribute',param:'text'};
-				var nodes = _.union(initial_nodes, node_goal_el, goal_node);
-				return nodes;
+				O.I = [I];
+				O.P = P:{type:'Select',param:JQueryPath};
 			}
 		},
-		extract_text: {
-			pre: function(initial_node, goal_node) {
-				// initial_node value must contails all the goal_node values 
-				return isDOM(initial_node.V[0]) && isStringList(goal_node.V) && containsText(initial_node.V[0].text(), goal_node.V);
-			},
-			eff: function(initial_node, goal_node){
-				// find a consistent jquery paths selecting the goal_node values (and possibly more)
-				var JQueryPath = $(enclosing_el).findQuerySelector(el_containing_goal_text);
-				// create nodes
-				var node_goal_el = {V:$(enclosing_el).find(JQueryPath), I:initial_nodes, A:null, P:{type:'Select',param:JQueryPath} };
-				goal_node.I = [node_goal_el];
-				goal_node.P = {type:'Attribute',param:'text'};
-				var nodes = _.union(initial_nodes, node_goal_el, goal_node);
-				return nodes;
-			}
-
-		},
-		compose: function(initial_nodes, goal_node){
-			// <composing function>
-			// Pre-condition
-			
-
-			if (!goal_node.V) return false;
-			num_el = goal_node.V.length;
-			_.each(initial_nodes, function(node, index) {
-				if (num_el !== node.V.length) {
+		attribute_text: {
+			// (list of elements) -> (list of text)   elements must contains the texts exactly.  
+			pre: function(I, O) {
+				if (isDOMList(I.V)==false || isStringList(O.V)==false) {
+					console.log("type mismatch");
 					return false;
 				}
-			});
-			// Figure out the separators
-			var separators = ['//', '-', '_', '\\+', ';', ':', ',', '\\.', '\\|', '\\|\\|', '@', '#', '$', '%', '\\^' ,'&' , '\\*'];
-			var targetIndex = 0;
-			var most = 0;
-
-			_.each(separators, function(sep, index) {
-				var reg = new RegExp(sep,"g");
-				var current = (goal_node.V[0].match(reg)||[]).length;
-				if (most < current) {
-					most = current;
-					targetIndex = index;
+				// I value must contails all the O values 
+				if (I.V.length == O.V.length) {
+					for(i in I.V.length) {
+						if(I.V[i].text() != O.V[i]) {
+							console.log(I.V[i].text() + " != " + O.V[i]);
+							return false;
+						}
+					}
+					return true;
+				} else {
+					console.log("length of init and goal node vlaues must match")
+					return false;	
 				}
-			});
-		
-			var separator = separators[targetIndex];
-			var positions = [];
-			for (var i = 0; i < initial_nodes.length; i++) {
-				positions.push({index: i, position: goal_node.V[0].indexOf(initial_nodes[i].V[0])});
-
+				
+			},
+			eff: function(I, O){
+				O.I = [I];
+				O.P = {type:'Attribute',param:'text'};
 			}
-			positions.sort(function (a, b) {
-			    if (a.position > b.position)
-			      return 1;
-			    if (a.position < b.position)
-			      return -1;
-			    // a must be equal to b
-			    return 0;
-			});
-			
-			order = _.map(positions, function(pos, index) {
-				return pos.index;
-			})
+		},
+		substring_text{
+			// (list of texts) -> (list of subtexts)  
+			pre: function(I, O) {
+				if (I.V.length!=O.V.length) {	
+					console.log("length mismatch"); 	
+					return false;	
+				}
+				for (i in I.V) {
+					if (I.V[i].indexOf(O.V[i])==-1) {
+						console.log(O.V[i] + " not found in the input " + I.V[i]);
+						return false;
+					}
+				}
+			},
+			eff: function(I, O) {
+				// TBD
+			}
+		},
+		compose_text: {
+			// (multiple lists of texts) -> (list of texts)   all the init. must exist in goal  
+			pre: function(Is, O) {
+				if (isStringList(O.V)==false) {
+					console.log("type mismatch");
+					return false;
+				}
+				length = O.V.length;
+				for(i in Is) {
+					if(isStringList(Is[i].V)==false)
+						console.log("type mismatch");
+						return false;
+					}
+					if(Is[i].V.length!=length) {
+						console.log("length mismatch");
+						return false;	
+					}
+					// checking whether the I value exist in O value
+					for(j in Is[i].V) {
+						var i_t = Is[i].V[j];
+						var o_t = O.V[j];
+						if( o_t.indexOf(i_t)==-1) {
+							console.log(i_t + " not found in the output " + o_t);
+							return false;
+						}
+					}
+				}
 
-			_.each(goal_node.V, function(element, i1) {
-				var text = "";
-				_.each(positions, function(item, index) {
-				text = text + initial_nodes[item.index].V[i1] + separator;
+			},
+			eff: function(Is, O){
+				if (!O.V) return false;
+				num_el = O.V.length;
+				_.each(Is, function(node, index) {
+					if (num_el !== node.V.length) {
+						return false;
+					}
 				});
-				text = text.substring(0, text.length - separator.length);
-			})
+				// Figure out the separators
+				var separators = ['//', '-', '_', '\\+', ';', ':', ',', '\\.', '\\|', '\\|\\|', '@', '#', '$', '%', '\\^' ,'&' , '\\*'];
+				var targetIndex = 0;
+				var most = 0;
+
+				_.each(separators, function(sep, index) {
+					var reg = new RegExp(sep,"g");
+					var current = (O.V[0].match(reg)||[]).length;
+					if (most < current) {
+						most = current;
+						targetIndex = index;
+					}
+				});
 			
-			var node_goal = {V:goal_node.V, I:initial_nodes, A:null, P:{type:'Composer',param:{separator:separator, order: order}} };
-			var nodes = _.union(initial_nodes, node_goal);
-			return nodes;
+				var separator = separators[targetIndex];
+				var positions = [];
+				for (var i = 0; i < Is.length; i++) {
+					positions.push({index: i, position: O.V[0].indexOf(Is[i].V[0])});
+
+				}
+				positions.sort(function (a, b) {
+				    if (a.position > b.position)
+				      return 1;
+				    if (a.position < b.position)
+				      return -1;
+				    // a must be equal to b
+				    return 0;
+				});
+				
+				order = _.map(positions, function(pos, index) {
+					return pos.index;
+				})
+
+				_.each(O.V, function(element, i1) {
+					var text = "";
+					_.each(positions, function(item, index) {
+					text = text + Is[item.index].V[i1] + separator;
+					});
+					text = text.substring(0, text.length - separator.length);
+				})
+				
+				var node_goal = {V:O.V, I:Is, A:null, P:{type:'Composer',param:{separator:separator, order: order}} };
+				var nodes = _.union(Is, node_goal);
+				return nodes;		
+
+				}
+
+		},
+		filter: {
+
+			
 		}
 
+			
 
 	},	// END OF ACTIONS //
 	

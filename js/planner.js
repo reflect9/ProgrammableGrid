@@ -8,6 +8,34 @@ pg.planner = {
 	top_level_plan: function(initial_nodes, goal_nodes){
 		var goal_node = goal_nodes[0];
 
+		// HTN Planning Algorithm
+		if (initial_nodes === null || goal_nodes === null || initial_nodes.V === null || goal_nodes.V === null) return false;
+
+		// Get all the doable action (either primitive or non-primitive)
+		doable_actions = [];
+		for (var action in action_list) {
+			if (action.precondition(initial_nodes, goal_nodes)) {
+				doable_actions.push(action);
+			}
+		}
+
+		if (doable.length == 0) return false;
+
+		// Shuffle the array for the non-deterministicity
+		o = doable_actions;
+		for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+		doable_actions = o;
+
+		// Try to execute each doable action
+		for (var action in doable_actions) {
+			result = action.execute(initial_nodes, goal_nodes);
+			if (result !== null) return result;
+		}
+
+		return false;
+
+
+
 		// BACKWARD SEARCH
 		// 		creates intermediate nodes and run specific sub-tasks for the nodes    
 
@@ -28,7 +56,6 @@ pg.planner = {
 						B. (smaller elements) --[attribute]--> (text' list: not exactly the same)
 						C. (text' list) --[string-transform]--> (text list)
 			E.g. in Rule 1, sub-prob B.   Or, extracting simplified title from google scholar page   
-	
 		*/ 
 
 		/*	RULE [compose-text]

@@ -150,29 +150,29 @@ pg.planner = {
 			/*	
 				(enclosing element. e.g. Web Page) -> (list of sub-elements)
 			*/
-			pre: function(initial_node, goal_node) {
-				// initial_node value must contails all the goal_node values 
-				return isDOM(initial_node.V[0]) && isDOMList(goal_node.V) && containsAll(initial_node.V[0],goal_node.V);
+			pre: function(I, O) {
+				// I value must contails all the O values 
+				return isDOM(I.V[0]) && isDOMList(O.V) && containsAll(I.V[0],O.V);
 			},
-			eff: function(initial_node, goal_node){
-				// find a consistent jquery paths selecting the goal_node values (and possibly more)
+			eff: function(I, O){
+				// find a consistent jquery paths selecting the O values (and possibly more)
 				var JQueryPath = $(enclosing_el).findQuerySelector(el_containing_goal_text);
-				goal_node.I = [initial_node];
-				goal_node.P = P:{type:'Select',param:JQueryPath};
+				O.I = [I];
+				O.P = P:{type:'Select',param:JQueryPath};
 			}
 		},
 		attribute_text: {
 			// (list of elements) -> (list of text)   elements must contains the texts exactly.  
-			pre: function(initial_node, goal_node) {
-				if (isDOMList(initial_node.V)==false || isStringList(goal_node.V)==false) {
+			pre: function(I, O) {
+				if (isDOMList(I.V)==false || isStringList(O.V)==false) {
 					console.log("type mismatch");
 					return false;
 				}
-				// initial_node value must contails all the goal_node values 
-				if (initial_node.V.length == goal_node.V.length) {
-					for(i in initial_node.V.length) {
-						if(initial_node.V[i].text() != goal_node.V[i]) {
-							console.log(initial_node.V[i].text() + " != " + goal_node.V[i]);
+				// I value must contails all the O values 
+				if (I.V.length == O.V.length) {
+					for(i in I.V.length) {
+						if(I.V[i].text() != O.V[i]) {
+							console.log(I.V[i].text() + " != " + O.V[i]);
 							return false;
 						}
 					}
@@ -183,34 +183,62 @@ pg.planner = {
 				}
 				
 			},
-			eff: function(initial_node, goal_node){
-				goal_node.I = [initial_node];
-				goal_node.P = {type:'Attribute',param:'text'};
+			eff: function(I, O){
+				O.I = [I];
+				O.P = {type:'Attribute',param:'text'};
+			}
+		},
+		substring_text{
+			// (list of texts) -> (list of subtexts)  
+			pre: function(I, O) {
+				if (I.V.length!=O.V.length) {	
+					console.log("length mismatch"); 	
+					return false;	
+				}
+				for (i in I.V) {
+					if (I.V[i].indexOf(O.V[i])==-1) {
+						console.log(O.V[i] + " not found in the input " + I.V[i]);
+						return false;
+					}
+				}
+			},
+			eff: function(I, O) {
+				// TBD
 			}
 		},
 		compose_text: {
 			// (multiple lists of texts) -> (list of texts)   all the init. must exist in goal  
-			pre: function(initial_nodes, goal_node) {
-				if (isStringList(goal_node.V)==false) {
+			pre: function(Is, O) {
+				if (isStringList(O.V)==false) {
 					console.log("type mismatch");
 					return false;
 				}
-				length = goal_node.V.length;
-				for(i in initial_nodes) {
-					if(isStringList(initial_nodes[i].V)==false)
+				length = O.V.length;
+				for(i in Is) {
+					if(isStringList(Is[i].V)==false)
 						console.log("type mismatch");
 						return false;
 					}
-					if(initial_nodes[i].V.length!=length) {
+					if(Is[i].V.length!=length) {
 						console.log("length mismatch");
 						return false;	
 					}
+					// checking whether the I value exist in O value
+					for(j in Is[i].V) {
+						var i_t = Is[i].V[j];
+						var o_t = O.V[j];
+						if( o_t.indexOf(i_t)==-1) {
+							console.log(i_t + " not found in the output " + o_t);
+							return false;
+						}
+					}
 				}
+
 			},
-			eff: function(initial_nodes, goal_node){
-				if (!goal_node.V) return false;
-				num_el = goal_node.V.length;
-				_.each(initial_nodes, function(node, index) {
+			eff: function(Is, O){
+				if (!O.V) return false;
+				num_el = O.V.length;
+				_.each(Is, function(node, index) {
 					if (num_el !== node.V.length) {
 						return false;
 					}
@@ -222,7 +250,7 @@ pg.planner = {
 
 				_.each(separators, function(sep, index) {
 					var reg = new RegExp(sep,"g");
-					var current = (goal_node.V[0].match(reg)||[]).length;
+					var current = (O.V[0].match(reg)||[]).length;
 					if (most < current) {
 						most = current;
 						targetIndex = index;
@@ -231,8 +259,8 @@ pg.planner = {
 			
 				var separator = separators[targetIndex];
 				var positions = [];
-				for (var i = 0; i < initial_nodes.length; i++) {
-					positions.push({index: i, position: goal_node.V[0].indexOf(initial_nodes[i].V[0])});
+				for (var i = 0; i < Is.length; i++) {
+					positions.push({index: i, position: O.V[0].indexOf(Is[i].V[0])});
 
 				}
 				positions.sort(function (a, b) {
@@ -248,23 +276,25 @@ pg.planner = {
 					return pos.index;
 				})
 
-				_.each(goal_node.V, function(element, i1) {
+				_.each(O.V, function(element, i1) {
 					var text = "";
 					_.each(positions, function(item, index) {
-					text = text + initial_nodes[item.index].V[i1] + separator;
+					text = text + Is[item.index].V[i1] + separator;
 					});
 					text = text.substring(0, text.length - separator.length);
 				})
 				
-				var node_goal = {V:goal_node.V, I:initial_nodes, A:null, P:{type:'Composer',param:{separator:separator, order: order}} };
-				var nodes = _.union(initial_nodes, node_goal);
+				var node_goal = {V:O.V, I:Is, A:null, P:{type:'Composer',param:{separator:separator, order: order}} };
+				var nodes = _.union(Is, node_goal);
 				return nodes;		
 
 				}
 
 		},
-		
+		filter: {
+
 			
+		}
 
 			
 

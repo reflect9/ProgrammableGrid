@@ -277,6 +277,7 @@ pg.planner = {
 				var n_inter_3 = {I:n_inter_2, V:modified_text, P:undefined};
 				
 				var rep_el = findRepElements(O.V);  // rep_el is the top-most non-overlapping elements of modified elements
+				var n_rep_el = {I:n_inter_1, V:rep_el, P:{type:"select-representative", param:""}};
 				// first, try to find the entire modified_text in the rep_el 
 				var mt_exist_in_rep_el = _.every(modified_text, function(mt, i) {
 					if( $(rep_el[i]).text().indexOf(mt) == -1) return false;
@@ -284,6 +285,11 @@ pg.planner = {
 				});
 				if (mt_exist_in_rep_el) {
 					// we don't need decomposition. simply extract text from rep_el. 
+					var nodes_extract_original_el = extract_element.eff(I, n_inter_1);			
+					var nodes_extract_rep_el = [n_rep_el];
+					var nodes_extraction = extract-text(n_rep_el, n_inter_3);
+					O = O = {I:n_inter_3, V:O.V, P:{type:"set-attribute",param:"text"};
+					return _.union(nodes_extract_original_el, nodes_extract_rep_el, nodes_extraction, O);
 				} else {
 					// we need to try decomposing modified_text
 					// try to find a way to generate modified_text from I
@@ -299,33 +305,33 @@ pg.planner = {
 							}
 							modified_text_unzip.push(list);
 						}
-						 _.map(modified_text, function(mt){
-							return _.map(mt.split(separator), function(t) {
-								return 
-							});
+						var nodes_modified_text_unzip = _.map(modified_text_unzip, function(mt) {
+							return {I:undefined, V:mt, P:undefined};
+						});
+						// for each decomposed word group, find an extraction program
+						var extraction_programs = _.map(nodes_modified_text_unzip, function(node_mt, i) {
+							var I=n_rep_el;
+							var O=node_mt;
+							return extract-text(I,O);
 						},this);
 					} catch(e) {
 						console.log(e.stack);
 					}
-					// for each modified_text_unzip element, try extract from rep_el
-					var 
-
-
-
-
+					// compose extracted text lists
+					var all_extraction_nodes = _.union(extraction_programs);
+					var last_nodes = _.map(extraction_programs, function(p) {
+						return _.last(p);
+					})
+					// now assemble all
+					var nodes_extract_original_el = extract_element.eff(I, n_inter_1);			
+					var nodes_extract_rep_el = [n_rep_el];
+					var list_of_nodes_extracting_parts = extraction_programs;
+					var nodes_compose = compose-text(last_nodes, n_inter_3);
+					O = {I:n_inter_3, V:O.V, P:{type:"set-attribute",param:"text"};
+					return _.union(nodes_extract_original_el, nodes_extract_rep_el, list_of_nodes_extacting_parts, nodes_compose, O);
 				}
 
 				
-
-
-
-				var nodes_1 = extract_element.eff(I, n_inter_1);
-				
-				var nodes_2 = attribute_text.eff(n_inter_1, n_inter_2);
-
-				var nodes_3 = string-transform.eff(n_inter_2, n_inter_3);
-				var nodes_4 = set-attribute.eff([n_inter_1, n_inter_3], O);
-				return _.union(nodes_1,nodes_2,nodes_3,nodes_4);
 			}
 		},
 		set-attribute: { // takes two input nodes (original el and new values) and returns modified elements
@@ -346,7 +352,7 @@ pg.planner = {
 				return O;
 			}
 		}
-		extract_element: {
+		extract-element: {
 			/*	
 				(enclosing element. e.g. Web Page) -> (list of sub-elements)
 			*/
@@ -356,10 +362,10 @@ pg.planner = {
 			},
 			eff: function(I, O){
 				// find a consistent jquery paths selecting the O values (and possibly more)
-				var JQueryPath = $(enclosing_el).findQuerySelector(el_containing_goal_text);
-				O.I = [I];
+				var JQueryPath = $(I.V[0]).findQuerySelector(O.V);
+				O.I = I;
 				O.P = P:{type:'Select',param:JQueryPath};
-				return _.union(I,O);
+				return O;
 			}
 		},
 		attribute-text: {

@@ -358,8 +358,15 @@ pg.planner = {
 				// find a consistent jquery paths selecting the O values (and possibly more)
 				var JQueryPath = $(enclosing_el).findQuerySelector(el_containing_goal_text);
 				O.I = [I];
-				O.P = P:{type:'Select',param:JQueryPath};
+				O.P = P:{type:'extract_element',param:JQueryPath};
 				return _.union(I,O);
+			}
+			exe: function(O) {
+				if (O.P.type !== 'extract_element') return false;
+				var path = O.P.param;
+				var updated_value = O.I.V.EXTRACT(path);
+				O.V = updated_value;
+				return O;
 			}
 		},
 		attribute-text: {

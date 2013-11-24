@@ -32,6 +32,27 @@ var containsAll = function(outer,inner) {
 	});
 	return flag;
 };
+var getSeparator = function(str_list) {
+	var separators = ['//', '-', '_', '\\+', ';', ':', ',', '\\.', '\\|', '\\|\\|', '@', '#', '$', '%', '\\^' ,'&' , '\\*'];
+	var targetIndex = 0;
+	var most = 0;
+	_.each(separators, function(sep, index) {
+		var reg = new RegExp(sep,"g");
+		var current = (str_list[0].match(reg)||[]).length;
+		if (most < current) {
+			most = current;
+			targetIndex = index;
+		}
+	});
+	return separators[targetIndex];
+}
+findRepElements = function(elements) {
+	var commonAncester = getCommonAncestorMultiple(elements);
+	var representativeElements = _.map(elements, function(el) {
+		return $(commonAncester).children().has(el).get(0);
+	});
+	return representativeElements;
+};
 jQuery.fn.findQuerySelector = function(elements) {
 	var commonAncester = getCommonAncestorMultiple(elements);	// check whether all the output elements are within the input dom
 	if(commonAncester!==this && $(commonAncester).parents().hasElement(this.get(0))===false) return []; // if Input does not contain

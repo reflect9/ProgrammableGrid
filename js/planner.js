@@ -257,62 +257,95 @@ pg.planner = {
 				if (original_el.length == JQuery_path_to_O.length) {
 					if (isDOMList(original_el) return true;
 				} 
-				return false;
-
-
-				// Check if the two list of elements have identical attribute values except for one/multiple attributes
-				// and get those attributes's name.
-				// var bingo = true;
-				// var diff_attribute = null;
-				// for (var i = 0; i < O.V.length; i++) {
-				// 	var i_element = I.V[0];
-				// 	var o_element = O.V[i];
-				// 	$(i_element)
-
-
-				// 	var diff = true;
-				// 	if (diff) {  // if there are any difference
-				// 		if ($(i_element).text() === null) {
-				// 			diff_attribute = new_diff_attribute;
-				// 		} else if (diff_attribute !== new_diff_attribute) { // if the differing attribute across elements is inconsistent
-				// 			bingo = false;
-				// 		}
-						
-				// 	} else {
-				// 		bingo = false;
-				// 	}
-				// }
-				// if (bingo) return true;
-				// else continue;
-				
+				return false;				
 			},
 			eff: function(I, O) {
 				// retrieve the original page DOM 
 				var backup_I = (pg.backup_page)? pg.backup_page: $("html").get(0);
 
-				var JQuery_path_to_modified_elements = _.map(O.V, function(o) {
-					return $(o).pathWithNth("html");  // get JQuery selector path to those output elements
+				var JQuery_path_generalized = $("html").findQuerySelector(O.V); 
+				var JQuery_path_strict = _.map(O.V, function(o) {
+					return $(o).pathWithNth("html");  // get exact JQuery selector paths to those output elements in the modified page
 				});
+				var modified_text = _.map(O.V, function(o){return $(o).text();});
 				var original_el = _.map(JQuery_path_to_modified_elements, function(path) {
 					return $(backup_I).find(path).get(0); // retrieve original elements from backup I
 				});
-				var n_inter_1 = {I:undefined, V:original_el, P:undefined};
-				var n_inter_1 = {I:undefined, V:original_el, P:undefined};
+				var original_text = _.map(original_el, function(el) { return $(el).text; });
+				var n_inter_1 = {I:I, V:original_el, P:undefined};
+				var n_inter_2 = {I:n_inter_1, V:original_text, P:undefined};
+				var n_inter_3 = {I:n_inter_2, V:modified_text, P:undefined};
+				
+				var rep_el = findRepElements(O.V);  // rep_el is the top-most non-overlapping elements of modified elements
+				// first, try to find the entire modified_text in the rep_el 
+				var mt_exist_in_rep_el = _.every(modified_text, function(mt, i) {
+					if( $(rep_el[i]).text().indexOf(mt) == -1) return false;
+					else return true;
+				});
+				if (mt_exist_in_rep_el) {
+					// we don't need decomposition. simply extract text from rep_el. 
+				} else {
+					// we need to try decomposing modified_text
+					// try to find a way to generate modified_text from I
+					var separator = getSeparator(modified_text);
+					var num_parts = modified_text[0].split(separator).length;
+					var modified_text_unzip = [];
+					try{
+						for (var i in num_parts) {
+							var list = [];
+							for (var j in modified_text) {
+								var splitted = modified_text[j].split(separator);
+								list.push(splitted[i]);
+							}
+							modified_text_unzip.push(list);
+						}
+						 _.map(modified_text, function(mt){
+							return _.map(mt.split(separator), function(t) {
+								return 
+							});
+						},this);
+					} catch(e) {
+						console.log(e.stack);
+					}
+					// for each modified_text_unzip element, try extract from rep_el
+					var 
+
+
+
+
+				}
+
 				
 
 
 
-				result = extract_element(I, O);
-				if (result) I = _.union(result);
+				var nodes_1 = extract_element.eff(I, n_inter_1);
+				
+				var nodes_2 = attribute_text.eff(n_inter_1, n_inter_2);
 
-				result = extract_text(I, O);
-				if (result) I = _.union(result);
-
-				result = modify_text(I, O);
-				if (result) I = _.union(result);
-			},
-			sub_tasks: ['extract_element', 'extract_text', 'modify_text'],
+				var nodes_3 = string-transform.eff(n_inter_2, n_inter_3);
+				var nodes_4 = set-attribute.eff([n_inter_1, n_inter_3], O);
+				return _.union(nodes_1,nodes_2,nodes_3,nodes_4);
+			}
 		},
+		set-attribute: { // takes two input nodes (original el and new values) and returns modified elements
+			pre: function(Is, O) {
+				var original_el = Is[0].V;
+				var new_attribute = Is[1].V;
+				var modified_el = O.V;
+				if (	original_el.length != new_attribute.length  
+					||	new_attribute.length != modified_el.length) return false; 
+				for(var i=0; i<original_el.length; i++) {
+					if($(original_el[i]).fingerprint() != $(modifield_el[i]).fingerprint()) return false;
+					if (new_attribute[i] != $(modified_el[i]).text()) return false;
+				}
+				return true;
+			}, 
+			eff: function(Is, O) {
+				O.I=Is;   O.P={type:"set-attribute",param:"text"};
+				return O;
+			}
+		}
 		extract_element: {
 			/*	
 				(enclosing element. e.g. Web Page) -> (list of sub-elements)
@@ -329,7 +362,7 @@ pg.planner = {
 				return _.union(I,O);
 			}
 		},
-		attribute_text: {
+		attribute-text: {
 			// (list of elements) -> (list of text)   elements must contains the texts exactly.  
 			pre: function(I, O) {
 				if (isDOMList(I.V)==false || isStringList(O.V)==false) {
@@ -412,20 +445,8 @@ pg.planner = {
 					}
 				});
 				// Figure out the separators
-				var separators = ['//', '-', '_', '\\+', ';', ':', ',', '\\.', '\\|', '\\|\\|', '@', '#', '$', '%', '\\^' ,'&' , '\\*'];
-				var targetIndex = 0;
-				var most = 0;
+				var separator = getSeparator(O.V);
 
-				_.each(separators, function(sep, index) {
-					var reg = new RegExp(sep,"g");
-					var current = (O.V[0].match(reg)||[]).length;
-					if (most < current) {
-						most = current;
-						targetIndex = index;
-					}
-				});
-			
-				var separator = separators[targetIndex];
 				var positions = [];
 				for (var i = 0; i < Is.length; i++) {
 					positions.push({index: i, position: O.V[0].indexOf(Is[i].V[0])});

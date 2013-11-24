@@ -108,6 +108,100 @@ pg.planner = {
 						C. (text' list) --[string-transform]--> (text list)
 			E.g. in Rule 1, sub-prob B.   Or, extracting simplified title from google scholar page   
 		*/ 
+		filter_element: {
+			pre: function(I, O) {
+				// The texts in the goal node must exist in one of the I' content.
+				if (!isDOMList(O.V)) return false;
+				if (!isDOMList(I.V) ) return false;
+				if (!containsAll(I.V, O.V)) return false;
+				if (I.V.length == 0) return false;
+				return true;
+			},
+			eff: function(I, O) {
+				// get all the sub elements
+				var all_sub_elements = $(I.V[0]).find("*");
+				var sub_elements = all_sub_elements.filter(function(el) {
+					return $(el).text()!=""
+				});
+
+				// get element path
+				var el_paths = _.map(sub_elements, function(el, index) {
+					$(el).pathWithNth(I.V[0]);
+				})
+				
+				// use path to all the list items
+				for (var path in el_paths) {
+					var i_els = _.map(I.V, function(item, index) {
+						// To Do: parse string into number
+						return $(item).find(path);
+					});
+					var o_els = _.map(I.V, function(item, index) {
+						// To Do: parse string into number
+						return $(item).find(path);
+					});
+					var i_texts = _.map(i_els, function(item, index) {
+						// To Do: parse string into number
+						return $(item).text();
+					});
+					var o_texts = _.map(o_els, function(item, index) {
+						// To Do: parse string into number
+						return $(item).text();
+					});
+
+					// create intermediate nodes
+
+					var i_inter = {I:I, V:i_texts, P:undefined};
+					var o_inter = {I:null, V:i_texts, P:undefined};
+
+					if (filter.pre(i_inter, o_inter)) {
+						var result = filter.eff(i_inter, o_inter);
+						if (result) {
+							I.P = ;
+							var el_node = {I:I, V:i_els, P:{type:"Select", param:path}};
+
+							i_inter = result[0];
+							i_inter.P = P:{type:"Attribute", param:"text"};
+							i_inter.I = el_node;
+
+							o_inter = result[1];
+							O.I = [I, i_inter];
+							O.P = P:{type:"filter_element", param:o_inter.P.param};
+
+							return _.union(I, el_node, i_inter, O);
+						} else {
+							return false;
+						}
+					}
+				}
+				return false;
+			},
+			exe: function(O) {
+				if (O.P.type !== "filter_element") return false;
+				var original_els = O.I[0];
+				var extracted_keys = O.I[1];
+				var temp_node = {I:extracted_keys, V:null, P:{type:'filter', param: O.P.param}};
+				var booleans = filter.exe_helper(temp_node);
+
+				if (booleans.length !== O.V.length) console.error(e.track);
+				var filtered = []
+				for (var i = 0; i < booleans.length; i++) {
+					if (booleans[i]) {
+						filtered.push(O.V[i]);
+					}
+				}
+				O.V = filtered;
+				return O;
+			}
+		},
+
+		/*	RULE [extract-text]
+			precondition:  goal_node consists of text variables existing in one of the initial nodes.
+			org. prob.	:  (enclosing element e.g. web page) --?--> (text list)
+			sub-prob. 	A. (enclosing element) --[extract-element]--> (smaller elements containing the text list)
+						B. (smaller elements) --[attribute]--> (text' list: not exactly the same)
+						C. (text' list) --[string-transform]--> (text list)
+			E.g. in Rule 1, sub-prob B.   Or, extracting simplified title from google scholar page   
+		*/ 
 		extract_text: {
 			pre: function(I, O) {
 				// The texts in the goal node must exist in one of the I' content.
@@ -353,17 +447,33 @@ pg.planner = {
 				_.each(O.V, function(element, i1) {
 					var text = "";
 					_.each(positions, function(item, index) {
-					text = text + Is[item.index].V[i1] + separator;
+						text = text + Is[item.index].V[i1] + separator;
 					});
 					text = text.substring(0, text.length - separator.length);
 				})
 				
-				var node_goal = {V:O.V, I:Is, A:null, P:{type:'Composer',param:{separator:separator, order: order}} };
+				var node_goal = {V:O.V, I:Is, A:null, P:{type:'composer',param:{separator:separator, order: order}} };
 				var nodes = _.union(Is, node_goal);
 				return nodes;		
 
 				}
+			exe: function(O) {
+				if (O.P.type !== 'composer') return false;
+				var order = O.P.param.order;
+				var separator = O.P.param.separator;
+				var composed_texts = [];
+				_.each(O.I[0].V, function(element, i1) {
+					var text = "";
+					_.each(order, function(item, index) {
+						text = text + O.I[item].V[i1] + separator;
+					});
+					text = text.substring(0, text.length - separator.length);
+					composed_texts.push(text);
+				});
 
+				O.V = composed_texts;
+				return O;
+			}
 		},
 		filter: {
 			// (list of object) -> (list of subtexts)  
@@ -381,6 +491,7 @@ pg.planner = {
 				if (!_.isString(I.V[0]) && !_.isNumber(I.V[0])) {
 					return false;
 				}
+				return true;
 			},
 			eff: function(I, O) {
 				var goal_node;
@@ -418,7 +529,7 @@ pg.planner = {
 					if (key_words.length == 0) {
 						return null;
 					}
-					node_goal = {V:O.V, I:I, A:null, P:{type:'Filter',param:{type: "String_Contain", arg: key_words[0]}} };
+					node_goal = {V:O.V, I:I, A:null, P:{type:'filter',param:{type: "string_contain", param: key_words[0]}} };
 				} else {
 					// check equal
 					unique = O.V[0];
@@ -429,7 +540,7 @@ pg.planner = {
 						}
 					}
 					if (!fail) {
-						node_goal = {V:O.V, I:I, A:null, P:{type:'Filter',param:{type: "==", arg: oV[0]}} };
+						node_goal = {V:O.V, I:I, A:null, P:{type:'filter',param:{type: "==", param: oV[0]}} };
 					}
 					// check inequality
 					iV = I.V.sort();
@@ -439,10 +550,10 @@ pg.planner = {
 
 					if (JSON.stringify(iV.splice(0,oL)) == JSON.stringify(oV)) {
 						// less and equal
-						node_goal = {V:O.V, I:I, A:null, P:{type:'Filter',param:{type: "<=", arg: oV[oV.length - 1]}} };
+						node_goal = {V:O.V, I:I, A:null, P:{type:'filter',param:{type: "<=", param: oV[oV.length - 1]}} };
 					} else if (JSON.stringify(iV.splice(iL - oL,iL)) == JSON.stringify(oV)) {
 						// greater and equal
-						node_goal = {V:O.V, I:I, A:null, P:{type:'Filter',param:{type: ">=", arg: oV[0]}} };
+						node_goal = {V:O.V, I:I, A:null, P:{type:'filter',param:{type: ">=", param: oV[0]}} };
 					}
 
 					// check odd and even
@@ -457,17 +568,74 @@ pg.planner = {
 					}
 					if (odd_count == oL) {
 						// Odd number filter
-						node_goal = {V:O.V, I:I, A:null, P:{type:'Filter',param:{type: "odd", arg: null}} };
+						node_goal = {V:O.V, I:I, A:null, P:{type:'filter',param:{type: "odd", param: null}} };
 					}
 
 					if (even_count == oL) {
 						// Even number filter
-						node_goal = {V:O.V, I:I, A:null, P:{type:'Filter',param:{type: "even", arg: null}} };
+						node_goal = {V:O.V, I:I, A:null, P:{type:'filter',param:{type: "even", param: null}} };
 					}
 				}
 				var nodes = _.union(I, node_goal);
 				return nodes;	
 			}	
+			exe: function(O) {
+				if (O.P.type !== 'filter') return false;
+				var booleans = filter.exe_helper(O);
+				if (booleans.length !== O.V.length) console.error(e.track);
+				var filtered = []
+				for (var i = 0; i < booleans.length; i++) {
+					if (booleans[i]) {
+						filtered.push(O.V[i]);
+					}
+				}
+				O.V = filtered;
+				return O;
+			}
+			exe_helper: function(O) {
+				if (O.P.type !== 'filter') return false;
+				var arg = O.P.arg;
+				var booleans = [];
+				switch(O.P.type) {
+					case 'string_contain':
+						_.each(O.I.V, function(item, index) {
+							if (item.indexOf(arg) >= 0) booleans.push(true);
+							else booleans.push(false);
+						})
+						break;
+					case '==':
+						_.each(O.I.V, function(item, index) {
+							if (item == arg) booleans.push(true);
+							else booleans.push(false);
+						})
+						break;
+					case '<=':
+						_.each(O.I.V, function(item, index) {
+							if (item <= arg) booleans.push(true);
+							else booleans.push(false);
+						})
+						break;
+					case '>=':
+						_.each(O.I.V, function(item, index) {
+							if (item <= arg) booleans.push(true);
+							else booleans.push(false);
+						})
+						break;
+					case 'odd':
+						_.each(O.I.V, function(item, index) {
+							if (item % 2 == 1) booleans.push(true);
+							else booleans.push(false);
+						})
+						break;
+					case 'even':
+						_.each(O.I.V, function(item, index) {
+							if (item % 2 == 0) booleans.push(true);
+							else booleans.push(false);
+						})
+						break;
+				}
+				return booleans;
+			}
 		}
 	},	// END OF ACTIONS //
 	

@@ -612,7 +612,7 @@ pg.planner = {
 					}
 				}
 				var nodes = _.union(I, node_goal);
-				return nodes;	
+				return nodes;
 			}	
 			exe: function(O) {
 				if (O.P.type !== 'filter') return false;

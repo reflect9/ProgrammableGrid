@@ -1,134 +1,62 @@
-var test = function(){
-	problem_nodes = pg.problems.scholar_extract_title();
-	result = pg.planner.task_extract(problem_nodes[0],problem_nodes[1]);
-	return result;
-};
-
 pg.planner = {
 	plan: function(Is, O){
 		// HTN Planning Algorithm
-		if (Is === null || O === null || Is.V === null || O.V === null) return false;
+		var null_check = _.every([Is, O, O.V], function(obj) {
+			if (obj===null || obj===undefined) {
+				console.log(obj);
+				console.log("cannot be null or undefined");
+				return false;
+			} else return true;
+		})
+		if (!null_check) return false;
 
 		// Get all the doable action (either primitive or non-primitive)
 		doable_methods = [];
-		for (var method in pg.planner.methods.values) {
+		_.each(_.pairs(pg.planner.methods), function(ml) {
+			var method_name = ml[0];	var method = ml[1];
 			if (method.pre(Is, O)) {
+				console.log(method_name + " is doable;");
 				doable_methods.push(method);
-			}
+			} 
+		},this);
+		if (doable_methods.length == 0) {
+			console.log("no method is doable");
+			return false;
 		}
-
-		if (doable_methods.length == 0) return false;
-
 		// Shuffle the array for the non-deterministicity
 		o = doable_methods;
 		for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
 		doable_methods = o;
 
 		// Try to execute each doable method
-		for (var method in doable_methods) {
-			result = method.eff(I, O);
-			if (result !== null) return result;
-		}
-		return false;
-
-
-
-		// BACKWARD SEARCH
-		// 		creates intermediate nodes and run specific sub-tasks for the nodes    
-
-		/* RULE. [modify-element-attributes]  
-			precondition:  O has element existing in one of the initial nodes, but with different attribute values.
-			org. prob.	:  (enclosing element e.g. web page) --?--> (modified elements)
-			sub-prob.	A. (enclosing element) --[extract-element]--> (elements to modify) 
-							B. (enclosing element) --[extract-text]--> (intermediate values) 
-						C. (elements to modify, intermediate values) --[modify-attribute]--> (modified elements)
-			E.g. user selected page elements and modified (text/download/src/href/style) attributes.  
-		*/
-
-
-		/*	RULE [extract-text]
-			precondition:  O consists of text variables existing in one of the initial nodes.
-			org. prob.	:  (enclosing element e.g. web page) --?--> (text list)
-			sub-prob. 	A. (enclosing element) --[extract-element]--> (smaller elements containing the text list)
-						B. (smaller elements) --[attribute]--> (text' list: not exactly the same)
-						C. (text' list) --[string-transform]--> (text list)
-			E.g. in Rule 1, sub-prob B.   Or, extracting simplified title from google scholar page   
-		*/ 
-
-		/*	RULE [compose-text]      b
-			precondition: O values are ... the initial nodes,
-			original prob. 	: (unfiltered list) --?--> (filtered list)
-			sub-prob. 	A. (un)  	
-
-		*/
-
-
-
-		/*	RULE [filter]
-			precondition: O values are subset of values of one of the initial nodes,
-			original prob. 	: (unfiltered list) --?--> (filtered list)
-			sub-prob. 	A. (un)  	
-
-		*/
-
-
-
-		// RULE 2. if goal_node (which is text) exists in the I,   
-		var all_text = _.map(goal_node.V, function(el) { return $(el).attr('download'); });
-
-		var titles = _.map(goal_node.V, function(el){ return $(el).attr('download').split('^')[0];}); 
-		var authors = _.map(goal_node.V, function(el){ return $(el).attr('download').split('^')[1];}); 
-		var years = _.map(goal_node.V, function(el){ return $(el).attr('download').split('^')[2];}); 
-		var node_title = {V:titles, I:null, A:null, P:null};
-		var node_authors = {V:authors, I:null, A:null, P:null};
-		var node_years = {V:years, I:null, A:null, P:null};
-
-		// extracting title, authors, years
-		var program_extract_title = pg.planner.task_extract(I,[node_title]); 
-		var program_extract_authors = pg.planner.task_extract(I,[node_authors]); 
-		var program_extract_years = pg.planner.task_extract(I,[node_years]); 
-
-		// composing part
-		
-		var node_all_text = {V:all_text, I:null, A:null, P:null};
-
-		var program_composing_all = pg.planner.task_compose([node_title,node_authors,node_years],[node_all_text]);
-
-
-
-		return _.union(program_extract_title, program_extract_authors, program_extract_years, program_composing_all);
-		
+		solutions = _.map(doable_methods, function(method){
+			result = method.generate(Is, O);
+			if (result !== null) return _.union(Is, result);
+		});
+		return (solutions)? solutions:false;	
 	},
 	methods: {
-		/*	RULE [extract-text]
-			precondition:  goal_node consists of text variables existing in one of the initial nodes.
-			org. prob.	:  (enclosing element e.g. web page) --?--> (text list)
-			sub-prob. 	A. (enclosing element) --[extract-element]--> (smaller elements containing the text list)
-						B. (smaller elements) --[attribute]--> (text' list: not exactly the same)
-						C. (text' list) --[string-transform]--> (text list)
-			E.g. in Rule 1, sub-prob B.   Or, extracting simplified title from google scholar page   
-		*/ 
 		filter_element: {
 			pre: function(I, O) {
+				I = (_.isArray(I))?I[0]:I;
 				// The texts in the goal node must exist in one of the I' content.
-				if (!isDOMList(O.V)) return false;
-				if (!isDOMList(I.V) ) return false;
+				if (!isDomList(O.V)) return false;
+				if (!isDomList(I.V) ) return false;
 				if (!containsAll(I.V, O.V)) return false;
 				if (I.V.length == 0) return false;
 				return true;
 			},
-			eff: function(I, O) {
+			generate: function(I, O) {
+				I = (_.isArray(I))?I[0]:I;
 				// get all the sub elements
 				var all_sub_elements = $(I.V[0]).find("*");
 				var sub_elements = all_sub_elements.filter(function(el) {
 					return $(el).text()!=""
 				});
-
 				// get element path
 				var el_paths = _.map(sub_elements, function(el, index) {
 					$(el).pathWithNth(I.V[0]);
 				})
-				
 				// use path to all the list items
 				for (var path in el_paths) {
 					var i_els = _.map(I.V, function(item, index) {
@@ -149,23 +77,20 @@ pg.planner = {
 					});
 
 					// create intermediate nodes
-
 					var i_inter = {I:I, V:i_texts, P:undefined};
 					var o_inter = {I:null, V:i_texts, P:undefined};
-
 					if (filter.pre(i_inter, o_inter)) {
-						var result = filter.eff(i_inter, o_inter);
+						var result = filter.generate(i_inter, o_inter);
 						if (result) {
-							I.P = ;
 							var el_node = {I:I, V:i_els, P:{type:"Select", param:path}};
 
 							i_inter = result[0];
-							i_inter.P = P:{type:"Attribute", param:"text"};
+							i_inter.P = {type:"Attribute", param:"text"};
 							i_inter.I = el_node;
 
 							o_inter = result[1];
 							O.I = [I, i_inter];
-							O.P = P:{type:"filter_element", param:o_inter.P.param};
+							O.P = {type:"filter_element", param:o_inter.P.param};
 
 							return _.union(I, el_node, i_inter, O);
 						} else {
@@ -175,12 +100,12 @@ pg.planner = {
 				}
 				return false;
 			},
-			exe: function(O) {
+			execute: function(O) {
 				if (O.P.type !== "filter_element") return false;
 				var original_els = O.I[0];
 				var extracted_keys = O.I[1];
 				var temp_node = {I:extracted_keys, V:null, P:{type:'filter', param: O.P.param}};
-				var booleans = filter.exe_helper(temp_node);
+				var booleans = filter.execute_helper(temp_node);
 
 				if (booleans.length !== O.V.length) console.error(e.track);
 				var filtered = []
@@ -193,27 +118,20 @@ pg.planner = {
 				return O;
 			}
 		},
-
-		/*	RULE [extract-text]
-			precondition:  goal_node consists of text variables existing in one of the initial nodes.
-			org. prob.	:  (enclosing element e.g. web page) --?--> (text list)
-			sub-prob. 	A. (enclosing element) --[extract-element]--> (smaller elements containing the text list)
-						B. (smaller elements) --[attribute]--> (text' list: not exactly the same)
-						C. (text' list) --[string-transform]--> (text list)
-			E.g. in Rule 1, sub-prob B.   Or, extracting simplified title from google scholar page   
-		*/ 
 		extract_text: {
 			pre: function(I, O) {
+				I = (_.isArray(I))?I[0]:I;
 				// The texts in the goal node must exist in one of the I' content.
 				if (!isStringList(O.V)) return false;
-				if (!isDOMList(I.V) ) return false;
+				if (!isDomList(I.V) ) return false;
 				if (I.V.length != 1) return false;
 				for (i in O.V) {
 					if ($(I.V[0]).text().indexOf(O.V[i])==-1) return false;
 				}
 				return true;
 			},
-			eff: function(I, O) {
+			generate: function(I, O) {
+				I = (_.isArray(I))?I[0]:I;
 				var el_I = I.V[0];
 				var el_containing_O = _.map(O.V, function(o_t) {
 					return $(el_I).find("*.contains('"+o_t+"')").last();
@@ -223,30 +141,27 @@ pg.planner = {
 				// create intermediate nodes
 				var n_inter_1 = {I:undefined, V:el_containing_O, P:undefined};
 				var n_inter_2 = {I:undefined, V:text_containing_O, P:undefined};
-				//sub-prob 	A. (enclosing element) --[extract-element]--> (smaller elements containing the text list)
-				result_A = extract_element.eff(I, n_inter_1);
+				//sub-prob 	A. (enclosing element) --[extract_element]--> (smaller elements containing the text list)
+				result_A = extract_element.generate(I, n_inter_1);
 				//			B. (smaller elements) --[attribute]--> (text' list: not exactly the same)
-				result_B = attribute.eff(n_inter_1, n_inter_2);
+				result_B = attribute.generate(n_inter_1, n_inter_2);
 				//			C. (text' list) --[string-transform]--> (text list)
-				result_C = string_transform.eff(n_inter_3, O);
+				result_C = string_transform.generate(n_inter_3, O);
 
 				if(result_A &&result_B &&result_C) return _.union(result_A,result_B,result_C);
 				else return false;
 			},
-		},
+			execute: function(O) {
+				
 
-		/* RULE. [modify-element-attributes]  
-			precondition:  goal_node has element existing in one of the initial nodes, but with different attribute values.
-			org. prob.	:  (enclosing element e.g. web page) --?--> (modified elements)
-			sub-prob.	A. (enclosing element) --[extract-element]--> (elements to modify) 
-							B. (enclosing element) --[extract-text]--> (intermediate values) 
-						C. (elements to modify, intermediate values) --[modify-attribute]--> (modified elements)
-			E.g. user selected page elements and modified (text/download/src/href/style) attributes.  
-		*/
+				return O;
+			}
+		},
 		modify_element_attribute: {
 			pre: function(I, O) {
+				I = (_.isArray(I))?I[0]:I;
 				// Initial_node value must contails all the goal_node values 
-				if (!isDOMList(I.V) || !isDOMList(O.V)) return false;
+				if (!isDomList(I.V) || !isDomList(O.V)) return false;
 				if (I.V.length!=1) return false;
 				var JQuery_path_to_O = _.map(O.V, function(o) {
 					return $(o).pathWithNth("html");
@@ -255,11 +170,12 @@ pg.planner = {
 					return $(I).find(path).get(0);
 				});
 				if (original_el.length == JQuery_path_to_O.length) {
-					if (isDOMList(original_el) return true;
+					if (isDomList(original_el)) return true;
 				} 
 				return false;				
 			},
-			eff: function(I, O) {
+			generate: function(I, O) {
+				I = (_.isArray(I))?I[0]:I;
 				// retrieve the original page DOM 
 				var backup_I = (pg.backup_page)? pg.backup_page: $("html").get(0);
 
@@ -285,10 +201,10 @@ pg.planner = {
 				});
 				if (mt_exist_in_rep_el) {
 					// we don't need decomposition. simply extract text from rep_el. 
-					var nodes_extract_original_el = extract_element.eff(I, n_inter_1);			
+					var nodes_extract_original_el = extract_element.generate(I, n_inter_1);			
 					var nodes_extract_rep_el = [n_rep_el];
 					var nodes_extraction = extract-text(n_rep_el, n_inter_3);
-					O = O = {I:n_inter_3, V:O.V, P:{type:"set-attribute",param:"text"};
+					O = {I:n_inter_3, V:O.V, P:{type:"set_attribute",param:"text"}};
 					return _.union(nodes_extract_original_el, nodes_extract_rep_el, nodes_extraction, O);
 				} else {
 					// we need to try decomposing modified_text
@@ -323,18 +239,18 @@ pg.planner = {
 						return _.last(p);
 					})
 					// now assemble all
-					var nodes_extract_original_el = extract_element.eff(I, n_inter_1);			
+					var nodes_extract_original_el = extract_element.generate(I, n_inter_1);			
 					var nodes_extract_rep_el = [n_rep_el];
 					var list_of_nodes_extracting_parts = extraction_programs;
 					var nodes_compose = compose-text(last_nodes, n_inter_3);
-					O = {I:n_inter_3, V:O.V, P:{type:"set-attribute",param:"text"};
+					O = {I:n_inter_3, V:O.V, P:{type:"set_attribute",param:"text"}};
 					return _.union(nodes_extract_original_el, nodes_extract_rep_el, list_of_nodes_extacting_parts, nodes_compose, O);
 				}
 
 				
 			}
 		},
-		set-attribute: { // takes two input nodes (original el and new values) and returns modified elements
+		set_attribute: { // takes two input nodes (original el and new values) and returns modified elements
 			pre: function(Is, O) {
 				var original_el = Is[0].V;
 				var new_attribute = Is[1].V;
@@ -342,33 +258,34 @@ pg.planner = {
 				if (	original_el.length != new_attribute.length  
 					||	new_attribute.length != modified_el.length) return false; 
 				for(var i=0; i<original_el.length; i++) {
-					if($(original_el[i]).fingerprint() != $(modifield_el[i]).fingerprint()) return false;
+					if($(original_el[i]).fingerprint() != $(modified_el[i]).fingerprint()) return false;
 					if (new_attribute[i] != $(modified_el[i]).text()) return false;
 				}
 				return true;
 			}, 
-			eff: function(Is, O) {
-				O.I=Is;   O.P={type:"set-attribute",param:"text"};
+			generate: function(Is, O) {
+				O.I=Is;   O.P={type:"set_attribute",param:"text"};
 				return O;
 			}
-		}
-		extract-element: {
+		},
+		extract_element: {
 			/*	
 				(enclosing element. e.g. Web Page) -> (list of sub-elements)
 			*/
 			pre: function(I, O) {
+				I = (_.isArray(I))?I[0]:I;
 				// I value must contails all the O values 
-				return isDOM(I.V[0]) && isDOMList(O.V) && containsAll(I.V[0],O.V);
+				return isDom(I.V[0]) && isDomList(O.V) && containsAll(I.V[0],O.V);
 			},
-			eff: function(I, O){
+			generate: function(I, O){
 				// find a consistent jquery paths selecting the O values (and possibly more)
-
+				I = (_.isArray(I))?I[0]:I;
 				var JQueryPath = $(I.V[0]).findQuerySelector(O.V);
 				O.I = I;
-				O.P = P:{type:'Select',param:JQueryPath};
+				O.P = {type:'Select',param:JQueryPath};
 				return O;
-			}
-			exe: function(O) {
+			},
+			execute: function(O) {
 				if (O.P.type !== 'extract_element') return false;
 				var path = O.P.param;
 				var updated_value = O.I.V.EXTRACT(path);
@@ -376,10 +293,11 @@ pg.planner = {
 				return O;
 			}
 		},
-		attribute-text: {
+		attribute_text: {
 			// (list of elements) -> (list of text)   elements must contains the texts exactly.  
 			pre: function(I, O) {
-				if (isDOMList(I.V)==false || isStringList(O.V)==false) {
+				I = (_.isArray(I))?I[0]:I;
+				if (isDomList(I.V)==false || isStringList(O.V)==false) {
 					console.log("type mismatch");
 					return false;
 				}
@@ -398,14 +316,20 @@ pg.planner = {
 				}
 				
 			},
-			eff: function(I, O){
+			generate: function(I, O){
+				I = (_.isArray(I))?I[0]:I;
 				O.I = [I];
 				O.P = {type:'Attribute',param:'text'};
 			}
 		},
-		substring_text{
+		substring_text: {
 			// (list of texts) -> (list of subtexts)  
 			pre: function(I, O) {
+				I = (_.isArray(I))?I[0]:I;
+				if (isStringList(I.V)==false || isStringList(O.V)==false) {
+					console.log("substring_text requires both to be string list.");
+					return false;
+				}
 				if (I.V.length!=O.V.length) {	
 					console.log("length mismatch"); 	
 					return false;	
@@ -417,20 +341,25 @@ pg.planner = {
 					}
 				}
 			},
-			eff: function(I, O) {
+			generate: function(I, O) {
 				// TBD
 			}
 		},
 		compose_text: {
 			// (multiple lists of texts) -> (list of texts)   all the init. must exist in goal  
 			pre: function(Is, O) {
+				if (_.every(Is, function(I){ return isStringList(I.V); }) == false) {
+					console.log("compose_text requires all the input to be text list.");
+					return false;
+				}
 				if (isStringList(O.V)==false) {
 					console.log("type mismatch");
 					return false;
 				}
 				length = O.V.length;
+
 				for(i in Is) {
-					if(isStringList(Is[i].V)==false)
+					if(isStringList(Is[i].V)==false) {
 						console.log("type mismatch");
 						return false;
 					}
@@ -450,7 +379,7 @@ pg.planner = {
 				}
 
 			},
-			eff: function(Is, O){
+			generate: function(Is, O){
 				if (!O.V) return false;
 				num_el = O.V.length;
 				_.each(Is, function(node, index) {
@@ -477,7 +406,7 @@ pg.planner = {
 				
 				order = _.map(positions, function(pos, index) {
 					return pos.index;
-				})
+				});
 
 				_.each(O.V, function(element, i1) {
 					var text = "";
@@ -485,14 +414,13 @@ pg.planner = {
 						text = text + Is[item.index].V[i1] + separator;
 					});
 					text = text.substring(0, text.length - separator.length);
-				})
+				});
 				
 				var node_goal = {V:O.V, I:Is, A:null, P:{type:'composer',param:{separator:separator, order: order}} };
 				var nodes = _.union(Is, node_goal);
 				return nodes;		
-
-				}
-			exe: function(O) {
+			},
+			execute: function(O) {
 				if (O.P.type !== 'composer') return false;
 				var order = O.P.param.order;
 				var separator = O.P.param.separator;
@@ -513,6 +441,7 @@ pg.planner = {
 		filter: {
 			// (list of object) -> (list of subtexts)  
 			pre: function(I, O) {
+				I = (_.isArray(I))?I[0]:I;
 				if (I.V.length<=O.V.length) {	
 					console.log("length of inputs must be bigger than that of outputs"); 	
 					return false;	
@@ -528,18 +457,19 @@ pg.planner = {
 				}
 				return true;
 			},
-			eff: function(I, O) {
+			generate: function(I, O) {
+				I = (_.isArray(I))?I[0]:I;
 				var goal_node;
-				if (_.isString(I.V[0]) {
+				if (_.isString(I.V[0])) {
 					indexs = []; // the index of input values corresponding to the output values
-					for (var value : O.V) {
-						indexs.push(I.V.indexOf(value))
+					for (var i in O.V) {
+						indexs.push(I.V.indexOf(O.V[i]))
 					}
 					indexs.sort();
 					// get bag of word
 					var bagOfWords = {};
-					for (var value : I.O) {
-						var words = value.split(" ");
+					for (var i in I.O) {
+						var words = I.O[i].split(" ");
 						for (var word in words) {
 							if (!(word in bagOfWords)) {
 								bagOfWords[word] = word;
@@ -549,7 +479,8 @@ pg.planner = {
 
 					// find the words that may be filter criteria
 					key_words = [];
-					for (var word in bagOfWords) {
+					for (var word_i in bagOfWords) {
+						var word = bagOfWords[word_i];
 						match_indexs = []
 						for (var i = 0; i < I.V.length; i++) {
 							if (value.contains(word)) {
@@ -569,8 +500,8 @@ pg.planner = {
 					// check equal
 					unique = O.V[0];
 					fail = false;
-					for (var value in O.V) {
-						if (value !== unique) {
+					for (var i in O.V) {
+						if (O.V[i] !== unique) {
 							fail = true;
 						}
 					}
@@ -594,8 +525,8 @@ pg.planner = {
 					// check odd and even
 					odd_count = 0;
 					even_count = 0;
-					for (var value in oV) {
-						if (value % 2 == 1) {
+					for (var i in oV) {
+						if (oV[i] % 2 == 1) {
 							odd_count++;
 						} else {
 							even_count++;
@@ -613,10 +544,10 @@ pg.planner = {
 				}
 				var nodes = _.union(I, node_goal);
 				return nodes;	
-			}	
-			exe: function(O) {
+			},	
+			execute: function(O) {
 				if (O.P.type !== 'filter') return false;
-				var booleans = filter.exe_helper(O);
+				var booleans = filter.execute_helper(O);
 				if (booleans.length !== O.V.length) console.error(e.track);
 				var filtered = []
 				for (var i = 0; i < booleans.length; i++) {
@@ -626,8 +557,8 @@ pg.planner = {
 				}
 				O.V = filtered;
 				return O;
-			}
-			exe_helper: function(O) {
+			},
+			execute_helper: function(O) {
 				if (O.P.type !== 'filter') return false;
 				var arg = O.P.arg;
 				var booleans = [];
@@ -672,104 +603,101 @@ pg.planner = {
 				return booleans;
 			}
 		}
-	},	// END OF ACTIONS //
-	
-
-	// OLD CODE //
-	generateGraph : function(ContextNodes,OutputNode) {
-		// a Node has V and P[], and id. 
-		//		data is an array of data
-		//		operations is an operation that contains,
-		//			inputNodes: a list of input nodes,
-		//			expr: the expression
-		// a Node may have multiple operations 
-		console.log("================================================");
-		console.log("Input:");
-		console.log(_.map(ContextNodes,function(node){ return node.V.join(",");}));
-		console.log("Output:");
-		console.log(OutputNode.V.join(","));
-		console.log("================================================");
-		var i = 0;
-		while(true) {// start generating new nodes from context nodes
-			console.log("Round "+i+" starts");
-			// create all combinations of (inputNode,argNode)
-			var IAList = chooseInputArgNodes(ContextNodes);
-			var emptyNode = new pg.Node();
-			emptyNode.id = emptyNode.id+"_empty";
-			// if(IAList.length>200) break;
-			_.each(IAList, function(IA) {
-				var nI=IA[0]; var nA=IA[1]; var nO=OutputNode;
-				console.log("Inference start----------");
-				// 1. try each (nI,nA,nO) to check whether the outputNode is reachable 
-				// add the result procedure to the OutputNode's operation
-				try{
-					var OperationReachingOutput = this.GenerateProcedureForGraph(nI,nO,nA,pg.language.Operation);	
-				} catch(e) {
-					console.error(e.stack);
-				}
-				if(OperationReachingOutput && OperationReachingOutput.length>0) {
-					OutputNode.candidateP = _.without(_.union(OutputNode.candidateP,OperationReachingOutput),null);
-				}
-				// 2. try each (nI,nA,[]) to create intermediate nodes
-				try{
-					var Ps = this.GenerateProcedureForGraph(nI,emptyNode,nA,pg.language.Operation);
-				} catch(e) {
-					console.error(e.stack);
-				}
-				_.each(_.without(Ps,null), function(p) {
-					var newValue = pg.language.evaluate(nI,nA,p);
-					if(_.filter(ContextNodes, function(existingNode) {
-						return isSameArray(existingNode.V,newValue);
-					}).length===0) {
-						ContextNodes.push(new pg.Node(pg.language.evaluate(nI,nA,p),p));
-					}
-				});
-			},this);
-			console.log("Round "+i+" is over");
-			console.log(_.map(ContextNodes,function(node){ return node.V.join(",");}));
-			if(OutputNode.candidateP.length>0 || i>=this.maxInferenceSteps) break;
-			else i++;
-		}
-		console.log("********************* END RESULT");
-		console.log(ContextNodes);
-		console.log(OutputNode);
-		console.log("*********************");
-		// return ContextNodes;
-		// now get the paths to reach OutputNode
-		// var pathToOutput = PathFromGraph(ContextNodes, OutputNode);
-		var resultGraph = new pg.Graph(ContextNodes);
-		resultGraph.sanityCheck();
-		if(OutputNode.candidateP===null) { // if no path found, then return paths to all the intermediate nodes
-			return resultGraph;  
-		} else { // if there's any path reaching to the output, then return paths to the output node
-			OutputNode.P 
-			resultGraph.addNode(OutputNode);
-			return resultGraph.getSubGraph(OutputNode.id);
-		}
-		// in the end, 
-
-	},
-	// it returns P[] which also contains links to input and arg nodes
-	generateProcedureForGraph : function(nI,nO,nA,L) {
-		// console.log("[GenerateProcedureForGraph]\t:");
-		// console.log(nI,nO,nA,L);
-		if(!L.constraint(nI,nO,nA)) return null;
-		var Op=null;
-		if(L.expr!==null) {  // if L is not leafnode of the language tree, then dig deeper
-			Op = _.map(L.expr, function(e) {
-				return this.GenerateProcedureForGraph(nI,nO,nA,e);
-			},this);
-		} else { // if L is a leaf, then return a new array of operations
-			Op = L.generateOperation(nI,nO,nA);
-		}
-		Op = _.flatten(_.without(Op,null));  // remove null operations
-		// if(L.type=="Operation" && Op!==null) {
-			// console.log("Inference finished for a set of IOA");
-			// console.log(nI.V,nO.V,nA.V);
-			// console.log(_.map(Op, function(p){return p.type;}));
-		// }
-		return Op;
-	}
-
-
+	}	// END OF METHODS //
 };
+
+	// // OLD CODE //
+	// generateGraph : function(ContextNodes,OutputNode) {
+	// 	// a Node has V and P[], and id. 
+	// 	//		data is an array of data
+	// 	//		operations is an operation that contains,
+	// 	//			inputNodes: a list of input nodes,
+	// 	//			expr: the expression
+	// 	// a Node may have multiple operations 
+	// 	console.log("================================================");
+	// 	console.log("Input:");
+	// 	console.log(_.map(ContextNodes,function(node){ return node.V.join(",");}));
+	// 	console.log("Output:");
+	// 	console.log(OutputNode.V.join(","));
+	// 	console.log("================================================");
+	// 	var i = 0;
+	// 	while(true) {// start generating new nodes from context nodes
+	// 		console.log("Round "+i+" starts");
+	// 		// create all combinations of (inputNode,argNode)
+	// 		var IAList = chooseInputArgNodes(ContextNodes);
+	// 		var emptyNode = new pg.Node();
+	// 		emptyNode.id = emptyNode.id+"_empty";
+	// 		// if(IAList.length>200) break;
+	// 		_.each(IAList, function(IA) {
+	// 			var nI=IA[0]; var nA=IA[1]; var nO=OutputNode;
+	// 			console.log("Inference start----------");
+	// 			// 1. try each (nI,nA,nO) to check whether the outputNode is reachable 
+	// 			// add the result procedure to the OutputNode's operation
+	// 			try{
+	// 				var OperationReachingOutput = this.GenerateProcedureForGraph(nI,nO,nA,pg.language.Operation);	
+	// 			} catch(e) {
+	// 				console.error(e.stack);
+	// 			}
+	// 			if(OperationReachingOutput && OperationReachingOutput.length>0) {
+	// 				OutputNode.candidateP = _.without(_.union(OutputNode.candidateP,OperationReachingOutput),null);
+	// 			}
+	// 			// 2. try each (nI,nA,[]) to create intermediate nodes
+	// 			try{
+	// 				var Ps = this.GenerateProcedureForGraph(nI,emptyNode,nA,pg.language.Operation);
+	// 			} catch(e) {
+	// 				console.error(e.stack);
+	// 			}
+	// 			_.each(_.without(Ps,null), function(p) {
+	// 				var newValue = pg.language.evaluate(nI,nA,p);
+	// 				if(_.filter(ContextNodes, function(existingNode) {
+	// 					return isSameArray(existingNode.V,newValue);
+	// 				}).length===0) {
+	// 					ContextNodes.push(new pg.Node(pg.language.evaluate(nI,nA,p),p));
+	// 				}
+	// 			});
+	// 		},this);
+	// 		console.log("Round "+i+" is over");
+	// 		console.log(_.map(ContextNodes,function(node){ return node.V.join(",");}));
+	// 		if(OutputNode.candidateP.length>0 || i>=this.maxInferenceSteps) break;
+	// 		else i++;
+	// 	}
+	// 	console.log("********************* END RESULT");
+	// 	console.log(ContextNodes);
+	// 	console.log(OutputNode);
+	// 	console.log("*********************");
+	// 	// return ContextNodes;
+	// 	// now get the paths to reach OutputNode
+	// 	// var pathToOutput = PathFromGraph(ContextNodes, OutputNode);
+	// 	var resultGraph = new pg.Graph(ContextNodes);
+	// 	resultGraph.sanityCheck();
+	// 	if(OutputNode.candidateP===null) { // if no path found, then return paths to all the intermediate nodes
+	// 		return resultGraph;  
+	// 	} else { // if there's any path reaching to the output, then return paths to the output node
+	// 		OutputNode.P 
+	// 		resultGraph.addNode(OutputNode);
+	// 		return resultGraph.getSubGraph(OutputNode.id);
+	// 	}
+	// 	// in the end, 
+
+	// },
+	// // it returns P[] which also contains links to input and arg nodes
+	// generateProcedureForGraph : function(nI,nO,nA,L) {
+	// 	// console.log("[GenerateProcedureForGraph]\t:");
+	// 	// console.log(nI,nO,nA,L);
+	// 	if(!L.constraint(nI,nO,nA)) return null;
+	// 	var Op=null;
+	// 	if(L.expr!==null) {  // if L is not leafnode of the language tree, then dig deeper
+	// 		Op = _.map(L.expr, function(e) {
+	// 			return this.GenerateProcedureForGraph(nI,nO,nA,e);
+	// 		},this);
+	// 	} else { // if L is a leaf, then return a new array of operations
+	// 		Op = L.generateOperation(nI,nO,nA);
+	// 	}
+	// 	Op = _.flatten(_.without(Op,null));  // remove null operations
+	// 	// if(L.type=="Operation" && Op!==null) {
+	// 		// console.log("Inference finished for a set of IOA");
+	// 		// console.log(nI.V,nO.V,nA.V);
+	// 		// console.log(_.map(Op, function(p){return p.type;}));
+	// 	// }
+	// 	return Op;
+	// }

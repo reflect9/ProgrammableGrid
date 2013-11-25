@@ -3,6 +3,18 @@
 */
 
 
+var test = function(problem_title){
+	try {
+		problem_nodes = pg.problems[problem_title]();
+		result = pg.planner.plan(problem_nodes[0],problem_nodes[1]);
+		return result;
+	} catch(e) {
+		console.log(e.stack);
+	}
+};
+
+
+
 NODE_TYPE_TRIGGER = 'trigger';
 NODE_TYPE_ELEMENT = 'element';
 NODE_TYPE_VARIABLE = 'variable';
@@ -12,6 +24,30 @@ NODE_TYPE_JS = 'javascript';
 pg.backup_page = $("html").clone().get(0);
 
 pg.problems = {
+	'set_attribute': function() {
+		var el = _.map([1,2,3,4], function(n){ return $("<div>"+n+"</div>").get(0); });
+		var new_text = [5,6,7,8];
+		var el_modified = _.map(el, function(e,i){ return $(e).clone().text(new_text[i]).get(0);});
+		var I = [
+			{I:undefined, V:el, P:undefined},
+			{I:undefined, V:new_text, P:undefined}
+		];
+		var O = {I:undefined, V:el_modified, P:undefined};
+		return [I,O];
+	}, 
+	'extract_text': function() {
+		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
+		if(window.location.href != BASE_URL) {
+			window.location.replace(BASE_URL);
+			console.log("try again in this page.");
+			return;
+		}
+		var value_body = $("body");
+		
+
+		
+
+	},
 	'scholar_extract_title': function() {
 		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
 		if(window.location.href != BASE_URL) {

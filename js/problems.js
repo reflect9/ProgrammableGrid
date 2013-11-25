@@ -42,11 +42,10 @@ pg.problems = {
 			console.log("try again in this page.");
 			return;
 		}
-		var value_body = $("body");
-		
-
-		
-
+		var value_body = $("html").get(0);
+		var initial_node = {I:undefined, P:undefined, V:[value_body]};
+		var goal_node = {I:undefined, P:undefined, V:["CTArcade: learning computational thinking while training virtual characters through game play", "[PDF][PDF] Rule Creation in CTArcade: Teaching Abstract Computational Thinking From Concrete Guidelines", "[PDF][PDF] CTArcade: Computational Thinking with Games in School Age Children", "[PDF][PDF] Robobuilder: a computational thinking game", "[PDF][PDF] Capstone Project–Designing a touch screen application to help young children develop programming skills"]};
+		return [initial_node, goal_node];
 	},
 	'scholar_extract_title': function() {
 		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';

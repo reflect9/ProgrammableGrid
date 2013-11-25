@@ -1,5 +1,6 @@
 pg.planner = {
 	plan: function(Is, O){
+		if(!_.isArray(Is)) Is=[Is];
 		// HTN Planning Algorithm
 		var null_check = _.every([Is, O, O.V], function(obj) {
 			if (obj===null || obj===undefined) {
@@ -134,7 +135,7 @@ pg.planner = {
 				I = (_.isArray(I))?I[0]:I;
 				var el_I = I.V[0];
 				var el_containing_O = _.map(O.V, function(o_t) {
-					return $(el_I).find("*.contains('"+o_t+"')").last();
+					return $(el_I).find("*:contains('"+o_t+"')").last();
 				},this);
 				var text_containing_O = _.map(el_containing_O, function(el) { return $(el).text(); });
 				
@@ -152,7 +153,7 @@ pg.planner = {
 				else return false;
 			},
 			execute: function(O) {
-				
+
 
 				return O;
 			}
@@ -252,6 +253,7 @@ pg.planner = {
 		},
 		set_attribute: { // takes two input nodes (original el and new values) and returns modified elements
 			pre: function(Is, O) {
+				if(!_.isArray(Is) || Is.length<2) return false;
 				var original_el = Is[0].V;
 				var new_attribute = Is[1].V;
 				var modified_el = O.V;
@@ -264,6 +266,7 @@ pg.planner = {
 				return true;
 			}, 
 			generate: function(Is, O) {
+				if(!_.isArray(Is) || Is.length<2) return false;
 				O.I=Is;   O.P={type:"set_attribute",param:"text"};
 				return O;
 			}
@@ -348,6 +351,7 @@ pg.planner = {
 		compose_text: {
 			// (multiple lists of texts) -> (list of texts)   all the init. must exist in goal  
 			pre: function(Is, O) {
+				if(!_.isArray(Is) || Is.length<2) return false;
 				if (_.every(Is, function(I){ return isStringList(I.V); }) == false) {
 					console.log("compose_text requires all the input to be text list.");
 					return false;
@@ -380,6 +384,7 @@ pg.planner = {
 
 			},
 			generate: function(Is, O){
+				if(!_.isArray(Is) || Is.length<2) return false;
 				if (!O.V) return false;
 				num_el = O.V.length;
 				_.each(Is, function(node, index) {

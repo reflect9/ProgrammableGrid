@@ -151,11 +151,7 @@ pg.planner = {
 				if(result_A &&result_B &&result_C) return _.union(result_A,result_B,result_C);
 				else return false;
 			},
-			execute: function(O) {
-				
-
-				return O;
-			}
+			// no need for execution
 		},
 		modify_element_attribute: {
 			pre: function(I, O) {
@@ -246,8 +242,7 @@ pg.planner = {
 					O = {I:n_inter_3, V:O.V, P:{type:"set_attribute",param:"text"}};
 					return _.union(nodes_extract_original_el, nodes_extract_rep_el, list_of_nodes_extacting_parts, nodes_compose, O);
 				}
-
-				
+				// no need for execution
 			}
 		},
 		set_attribute: { // takes two input nodes (original el and new values) and returns modified elements
@@ -265,6 +260,14 @@ pg.planner = {
 			}, 
 			generate: function(Is, O) {
 				O.I=Is;   O.P={type:"set_attribute",param:"text"};
+				return O;
+			},
+			execute: function(O) {
+				copy = $(O.I[0]).clone();
+				_.each(copy, function(el, index) {
+					%(el).text(O.I[1][index]);
+				})
+				O.V = copy;
 				return O;
 			}
 		},
@@ -320,6 +323,17 @@ pg.planner = {
 				I = (_.isArray(I))?I[0]:I;
 				O.I = [I];
 				O.P = {type:'Attribute',param:'text'};
+			},
+
+			execute: function(O) {
+				if (O.P.type !== 'Attribute') return false;
+				texts = [];
+				I = (_.isArray(O.I))?O.I[0]:I;
+				for (var el in I) {
+					texts.push($(el).text());
+				}
+				O.V = texts;
+				return O;
 			}
 		},
 		substring_text: {

@@ -548,4 +548,40 @@ function UserException(message) {
    this.name = "UserException";
 }
 
+function strNode(nodes) {
+	var str = "";
+	for (var i in nodes) {
+		var n= nodes[i];
+		var input_desc = "";
+		// generate I 
+		if(_.isArray(n.I)) {
+			_.each(n.I, function(n) {
+				var node_num = nodes.indexOf(n);
+				input_desc += "NODE("+node_num +"),";
+			},this);
+		} else if(n.I){
+			input_desc = "NODE("+nodes.indexOf(n.I)+")";
+		} else {
+			input_desc = "__";
+		}
+		// generate V 
+		var value_desc = "[";
+		_.each(n.V, function(v) {
+			if(isDom(v)) {
+				value_desc += "(D)"+ $(v).clone().wrap('<p>').parent().html()+",";
+			} else value_desc += v+",";
+		},this);
+		value_desc +="]";
+
+		// generate P
+		var p_desc = (n.P && n.P.type)?n.P.type+", param:"+n.P.param:'__'; 
+		
+		// compose all
+		var line = "NODE("+i+")\n\tINPUT:"+input_desc+"\n\tP:"+p_desc+"\n\tV:"+value_desc+"\n";
+		str+=line;
+	}
+	return str;
+}
+
+
 

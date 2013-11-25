@@ -143,11 +143,11 @@ pg.planner = {
 				var n_inter_1 = {I:undefined, V:el_containing_O, P:undefined};
 				var n_inter_2 = {I:undefined, V:text_containing_O, P:undefined};
 				//sub-prob 	A. (enclosing element) --[extract_element]--> (smaller elements containing the text list)
-				result_A = extract_element.generate(I, n_inter_1);
+				result_A = pg.planner.methods.extract_element.generate(I, n_inter_1);
 				//			B. (smaller elements) --[attribute]--> (text' list: not exactly the same)
-				result_B = attribute.generate(n_inter_1, n_inter_2);
+				result_B = pg.planner.methods.attribute.generate(n_inter_1, n_inter_2);
 				//			C. (text' list) --[string-transform]--> (text list)
-				result_C = string_transform.generate(n_inter_3, O);
+				result_C = pg.planner.methods.string_transform.generate(n_inter_3, O);
 
 				if(result_A &&result_B &&result_C) return _.union(result_A,result_B,result_C);
 				else return false;
@@ -269,7 +269,7 @@ pg.planner = {
 			execute: function(O) {
 				copy = $(O.I[0]).clone();
 				_.each(copy, function(el, index) {
-					%(el).text(O.I[1][index]);
+					$(el).text(O.I[1][index]);
 				})
 				O.V = copy;
 				return O;

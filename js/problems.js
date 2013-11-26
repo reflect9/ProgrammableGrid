@@ -60,34 +60,17 @@ pg.problems = {
 		var value_author = _.map(value_pdf, function(node){
 			return $(node).parents(".gs_r").find(".gs_a").text();
 		});
-		// var value_year = _.map(value_pdf, function(node){
-		// 	var article_el = $(node).parents(".gs_r");
-		// 	var author_name = $(article_el).find(".gs_a").text();
-		// 	var year = author_name.match(/\d{4}/);
-		// 	return (year)?year[0]:year;
-		// });
 		var value_title = _.map(value_pdf, function(node){
 			var article_el = $(node).parents(".gs_r");
 			var title = $(article_el).find("h3.gs_rt>a").text();
 			// title = title.replace(/\W/g,"-");
 			return title;
 		});
-		var value_pdf_modified = _.map(value_pdf, function(node, index) {
-			var article_el = $(node).parents(".gs_r");
-			var title = $(article_el).find("h3.gs_rt>a").text();
+		var value_pdf_modified = [];
+		for(var i=0;i<value_title.length;i++) {
+			value_pdf_modified.push(value_title[i]+value_author[i]);
 
-			// title = title.replace(/\W/g,"-");
-			var author_name = $(article_el).find(".gs_a").text();
-			//first_author = author_name.replace(/[,-].*/g,"").replace(/ /g,"");
-			first_author = author_name;
-			var year = author_name.match(/\d{4}/);
-			var file_name = title+"-"+first_author+"-"+year;
-			$(node).attr("download",file_name);
-			return $(node).get(0);
-		}); 
-		var value_download_text = _.map(value_pdf_modified, function(node){
-			return $(node).attr("download");
-		});
+		}
 		var initial_nodes = [
 			{	V:value_title,
 				P:null,
@@ -101,6 +84,65 @@ pg.problems = {
 			}
 		];
 		var goal_node = 
+			{	V:value_pdf_modified,
+				P:null,
+				I:null,
+				A:null,
+			};
+		return [initial_nodes, goal_node];
+	},
+	'modify_element_attribute': function() {
+		// initialize page and initial node set
+		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
+		if(window.location.href != BASE_URL) {
+			window.location.replace(BASE_URL);
+			console.log("try again in this page.");
+			return;
+		}
+		var value_body = $("body");
+		var value_articles = $(".gs_r"); 
+		var value_pdf = $(".gs_md_wp"); 
+		var value_pdf_modified = _.map(value_pdf, function(node, index) {
+			var article_el = $(node).parents(".gs_r");
+			var title = $(article_el).find("h3.gs_rt>a").text();
+			// title = title.replace(/\W/g,"-");
+			var author_name = $(article_el).find(".gs_a").text();
+<<<<<<< HEAD
+			//first_author = author_name.replace(/[,-].*/g,"").replace(/ /g,"");
+			first_author = author_name;
+			var year = author_name.match(/\d{4}/);
+			var file_name = title+"-"+first_author+"-"+year;
+=======
+			// first_author = author_name.replace(/[,-].*/g,"").replace(/ /g,"");
+			// first_author = author_name;
+			// var year = author_name.match(/\d{4}/);
+			// var year = author_name;
+			var file_name = title+"^"+author_name
+>>>>>>> 05a6934c901cd9f8cffc63e92448c470a41198fe
+			$(node).attr("download",file_name);
+			return $(node).get(0);
+		}); 
+		var value_download_text = _.map(value_pdf_modified, function(node){
+			return $(node).attr("download");
+		});
+		var initial_nodes = [
+<<<<<<< HEAD
+			{	V:value_title,
+				P:null,
+				I:null,
+				A:null,
+			},
+			{	V:value_author,
+=======
+			{	V:value_body,
+>>>>>>> 05a6934c901cd9f8cffc63e92448c470a41198fe
+				P:null,
+				I:null,
+				A:null,
+			}
+		];
+		var goal_node = 
+<<<<<<< HEAD
 			{	V:value_download_text,
 				P:null,
 				I:null,
@@ -112,8 +154,22 @@ pg.problems = {
 		pg.planner.methods.compose_text.generate(initial_nodes, goal_node);
 
 		return [initial_nodes, goal_node];
+=======
+			{	V:value_pdf_modified,
+				P:null,
+				I:null,
+				A:null,
+			};
+		// run planner
+		return [initial_nodes, goal_node];
+
+
+>>>>>>> 05a6934c901cd9f8cffc63e92448c470a41198fe
 
 	},
+
+
+
 	'scholar_extract_title': function() {
 		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
 		if(window.location.href != BASE_URL) {

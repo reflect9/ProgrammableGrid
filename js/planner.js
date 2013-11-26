@@ -135,7 +135,7 @@ pg.planner = {
 				I = (_.isArray(I))?I[0]:I;
 				var el_I = I.V[0];
 				var el_containing_O = _.map(O.V, function(o_t) {
-					return $(el_I).find("*:contains('"+o_t+"')").last();
+					return $(el_I).find("*:contains('"+o_t+"')").last().get(0);
 				},this);
 				var text_containing_O = _.map(el_containing_O, function(el) { return $(el).text(); });
 				
@@ -270,7 +270,7 @@ pg.planner = {
 				copy = $(O.I[0]).clone();
 				_.each(copy, function(el, index) {
 					$(el).text(O.I[1][index]);
-				})
+				});
 				O.V = copy;
 				return O;
 			}

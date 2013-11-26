@@ -112,6 +112,7 @@ pg.problems = {
 			// first_author = author_name;
 			// var year = author_name.match(/\d{4}/);
 			// var year = author_name;
+
 			var file_name = title+"^"+author_name;
 			$(node).attr("download",file_name);
 			return $(node).get(0);
@@ -131,12 +132,12 @@ pg.problems = {
 				P:null,
 				I:null,
 				A:null,
-			};
+			}
+		;
 		// run planner
+		//if (!pg.planner) pg.planner = new 
+		pg.planner.methods.compose_text.generate(initial_nodes, goal_node);
 		return [initial_nodes, goal_node];
-
-
-
 	},
 	'filter_element': function() {
 		// initialize page and initial node set

@@ -250,6 +250,7 @@ pg.planner = {
 		set_attribute: { // takes two input nodes (original el and new values) and returns modified elements
 			pre: function(Is, O) {
 				if(!_.isArray(Is) || Is.length<2) return false;
+				if(!isDomList(Is[0].V)) return false;
 				var original_el = Is[0].V;
 				var new_attribute = Is[1].V;
 				var modified_el = O.V;
@@ -326,12 +327,12 @@ pg.planner = {
 			generate: function(I, O){
 				I = (_.isArray(I))?I[0]:I;
 				O.I = [I];
-				O.P = {type:'Attribute',param:'text'};
+				O.P = {type:'attribute_text',param:'text'};
 				return O;
 			},
 
 			execute: function(O) {
-				if (O.P.type !== 'Attribute') return false;
+				if (O.P.type !== 'attribute_text') return false;
 				texts = [];
 				var I = (_.isArray(O.I))?O.I[0]:I;
 				for (var el in I) {
@@ -405,7 +406,7 @@ pg.planner = {
 						}
 					}
 				}
-
+				return true;
 			},
 			generate: function(Is, O){
 				if(!_.isArray(Is) || Is.length<2) return false;

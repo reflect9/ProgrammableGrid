@@ -78,7 +78,8 @@ pg.problems = {
 
 			// title = title.replace(/\W/g,"-");
 			var author_name = $(article_el).find(".gs_a").text();
-			first_author = author_name.replace(/[,-].*/g,"").replace(/ /g,"");
+			//first_author = author_name.replace(/[,-].*/g,"").replace(/ /g,"");
+			first_author = author_name;
 			var year = author_name.match(/\d{4}/);
 			var file_name = title+"-"+first_author+"-"+year;
 			$(node).attr("download",file_name);
@@ -97,25 +98,20 @@ pg.problems = {
 				P:null,
 				I:null,
 				A:null,
-			},
-			{	V:value_year,
-				P:null,
-				I:null,
-				A:null,
 			}
 		];
-		var goal_nodes = [
+		var goal_node = 
 			{	V:value_download_text,
 				P:null,
 				I:null,
 				A:null,
 			}
-		];
+		;
 		// run planner
 		//if (!pg.planner) pg.planner = new 
-		pg.planner.task_compose(initial_nodes, goal_nodes);
+		pg.planner.methods.compose_text.generate(initial_nodes, goal_node);
 
-		return [initial_nodes, goal_nodes];
+		return [initial_nodes, goal_node];
 
 	},
 	'scholar_extract_title': function() {

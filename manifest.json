@@ -17,7 +17,7 @@
   "content_scripts" : [
     {
       "matches" : ["<all_urls>"],
-      "js" : [	"js/lib/jquery.min.js",
+      "js" : [	"js/lib/jquery-2.0.3.min.js",
       			"js/lib/underscore-min.js",
             "js/lib/async.js",
             "js/utils.js",
@@ -52,7 +52,7 @@
     "http://*/", "https://*/"
   ],
   "web_accessible_resources": [
-
+    "js/lib/jquery-2.0.3.min.map"
   ],
   "manifest_version": 2
 }

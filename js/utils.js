@@ -568,7 +568,7 @@ function strNode(nodes) {
 		var value_desc = "[";
 		_.each(n.V, function(v) {
 			if(isDom(v)) {
-				value_desc += "(D)"+ $(v).clone().wrap('<p>').parent().html()+",";
+				value_desc += "(D)"+ $(v).clone().wrap('<p>').parent().html().substring(0,100)+",";
 			} else value_desc += v+",";
 		},this);
 		value_desc +="]";

@@ -54,7 +54,7 @@ pg.problems = {
 			console.log("try again in this page.");
 			return;
 		}
-		var value_body = $("body");
+		var value_body = $("body").get(0);
 		var value_articles = $(".gs_r"); 
 		var value_pdf = $(".gs_md_wp"); 
 		var value_author = _.map(value_pdf, function(node){
@@ -99,9 +99,10 @@ pg.problems = {
 			console.log("try again in this page.");
 			return;
 		}
+		pg.backup_page = $("body").clone().get(0);
 		var value_body = $("body");
-		var value_articles = $(".gs_r"); 
-		var value_pdf = $(".gs_md_wp"); 
+		var value_articles = $(value_body).find(".gs_r"); 
+		var value_pdf = $(value_body).find(".gs_md_wp"); 
 		var value_pdf_modified = _.map(value_pdf, function(node, index) {
 			var article_el = $(node).parents(".gs_r");
 			var title = $(article_el).find("h3.gs_rt>a").text();
@@ -111,22 +112,22 @@ pg.problems = {
 			// first_author = author_name;
 			// var year = author_name.match(/\d{4}/);
 			// var year = author_name;
-			var file_name = title+"^"+author_name
+			var file_name = title+"^"+author_name;
 			$(node).attr("download",file_name);
 			return $(node).get(0);
 		}); 
-		var value_download_text = _.map(value_pdf_modified, function(node){
-			return $(node).attr("download");
-		});
+		// var value_download_text = _.map(value_pdf_modified, function(node){
+		// 	return $(node).attr("download");
+		// });
 		var initial_nodes = [
-			{	V:value_body,
+			{	V:[pg.backup_page],
 				P:null,
 				I:null,
 				A:null,
 			}
 		];
 		var goal_node = 
-			{	V:value_pdf_modified,
+			{	V:[$(value_body).get(0)],
 				P:null,
 				I:null,
 				A:null,
@@ -137,7 +138,33 @@ pg.problems = {
 
 
 	},
+	'filter_element': function() {
+		// initialize page and initial node set
+		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
+		if(window.location.href != BASE_URL) {
+			window.location.replace(BASE_URL);
+			console.log("try again in this page.");
+			return;
+		}
 
+		var org_list = $(".gs_r");
+		var filtered_list = $(".gs_r:contains('PDF')");
+		var initial_nodes = [
+			{	V:[$(org_list).toArray()],
+				P:null,
+				I:null,
+				A:null,
+			}
+		];
+		var goal_node = 
+			{	V:[$(filtered_list).toArray()],
+				P:null,
+				I:null,
+				A:null,
+			};
+		// run planner
+		return [initial_nodes, goal_node];
+	},
 
 
 	'scholar_extract_title': function() {

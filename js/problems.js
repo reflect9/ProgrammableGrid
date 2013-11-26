@@ -60,33 +60,17 @@ pg.problems = {
 		var value_author = _.map(value_pdf, function(node){
 			return $(node).parents(".gs_r").find(".gs_a").text();
 		});
-		// var value_year = _.map(value_pdf, function(node){
-		// 	var article_el = $(node).parents(".gs_r");
-		// 	var author_name = $(article_el).find(".gs_a").text();
-		// 	var year = author_name.match(/\d{4}/);
-		// 	return (year)?year[0]:year;
-		// });
 		var value_title = _.map(value_pdf, function(node){
 			var article_el = $(node).parents(".gs_r");
 			var title = $(article_el).find("h3.gs_rt>a").text();
 			// title = title.replace(/\W/g,"-");
 			return title;
 		});
-		var value_pdf_modified = _.map(value_pdf, function(node, index) {
-			var article_el = $(node).parents(".gs_r");
-			var title = $(article_el).find("h3.gs_rt>a").text();
+		var value_pdf_modified = [];
+		for(var i=0;i<value_title.length;i++) {
+			value_pdf_modified.push(value_title[i]+value_author[i]);
 
-			// title = title.replace(/\W/g,"-");
-			var author_name = $(article_el).find(".gs_a").text();
-			first_author = author_name.replace(/[,-].*/g,"").replace(/ /g,"");
-			var year = author_name.match(/\d{4}/);
-			var file_name = title+"-"+first_author+"-"+year;
-			$(node).attr("download",file_name);
-			return $(node).get(0);
-		}); 
-		var value_download_text = _.map(value_pdf_modified, function(node){
-			return $(node).attr("download");
-		});
+		}
 		var initial_nodes = [
 			{	V:value_title,
 				P:null,
@@ -97,24 +81,15 @@ pg.problems = {
 				P:null,
 				I:null,
 				A:null,
-			},
-			{	V:value_year,
-				P:null,
-				I:null,
-				A:null,
 			}
 		];
 		var goal_nodes = [
-			{	V:value_download_text,
+			{	V:value_pdf_modified,
 				P:null,
 				I:null,
 				A:null,
 			}
 		];
-		// run planner
-		//if (!pg.planner) pg.planner = new 
-		pg.planner.task_compose(initial_nodes, goal_nodes);
-
 		return [initial_nodes, goal_nodes];
 
 	},

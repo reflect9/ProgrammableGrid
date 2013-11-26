@@ -81,7 +81,7 @@ pg.planner = {
 					var i_inter = {I:I, V:i_texts, P:undefined};
 					var o_inter = {I:null, V:i_texts, P:undefined};
 					if (filter.pre(i_inter, o_inter)) {
-						var result = filter.generate(i_inter, o_inter);
+						var result = pg.planner.methods.filter.generate(i_inter, o_inter);
 						if (result) {
 							var el_node = {I:I, V:i_els, P:{type:"Select", param:path}};
 
@@ -106,7 +106,7 @@ pg.planner = {
 				var original_els = O.I[0];
 				var extracted_keys = O.I[1];
 				var temp_node = {I:extracted_keys, V:null, P:{type:'filter', param: O.P.param}};
-				var booleans = filter.execute_helper(temp_node);
+				var booleans = pg.planner.methods.filter.execute_helper(temp_node);
 
 				if (booleans.length !== O.V.length) console.error(e.track);
 				var filtered = []
@@ -145,9 +145,9 @@ pg.planner = {
 				//sub-prob 	A. (enclosing element) --[extract_element]--> (smaller elements containing the text list)
 				result_A = pg.planner.methods.extract_element.generate(I, n_inter_1);
 				//			B. (smaller elements) --[attribute]--> (text' list: not exactly the same)
-				result_B = pg.planner.methods.attribute.generate(n_inter_1, n_inter_2);
+				result_B = pg.planner.methods.attribute_text.generate(n_inter_1, n_inter_2);
 				//			C. (text' list) --[string-transform]--> (text list)
-				result_C = pg.planner.methods.string_transform.generate(n_inter_3, O);
+				result_C = pg.planner.methods.substring.generate(n_inter_2, O);
 
 				if(result_A &&result_B &&result_C) return _.union(result_A,result_B,result_C);
 				else return false;
@@ -199,7 +199,7 @@ pg.planner = {
 				});
 				if (mt_exist_in_rep_el) {
 					// we don't need decomposition. simply extract text from rep_el. 
-					var nodes_extract_original_el = extract_element.generate(I, n_inter_1);			
+					var nodes_extract_original_el = pg.planner.methods.extract_element.generate(I, n_inter_1);			
 					var nodes_extract_rep_el = [n_rep_el];
 					var nodes_extraction = extract-text(n_rep_el, n_inter_3);
 					O = {I:n_inter_3, V:O.V, P:{type:"set_attribute",param:"text"}};
@@ -237,7 +237,7 @@ pg.planner = {
 						return _.last(p);
 					})
 					// now assemble all
-					var nodes_extract_original_el = extract_element.generate(I, n_inter_1);			
+					var nodes_extract_original_el = pg.planner.methods.extract_element.generate(I, n_inter_1);			
 					var nodes_extract_rep_el = [n_rep_el];
 					var list_of_nodes_extracting_parts = extraction_programs;
 					var nodes_compose = compose-text(last_nodes, n_inter_3);
@@ -327,12 +327,13 @@ pg.planner = {
 				I = (_.isArray(I))?I[0]:I;
 				O.I = [I];
 				O.P = {type:'Attribute',param:'text'};
+				return O;
 			},
 
 			execute: function(O) {
 				if (O.P.type !== 'Attribute') return false;
 				texts = [];
-				I = (_.isArray(O.I))?O.I[0]:I;
+				var I = (_.isArray(O.I))?O.I[0]:I;
 				for (var el in I) {
 					texts.push($(el).text());
 				}
@@ -340,7 +341,7 @@ pg.planner = {
 				return O;
 			}
 		},
-		substring_text: {
+		substring: {
 			// (list of texts) -> (list of subtexts)  
 			pre: function(I, O) {
 				I = (_.isArray(I))?I[0]:I;
@@ -360,7 +361,15 @@ pg.planner = {
 				}
 			},
 			generate: function(I, O) {
-				// TBD
+				I = (_.isArray(I))?I[0]:I;
+				O.I = [I];
+				O.P = {type:'substring',param:'r/.*/'};
+				return O;
+			},
+			execute: function(O) {
+				var I = (_.isArray(O.I))?O.I[0]:O.I;
+				O.V = I.V;
+				return O;
 			}
 		},
 		compose_text: {

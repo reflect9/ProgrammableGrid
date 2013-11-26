@@ -289,7 +289,7 @@ pg.planner = {
 				I = (_.isArray(I))?I[0]:I;
 				var JQueryPath = $(I.V[0]).findQuerySelector(O.V);
 				O.I = I;
-				O.P = {type:'Select',param:JQueryPath};
+				O.P = {type:'extract_element',param:JQueryPath};
 				return O;
 			},
 			execute: function(O) {

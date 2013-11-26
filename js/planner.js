@@ -15,10 +15,13 @@ pg.planner = {
 		doable_methods = [];
 		_.each(_.pairs(pg.planner.methods), function(ml) {
 			var method_name = ml[0];	var method = ml[1];
+			// console.log("checking whether "+method_name+" is doable.");
 			if (method.pre(Is, O)) {
 				console.log(method_name + " is doable;");
 				doable_methods.push(method);
-			} 
+			} else {
+				console.log(method_name + " is not doable;");
+			}
 		},this);
 		if (doable_methods.length == 0) {
 			console.log("no method is doable");
@@ -28,7 +31,7 @@ pg.planner = {
 		o = doable_methods;
 		for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
 		doable_methods = o;
-
+		console.log("doable_methods: " + doable_methods);
 		// Try to execute each doable method
 		solutions = _.map(doable_methods, function(method){
 			result = method.generate(Is, O);
@@ -157,15 +160,15 @@ pg.planner = {
 		},
 		modify_element_attribute: {
 			pre: function(I, O) {
-				I = (_.isArray(I))?I[0]:I;
+				var I0 = (_.isArray(I))?I[0]:I;
 				// Initial_node value must contails all the goal_node values 
-				if (!isDomList(I.V) || !isDomList(O.V)) return false;
-				if (I.V.length!=1) return false;
+				if (!isDomList(I0.V) || !isDomList(O.V)) return false;
+				if (I0.V.length!=1) return false;
 				var JQuery_path_to_O = _.map(O.V, function(o) {
 					return $(o).pathWithNth("html");
 				});
 				var original_el = _.map(JQuery_path_to_O, function(path) {
-					return $(I).find(path).get(0);
+					return $(I0.V).find(path).get(0);
 				});
 				if (original_el.length == JQuery_path_to_O.length) {
 					if (isDomList(original_el)) return true;

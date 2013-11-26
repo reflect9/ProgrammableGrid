@@ -44,8 +44,79 @@ pg.problems = {
 		}
 		var value_body = $("html").get(0);
 		var initial_node = {I:undefined, P:undefined, V:[value_body]};
-		var goal_node = {I:undefined, P:undefined, V:["CTArcade: learning computational thinking while training virtual characters through game play", "[PDF][PDF] Rule Creation in CTArcade: Teaching Abstract Computational Thinking From Concrete Guidelines", "[PDF][PDF] CTArcade: Computational Thinking with Games in School Age Children", "[PDF][PDF] Robobuilder: a computational thinking game", "[PDF][PDF] Capstone Project–Designing a touch screen application to help young children develop programming skills"]};
+		var goal_node = {I:undefined, P:undefined, V:["Rule Creation in CTArcade: Teaching Abstract Computational Thinking From Concrete Guidelines", "CTArcade: Computational Thinking with Games in School Age Children", "Robobuilder: a computational thinking game", "Capstone Project–Designing a touch screen application to help young children develop programming skills"]};
 		return [initial_node, goal_node];
+	},
+	'compose_text': function() {
+		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
+		if(window.location.href != BASE_URL) {
+			window.location.replace(BASE_URL);
+			console.log("try again in this page.");
+			return;
+		}
+		var value_body = $("body");
+		var value_articles = $(".gs_r"); 
+		var value_pdf = $(".gs_md_wp"); 
+		var value_author = _.map(value_pdf, function(node){
+			return $(node).parents(".gs_r").find(".gs_a").text();
+		});
+		// var value_year = _.map(value_pdf, function(node){
+		// 	var article_el = $(node).parents(".gs_r");
+		// 	var author_name = $(article_el).find(".gs_a").text();
+		// 	var year = author_name.match(/\d{4}/);
+		// 	return (year)?year[0]:year;
+		// });
+		var value_title = _.map(value_pdf, function(node){
+			var article_el = $(node).parents(".gs_r");
+			var title = $(article_el).find("h3.gs_rt>a").text();
+			// title = title.replace(/\W/g,"-");
+			return title;
+		});
+		var value_pdf_modified = _.map(value_pdf, function(node, index) {
+			var article_el = $(node).parents(".gs_r");
+			var title = $(article_el).find("h3.gs_rt>a").text();
+
+			// title = title.replace(/\W/g,"-");
+			var author_name = $(article_el).find(".gs_a").text();
+			first_author = author_name.replace(/[,-].*/g,"").replace(/ /g,"");
+			var year = author_name.match(/\d{4}/);
+			var file_name = title+"-"+first_author+"-"+year;
+			$(node).attr("download",file_name);
+			return $(node).get(0);
+		}); 
+		var value_download_text = _.map(value_pdf_modified, function(node){
+			return $(node).attr("download");
+		});
+		var initial_nodes = [
+			{	V:value_title,
+				P:null,
+				I:null,
+				A:null,
+			},
+			{	V:value_author,
+				P:null,
+				I:null,
+				A:null,
+			},
+			{	V:value_year,
+				P:null,
+				I:null,
+				A:null,
+			}
+		];
+		var goal_nodes = [
+			{	V:value_download_text,
+				P:null,
+				I:null,
+				A:null,
+			}
+		];
+		// run planner
+		//if (!pg.planner) pg.planner = new 
+		pg.planner.task_compose(initial_nodes, goal_nodes);
+
+		return [initial_nodes, goal_nodes];
+
 	},
 	'scholar_extract_title': function() {
 		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';

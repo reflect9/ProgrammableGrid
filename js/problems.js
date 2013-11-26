@@ -152,14 +152,14 @@ pg.problems = {
 		var org_list = $(".gs_r");
 		var filtered_list = $(".gs_r:contains('PDF')");
 		var initial_nodes = [
-			{	V:[$(org_list).toArray()],
+			{	V:$(org_list).toArray(),
 				P:null,
 				I:null,
 				A:null,
 			}
 		];
 		var goal_node = 
-			{	V:[$(filtered_list).toArray()],
+			{	V:$(filtered_list).toArray(),
 				P:null,
 				I:null,
 				A:null,

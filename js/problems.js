@@ -107,18 +107,11 @@ pg.problems = {
 			var title = $(article_el).find("h3.gs_rt>a").text();
 			// title = title.replace(/\W/g,"-");
 			var author_name = $(article_el).find(".gs_a").text();
-<<<<<<< HEAD
 			//first_author = author_name.replace(/[,-].*/g,"").replace(/ /g,"");
 			first_author = author_name;
 			var year = author_name.match(/\d{4}/);
 			var file_name = title+"-"+first_author+"-"+year;
-=======
-			// first_author = author_name.replace(/[,-].*/g,"").replace(/ /g,"");
-			// first_author = author_name;
-			// var year = author_name.match(/\d{4}/);
-			// var year = author_name;
-			var file_name = title+"^"+author_name
->>>>>>> 05a6934c901cd9f8cffc63e92448c470a41198fe
+
 			$(node).attr("download",file_name);
 			return $(node).get(0);
 		}); 
@@ -126,23 +119,18 @@ pg.problems = {
 			return $(node).attr("download");
 		});
 		var initial_nodes = [
-<<<<<<< HEAD
 			{	V:value_title,
 				P:null,
 				I:null,
 				A:null,
 			},
 			{	V:value_author,
-=======
-			{	V:value_body,
->>>>>>> 05a6934c901cd9f8cffc63e92448c470a41198fe
 				P:null,
 				I:null,
 				A:null,
 			}
 		];
 		var goal_node = 
-<<<<<<< HEAD
 			{	V:value_download_text,
 				P:null,
 				I:null,
@@ -154,17 +142,6 @@ pg.problems = {
 		pg.planner.methods.compose_text.generate(initial_nodes, goal_node);
 
 		return [initial_nodes, goal_node];
-=======
-			{	V:value_pdf_modified,
-				P:null,
-				I:null,
-				A:null,
-			};
-		// run planner
-		return [initial_nodes, goal_node];
-
-
->>>>>>> 05a6934c901cd9f8cffc63e92448c470a41198fe
 
 	},
 

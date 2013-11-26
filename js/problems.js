@@ -165,6 +165,7 @@ pg.problems = {
 				A:null,
 			};
 		// run planner
+		pg.planner.methods.filter_element.generate(initial_nodes, goal_node);
 		return [initial_nodes, goal_node];
 	},
 

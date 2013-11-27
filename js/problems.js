@@ -117,7 +117,7 @@ pg.problems = {
 			return;
 		}
 		var value_body = $("html").get(0);
-		var initial_node = {I:undefined, P:{type:"loadPage",param:""},, V:[value_body]};
+		var initial_node = {I:undefined, P:{type:"loadPage",param:""}, V:[value_body]};
 		var goal_node = {I:undefined, P:undefined, V:["Rule Creation in CTArcade: Teaching Abstract Computational Thinking From Concrete Guidelines", "CTArcade: Computational Thinking with Games in School Age Children", "Robobuilder: a computational thinking game", "Capstone Project–Designing a touch screen application to help young children develop programming skills"]};
 		return [initial_node, goal_node];
 	},

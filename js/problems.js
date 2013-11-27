@@ -84,7 +84,7 @@ pg.problems = {
 		var filtered_list = $(".gs_r:contains('Lee')").hide();
 		var initial_nodes = [
 			{	V:[pg.backup_page],
-				P:{type:"loadPage",param:""},,
+				P:{type:"loadPage",param:""},
 				I:null,
 				A:null,
 			}

@@ -345,6 +345,21 @@ pg.planner = {
 				return O;
 			}
 		},
+		select_representative: {
+			// it selects representatibe nodes from the input 
+			// no generation, only executes
+			pre: function(I, O) {
+				return false;
+			},
+			generate: function(I,O) {
+				return false;
+			},
+			execute: function(O) {
+				var rep_el = findRepElements(O.I.V);  // rep_el is the top-most non-overlapping elements of modified elements
+				O.V = rep_el;
+				return O;
+			}
+		},
 		attribute_text: {
 			// (list of elements) -> (list of text)   elements must contains the texts exactly.  
 			pre: function(I, O) {
@@ -512,6 +527,9 @@ pg.planner = {
 				return O;
 			}
 		},
+
+
+
 		filter: {
 			// (list of object) -> (list of subtexts)  
 			pre: function(I, O) {

@@ -96,7 +96,13 @@ pg.planner = {
 		console.log("doable_methods: " + doable_methods);
 		// Try to execute each doable method
 		var solutions = _.map(doable_methods, function(method){
-			result = method.generate(Is, O);
+			var result = null;
+			try {
+				result = method.generate(Is, O);
+			} catch (e) {
+				result = null;
+			}
+			
 			if (result && (!_.isArray(result) || result.indexOf(false)==-1)) return _.union(Is, result);
 			else return false;
 		});

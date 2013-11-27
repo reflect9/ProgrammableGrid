@@ -97,7 +97,8 @@ pg.planner = {
 		// Try to execute each doable method
 		var solutions = _.map(doable_methods, function(method){
 			result = method.generate(Is, O);
-			if (result !== null) return _.union(Is, result);
+			if (result && (!_.isArray(result) || result.indexOf(false)==-1)) return _.union(Is, result);
+			else return false;
 		});
 		return (solutions)? solutions:false;	
 	},
@@ -291,7 +292,7 @@ pg.planner = {
 				// 	return $(backup_I).find(path).get(0); // retrieve original elements from backup I
 				// });
 				var original_attr = _.map(I.V, function(el) { return $(el).attr('download'); });
-				if(modified_attr==undefined  )
+				if(!_.every(modified_attr, function(t){return t!==undefined && t!=="" && t!==null;})) return false;
 				// var n_inter_1 = {I:I, V:original_el, P:undefined};
 				var n_original_attr = {I:I, V:original_attr, P:undefined};
 				var n_modified_attr = {I:n_original_attr, V:modified_attr, P:undefined};
@@ -306,11 +307,15 @@ pg.planner = {
 				});
 				if (mt_exist_in_rep_el) {	// if every modified-text text of single (consistent) element in rep_el, 
 					var program_extracting_text_from_rep = pg.planner.methods.extract_text.generate(n_rep_el, n_modified_attr);
-					O = {I:n_modified_attr, V:O.V, P:{type:"set_attribute",param:"text"}};
+					O = {I:[I, n_modified_attr], V:O.V, P:{type:"set_attribute",param:"text"}};
 					return _.union(n_rep_el, program_extracting_text_from_rep, O);
 				} else {
 					// we need to try decomposing modified_attr
 					// try to find a way to generate modified_attr from I
+
+					return false;
+
+					// TBD: need some fixes
 					var separator = getSeparator(modified_attr);
 					var num_parts = modified_attr[0].split(separator).length;
 					var modified_attr_unzip = [];
@@ -341,12 +346,12 @@ pg.planner = {
 						return _.last(p);
 					})
 					// now assemble all
-					var nodes_extract_original_el = pg.planner.methods.extract_element.generate(I, n_inter_1);			
+					// var nodes_extract_original_el = pg.planner.methods.extract_element.generate(I, I);			
 					var nodes_extract_rep_el = [n_rep_el];
 					var list_of_nodes_extracting_parts = extraction_programs;
-					var nodes_compose = compose-text(last_nodes, n_inter_3);
-					O = {I:n_inter_3, V:O.V, P:{type:"set_attribute",param:"download"}};
-					return _.union(nodes_extract_original_el, nodes_extract_rep_el, list_of_nodes_extacting_parts, nodes_compose, O);
+					var nodes_compose = compose-text(last_nodes, n_modified_attr);
+					O = {I:[I,n_modified_attr], V:O.V, P:{type:"set_attribute",param:"download"}};
+					return _.union(nodes_extract_rep_el, list_of_nodes_extacting_parts, nodes_compose, O);
 				}
 			},
 			execute: function(O){

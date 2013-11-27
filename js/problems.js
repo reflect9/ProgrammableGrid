@@ -2,13 +2,14 @@
 	Sample problems
 */
 
-var test_execute = function() {
-	nodes = test('filter_element');
-	data = pg.planner.serialize(nodes[0]);
-	program = pg.planner.parse(data);
-	nodes = test('filter_element');
-	program[0].V = nodes[0][0].V;
-	program = pg.planner.execute(program);
+var test_serialize = function(problem_title) {
+	prog_list = test(problem_title);
+	data = pg.planner.serialize(prog_list[0]);
+	program_loaded = pg.planner.parse(data);
+
+	// prog_list = test(problem_title);
+	// program[0].V = prog_list[0][0].V;
+	program_executed = pg.planner.execute(program_loaded);
 	return program;
 };
 

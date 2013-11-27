@@ -46,7 +46,7 @@ pg.planner = {
 				// The texts in the goal node must exist in one of the I' content.
 				if (!isDomList(O.V)) return false;
 				if (!isDomList(I.V) ) return false;
-				if (!containsAll(I.V, O.V)) return false;
+				if (!_.every(O.V, function(el) {return I.V.indexOf(el) != -1;})) return false;
 				if (I.V.length == 0) return false;
 				return true;
 			},
@@ -55,19 +55,20 @@ pg.planner = {
 				// get all the sub elements
 				var all_sub_elements = $(I.V[0]).find("*");
 				var sub_elements = all_sub_elements.filter(function(el) {
-					return $(el).text()!=""
+					return $(el).text() != null;
 				});
 				// get element path
 				var el_paths = _.map(sub_elements, function(el, index) {
-					$(el).pathWithNth(I.V[0]);
+					return $(el).pathWithNth(I.V[0]);
 				})
 				// use path to all the list items
-				for (var path in el_paths) {
+				for (var i in el_paths) {
+					var path = el_paths[i];
 					var i_els = _.map(I.V, function(item, index) {
 						// To Do: parse string into number
 						return $(item).find(path);
 					});
-					var o_els = _.map(I.V, function(item, index) {
+					var o_els = _.map(O.V, function(item, index) {
 						// To Do: parse string into number
 						return $(item).find(path);
 					});
@@ -82,8 +83,8 @@ pg.planner = {
 
 					// create intermediate nodes
 					var i_inter = {I:I, V:i_texts, P:undefined};
-					var o_inter = {I:null, V:i_texts, P:undefined};
-					if (filter.pre(i_inter, o_inter)) {
+					var o_inter = {I:null, V:o_texts, P:undefined};
+					if (pg.planner.methods.filter.pre(i_inter, o_inter)) {
 						var result = pg.planner.methods.filter.generate(i_inter, o_inter);
 						if (result) {
 							var el_node = {I:I, V:i_els, P:{type:"Select", param:path}};
@@ -95,13 +96,14 @@ pg.planner = {
 							o_inter = result[1];
 							O.I = [I, i_inter];
 							O.P = {type:"filter_element", param:o_inter.P.param};
-
 							return _.union(I, el_node, i_inter, O);
+							
 						} else {
 							return false;
 						}
 					}
 				}
+				
 				return false;
 			},
 			execute: function(O) {
@@ -479,9 +481,7 @@ pg.planner = {
 					console.log("length of inputs must be bigger than that of outputs"); 	
 					return false;	
 				}
-				if (!containsAll(I.V, O.V)) {
-					return false;
-				}
+				if (!_.every(O.V, function(el) {return I.V.indexOf(el) != -1;})) return false;
 				if (I.V.length == 0 || O.V.length == 0) {
 					return false;
 				}
@@ -495,28 +495,28 @@ pg.planner = {
 				var goal_node;
 				if (_.isString(I.V[0])) {
 					indexs = []; // the index of input values corresponding to the output values
-					for (var i in O.V) {
-						indexs.push(I.V.indexOf(O.V[i]))
-					}
+					_.each(O.V, function(item, index) {
+						indexs.push(I.V.indexOf(item));
+					})
 					indexs.sort();
 					// get bag of word
 					var bagOfWords = {};
-					for (var i in I.O) {
-						var words = I.O[i].split(" ");
-						for (var word in words) {
+					_.each(I.V, function(item, index) {
+						var words = item.split(" ");
+						_.each(words, function(word, index) {
 							if (!(word in bagOfWords)) {
 								bagOfWords[word] = word;
 							}
-						}
-					}
+						});
+					});
 
 					// find the words that may be filter criteria
 					key_words = [];
-					for (var word_i in bagOfWords) {
-						var word = bagOfWords[word_i];
+					_.each(bagOfWords, function(word, index) {
+						var word = bagOfWords[word];
 						match_indexs = []
 						for (var i = 0; i < I.V.length; i++) {
-							if (value.contains(word)) {
+							if (I.V[i].indexOf(word) != -1) {
 								match_indexs.push(i);
 							}
 						}
@@ -524,7 +524,9 @@ pg.planner = {
 						if (JSON.stringify(indexs) == JSON.stringify(match_indexs)) {
 							key_words.push(word)
 						}
-					}
+					});
+						
+					
 					if (key_words.length == 0) {
 						return null;
 					}

@@ -1,4 +1,66 @@
 pg.planner = {
+	serialize: function(nodes) {
+		var output = {};
+		id_counter = 0;
+		_.each(nodes, function(node, index) {
+			
+			node.ID = id_counter++;
+			node.V = null;
+			output[node.ID] = node;
+
+		});
+		_.each(nodes, function(node, index) {
+			if (node.I) {
+				if (_.isArray(node.I)) {
+					node.IID = _.map(node.I, function(n, i) {
+					return n.ID;
+					});
+				} else {
+					node.IID = node.I.ID;
+				}
+				
+			} else {
+				node.IID = "";
+			}
+			
+			node.I = null;
+		});
+		
+		_.each(nodes, function(node, index) {
+			
+			node.ID = null;
+		});
+
+		return JSON.stringify(output);
+	},
+
+	parse: function(data) {
+		var nodes = JSON.parse(data);
+
+		_.each(nodes, function(node, i) {
+			if (_.isArray(node.IID)) {
+				node.I = _.map(node.IID, function(id, i) {
+					return nodes[id];
+				})
+			} else {
+				node.I = nodes[node.IID];
+			}
+			node.IID = null;
+		})
+		return nodes;
+	},
+
+	execute: function(nodes) {
+		for (var i in nodes) {
+			var node = nodes[i];
+			if (!node.V) {
+				var gen = node.P.type;
+				pg.planner.methods[gen].execute(node);
+			}
+		}
+		return nodes;
+	},
+
 	plan: function(Is, O){
 		if(!_.isArray(Is)) Is=[Is];
 		// HTN Planning Algorithm
@@ -121,10 +183,10 @@ pg.planner = {
 					if (pg.planner.methods.filter.pre(i_inter, o_inter)) {
 						var result = pg.planner.methods.filter.generate(i_inter, o_inter);
 						if (result) {
-							var el_node = {I:I, V:i_els, P:{type:"Select", param:path}};
+							var el_node = {I:I, V:i_els, P:{type:"extract_element", param:path}};
 
 							i_inter = result[0];
-							i_inter.P = {type:"Attribute", param:"text"};
+							i_inter.P = {type:"attribute_text", param:"text"};
 							i_inter.I = el_node;
 
 							o_inter = result[1];
@@ -147,11 +209,11 @@ pg.planner = {
 				var temp_node = {I:extracted_keys, V:null, P:{type:'filter', param: O.P.param}};
 				var booleans = pg.planner.methods.filter.execute_helper(temp_node);
 
-				if (booleans.length !== O.V.length) console.error(e.track);
+				
 				var filtered = []
 				for (var i = 0; i < booleans.length; i++) {
 					if (booleans[i]) {
-						filtered.push(O.V[i]);
+						filtered.push(original_els.V[i]);
 					}
 				}
 				O.V = filtered;
@@ -372,11 +434,11 @@ pg.planner = {
 				if (O.P.type !== 'extract_element') return false;
 				var path = O.P.param;
 				var new_V = [];
-				if (O.I.V.length==O.V.length) {
-					for(var i in O.V) {
+				if (O.I.V.length!=1) {
+					for(var i in O.I.V) {
 						new_V.push($(O.I.V[i]).find(path).get(0));
 					}
-				} else if(O.I.V.length==1) {
+				} else {
 					new_V = $(O.I.V[0]).find(path).toArray();
 				}
 				O.V = new_V;
@@ -447,8 +509,9 @@ pg.planner = {
 			execute: function(O) {
 				if (O.P.type !== 'attribute_text') return false;
 				texts = [];
-				var I = (_.isArray(O.I))?O.I[0]:I;
-				for (var el in I) {
+				var I = (_.isArray(O.I))?O.I[0]:O.I;
+				for (var i in I.V) {
+					var el = I.V[i];
 					texts.push($(el).text());
 				}
 				O.V = texts;
@@ -559,12 +622,12 @@ pg.planner = {
 					text = text.substring(0, text.length - separator.length);
 				});
 				
-				var node_goal = {V:O.V, I:Is, A:null, P:{type:'composer',param:{separator:separator, order: order}} };
+				var node_goal = {V:O.V, I:Is, A:null, P:{type:'compose_text',param:{separator:separator, order: order}} };
 				var nodes = _.union(Is, node_goal);
 				return nodes;		
 			},
 			execute: function(O) {
-				if (O.P.type !== 'composer') return false;
+				if (O.P.type !== 'compose_text') return false;
 				var order = O.P.param.order;
 				var separator = O.P.param.separator;
 				var composed_texts = [];
@@ -706,9 +769,9 @@ pg.planner = {
 			},
 			execute_helper: function(O) {
 				if (O.P.type !== 'filter') return false;
-				var arg = O.P.arg;
+				var arg = O.P.param.param;
 				var booleans = [];
-				switch(O.P.type) {
+				switch(O.P.param.type) {
 					case 'string_contain':
 						_.each(O.I.V, function(item, index) {
 							if (item.indexOf(arg) >= 0) booleans.push(true);

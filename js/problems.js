@@ -2,6 +2,15 @@
 	Sample problems
 */
 
+var test_execute = function() {
+	nodes = test('filter_element');
+	data = pg.planner.serialize(nodes[0]);
+	program = pg.planner.parse(data);
+	nodes = test('filter_element');
+	program[0].V = nodes[0][0].V;
+	program = pg.planner.execute(program);
+	return program;
+};
 
 var test = function(problem_title){
 	try {

@@ -209,7 +209,7 @@ pg.problems = {
 		}
 
 		var org_list = $(".gs_r");
-		var filtered_list = $(".gs_r:contains('PDF')");
+		var filtered_list = $(".gs_r:contains('Lee')");
 		var initial_nodes = [
 			{	V:$(org_list).toArray(),
 				P:null,

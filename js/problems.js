@@ -24,6 +24,71 @@ NODE_TYPE_JS = 'javascript';
 pg.backup_page = $("html").clone().get(0);
 
 pg.problems = {
+	'page_modified': function() {
+		// initialize page and initial node set
+		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
+		if(window.location.href != BASE_URL) {
+			window.location.replace(BASE_URL);
+			console.log("try again in this page.");
+			return;
+		}
+		pg.backup_page = $("body").clone().get(0);
+		var value_body = $("body");
+		var value_articles = $(value_body).find(".gs_r"); 
+		var value_pdf = $(value_body).find(".gs_md_wp"); 
+		var value_pdf_modified = _.map(value_pdf, function(node, index) {
+			var article_el = $(node).parents(".gs_r");
+			var title = $(article_el).find("h3.gs_rt").text();
+			var file_name = title;
+			$(node).attr("download",file_name);
+			return $(node).get(0);
+		}); 
+		var initial_nodes = [
+
+			{	V:[pg.backup_page],
+				P:{type:"loadPage",param:""},
+				I:null,
+				A:null,
+			}
+		];
+		var goal_node = 
+			{	V:$("body").toArray(),
+				P:null,
+				I:null,
+				A:null,
+			}
+		;
+		pg.planner.methods.compose_text.generate(initial_nodes, goal_node);
+		return [initial_nodes, goal_node];
+
+
+	},
+	'page_filtered': function() {
+		// some elements in the input page is hidden
+		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
+		if(window.location.href != BASE_URL) {
+			window.location.replace(BASE_URL);
+			console.log("try again in this page.");
+			return;
+		}
+		pg.backup_page = $("body").clone().get(0);
+		var filtered_list = $(".gs_r:contains('Lee')").hide();
+		var initial_nodes = [
+			{	V:[pg.backup_page],
+				P:{type:"loadPage",param:""},,
+				I:null,
+				A:null,
+			}
+		];
+		var goal_node = 
+			{	V:$("body").toArray(),
+				P:null,
+				I:null,
+				A:null,
+			};
+		pg.planner.methods.filter_element.generate(initial_nodes, goal_node);
+		return [initial_nodes, goal_node];
+	},
 	'set_attribute': function() {
 		var el = _.map([1,2,3,4], function(n){ return $("<div>"+n+"</div>").get(0); });
 		var new_text = [5,6,7,8];
@@ -43,7 +108,7 @@ pg.problems = {
 			return;
 		}
 		var value_body = $("html").get(0);
-		var initial_node = {I:undefined, P:undefined, V:[value_body]};
+		var initial_node = {I:undefined, P:{type:"loadPage",param:""},, V:[value_body]};
 		var goal_node = {I:undefined, P:undefined, V:["Rule Creation in CTArcade: Teaching Abstract Computational Thinking From Concrete Guidelines", "CTArcade: Computational Thinking with Games in School Age Children", "Robobuilder: a computational thinking game", "Capstone Project–Designing a touch screen application to help young children develop programming skills"]};
 		return [initial_node, goal_node];
 	},
@@ -91,55 +156,7 @@ pg.problems = {
 			};
 		return [initial_nodes, goal_node];
 	},
-	'modify_page': function() {
-		// initialize page and initial node set
-		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
-		if(window.location.href != BASE_URL) {
-			window.location.replace(BASE_URL);
-			console.log("try again in this page.");
-			return;
-		}
-		pg.backup_page = $("body").clone().get(0);
-		var value_body = $("body");
-		var value_articles = $(value_body).find(".gs_r"); 
-		var value_pdf = $(value_body).find(".gs_md_wp"); 
-		var value_pdf_modified = _.map(value_pdf, function(node, index) {
-			var article_el = $(node).parents(".gs_r");
-			var title = $(article_el).find("h3.gs_rt>a").text();
-			// title = title.replace(/\W/g,"-");
-			// var author_name = $(article_el).find(".gs_a").text();
-			//first_author = author_name.replace(/[,-].*/g,"").replace(/ /g,"");
-			// first_author = author_name;
-			// var year = author_name.match(/\d{4}/);
-			var file_name = title
 
-			$(node).attr("download",file_name);
-			return $(node).get(0);
-		}); 
-		// var value_download_text = _.map(value_pdf_modified, function(node){
-		// 	return $(node).attr("download");
-		// });
-		var initial_nodes = [
-
-			{	V:[pg.backup_page],
-				P:null,
-				I:null,
-				A:null,
-			}
-		];
-		var goal_node = 
-			{	V:[$(value_body).get(0)],
-				P:null,
-				I:null,
-				A:null,
-			}
-		;
-		// run planner
-		//if (!pg.planner) pg.planner = new 
-		pg.planner.methods.compose_text.generate(initial_nodes, goal_node);
-		return [initial_nodes, goal_node];
-
-	},
 	'modify_element_attribute': function() {
 		// initialize page and initial node set
 		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';

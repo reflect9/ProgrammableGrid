@@ -12,7 +12,7 @@ pg.planner = {
 		if (!null_check) return false;
 
 		// Get all the doable action (either primitive or non-primitive)
-		doable_methods = [];
+		var doable_methods = [];
 		_.each(_.pairs(pg.planner.methods), function(ml) {
 			var method_name = ml[0];	var method = ml[1];
 			// console.log("checking whether "+method_name+" is doable.");
@@ -28,18 +28,52 @@ pg.planner = {
 			return false;
 		}
 		// Shuffle the array for the non-deterministicity
-		o = doable_methods;
+		var o = doable_methods;
 		for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
 		doable_methods = o;
 		console.log("doable_methods: " + doable_methods);
 		// Try to execute each doable method
-		solutions = _.map(doable_methods, function(method){
+		var solutions = _.map(doable_methods, function(method){
 			result = method.generate(Is, O);
 			if (result !== null) return _.union(Is, result);
 		});
 		return (solutions)? solutions:false;	
 	},
 	methods: {
+		page_modified: {
+			pre: function(I,O) {
+				I = (_.isArray(I))?I[0]:I;
+				if(I.V.length!=1 || O.V.length!=1) return false;
+				var pI = I.V[0];  var pO = O.V[0];
+				if(!isDom(pI) || !isDom(pO)) return false;
+				if(pI.tagName!="BODY" || pO.tagName!="BODY") return false;
+				return true; 
+			},
+			generate: function(I,O){
+				// find differences
+				I = (_.isArray(I))?I[0]:I;
+				var pI = I.V[0];  var pO = O.V[0];
+				var all_el_I = $(pI).find("*").toArray(); 	var all_el_O = $(pO).find("*").toArray();
+				var el_differ_I = [];
+				var el_differ_O = [];
+				for(var i in all_el_I) {
+					if(html_differ_without_children(all_el_I[i], all_el_O[i])) {
+						el_differ_I.push(all_el_I[i]);
+						el_differ_O.push(all_el_O[i]);
+					}
+				}
+				
+				var n_original_el = {I:I,V:el_differ_I,P:undefined}; 
+				var n_modified_el = {I:I,V:el_differ_O,P:undefined};
+				// infering original page to original elements node
+				var program_extract_original_elements = pg.planner.methods.extract_element.generate(I,n_original_el);
+				var program_modify_element_attribute = pg.planner.methods.modify_element_attribute.generate(n_original_el, n_modified_el);
+				return _.union(program_extract_original_elements,program_modify_element_attribute);
+			},
+			execute: function(O){
+				return O;
+			}
+		},
 		filter_element: {
 			pre: function(I, O) {
 				I = (_.isArray(I))?I[0]:I;
@@ -176,7 +210,7 @@ pg.planner = {
 				for(var i=0;i<I.V.length;i++) {
 					var eI = I.V[i];  var eO = O.V[i];
 					if ($(eI).fingerprint() != $(eO).fingerprint()) return false;
-					if ($(eI).outerHTML() == $(eO).outerHTML()) return false;
+					if (!html_differ_without_children($(eI),$(eO))) return false;
 				}
 				return true;
 			},
@@ -195,6 +229,7 @@ pg.planner = {
 				// 	return $(backup_I).find(path).get(0); // retrieve original elements from backup I
 				// });
 				var original_attr = _.map(I.V, function(el) { return $(el).attr('download'); });
+				if(modified_attr==undefined  )
 				// var n_inter_1 = {I:I, V:original_el, P:undefined};
 				var n_original_attr = {I:I, V:original_attr, P:undefined};
 				var n_modified_attr = {I:n_original_attr, V:modified_attr, P:undefined};
@@ -251,7 +286,10 @@ pg.planner = {
 					O = {I:n_inter_3, V:O.V, P:{type:"set_attribute",param:"download"}};
 					return _.union(nodes_extract_original_el, nodes_extract_rep_el, list_of_nodes_extacting_parts, nodes_compose, O);
 				}
+			},
+			execute: function(O){
 				// no need for execution
+				return O;
 			}
 		},
 		set_attribute: { // takes two input nodes (original el and new values) and returns modified elements
@@ -292,7 +330,7 @@ pg.planner = {
 				// I value must contails all the O values 
 				if(I.V.length == O.V.length) { // n-to-n extraction
 					for (var i in I.V) {
-						if( !isDom(I.V[i]) || !isDom(O.V[i]) || $.contains(I.V[i], O.V[i])) return false;
+						if( !isDom(I.V[i]) || !isDom(O.V[i]) || !$.contains(I.V[i], O.V[i])) return false;
 					}
 				} else if (I.V.length==1 && O.V.length>1) {
 					// 1-to-n extraction
@@ -325,7 +363,7 @@ pg.planner = {
 					if(path===null) return false;
 					else {
 						O.I = I;
-						O.P = {type:'extract_element',param:JQueryPath};
+						O.P = {type:'extract_element',param:path};
 						return O;
 					}
 				}
@@ -359,6 +397,22 @@ pg.planner = {
 				O.V = rep_el;
 				return O;
 			}
+		},
+		loadPage: {
+			pre:function(I,O) {
+				return false;
+			},
+			generate: function(I,O) {
+				return false;
+			},
+			execute: function(O) {
+				if(O.P.param=="") {
+					O.V = $("body").toArray();
+					return O;	
+				}
+				return false;
+			}
+
 		},
 		attribute_text: {
 			// (list of elements) -> (list of text)   elements must contains the texts exactly.  

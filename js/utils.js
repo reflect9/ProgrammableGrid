@@ -13,6 +13,13 @@ jQuery.fn.justtext = function() {
             .end()
             .text();
 };
+jQuery.fn.html_no_children = function() {
+    var el_no_children = $(this).clone()
+            .children()
+            .remove()
+            .end();
+    return $(el_no_children).ohtml();
+};
 jQuery.fn.containsString = function(str) {
 	if($(this).text.indexOf(str)!=-1) return true;
 	if($(this).attr('href') && $(this).attr('href').indexOf(str)!=-1) return true;
@@ -115,6 +122,9 @@ jQuery.fn.tagNth = function() {
 		nth = ":nth-child("+(siblings.index(this)+1)+")";
 	} else nth = "";
 	return tag+nth;
+};
+jQuery.fn.ohtml = function() {
+	return $(this).clone().wrap('<p>').parent().html();
 };
 jQuery.fn.tagAndClass = function() {
 	var q = $(this).prop("tagName");
@@ -588,8 +598,8 @@ function strNode(nodes) {
 	return str;
 }
 
-jQuery.fn.outerHTML = function() {
-	return $(this).clone().wrap('<p>').parent().html();
-};
+function html_differ_without_children(el1, el2) {
+	return $(el1).html_no_children() != $(el2).html_no_children();
+}
 
 

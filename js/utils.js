@@ -54,13 +54,18 @@ findRepElements = function(elements) {
 	return representativeElements;
 };
 jQuery.fn.findQuerySelector = function(elements) {
-	var commonAncester = getCommonAncestorMultiple(elements);	// check whether all the output elements are within the input dom
-	if(commonAncester!==this && $(commonAncester).parents().hasElement(this.get(0))===false) return []; // if Input does not contain
-	var pathToAncester = $(commonAncester).pathWithNth(this); // find two step paths 1. Input->CommonAncester,  2. CommonAncester->O
-	var pathFromRepToLeaf = _.uniq(_.map(elements, function(o,i) { // collect paths from anscester's children to output nodes
-		return $(o).leafNodePath(commonAncester);	}));
-	if(pathFromRepToLeaf.length>1) return [];
-	return path = pathToAncester+" "+pathFromRepToLeaf[0];
+	if(elements.length==1) {
+		var exact_path = $(elements).pathWithNth(this);	// finding path from this(enclosing el) to the single element
+		return exact_path;
+	} else {
+		var commonAncester = getCommonAncestorMultiple(elements);	// check whether all the output elements are within the input dom
+		if(commonAncester!==this && $(commonAncester).parents().hasElement(this.get(0))===false) return null; // if Input does not contain
+		var pathToAncester = $(commonAncester).pathWithNth(this); // find two step paths 1. Input->CommonAncester,  2. CommonAncester->O
+		var pathFromRepToLeaf = _.uniq(_.map(elements, function(o,i) { // collect paths from anscester's children to output nodes
+			return $(o).leafNodePath(commonAncester);	}));
+		if(pathFromRepToLeaf.length>1) return [];
+		return path = pathToAncester+" "+pathFromRepToLeaf[0];	
+	}
 };
 jQuery.fn.fingerprint = function() {
 	var  childrenPrint = "";
@@ -583,5 +588,8 @@ function strNode(nodes) {
 	return str;
 }
 
+jQuery.fn.outerHTML = function() {
+	return $(this).clone().wrap('<p>').parent().html();
+};
 
 

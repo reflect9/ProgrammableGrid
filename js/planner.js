@@ -136,9 +136,9 @@ pg.planner = {
 			},
 			generate: function(I, O) {
 				I = (_.isArray(I))?I[0]:I;
-				var el_I = I.V[0];
-				var el_containing_O = _.map(O.V, function(o_t) {
-					return $(el_I).find("*:contains('"+o_t+"')").last().get(0);
+				// var el_I = I.V[0];
+				var el_containing_O = _.map(O.V, function(o_t,index) {
+					return $(I.V[index]).find("*:contains('"+o_t+"')").last().get(0);
 				},this);
 				var text_containing_O = _.map(el_containing_O, function(el) { return $(el).text(); });
 				
@@ -146,11 +146,11 @@ pg.planner = {
 				var n_inter_1 = {I:undefined, V:el_containing_O, P:undefined};
 				var n_inter_2 = {I:undefined, V:text_containing_O, P:undefined};
 				//sub-prob 	A. (enclosing element) --[extract_element]--> (smaller elements containing the text list)
-				result_A = pg.planner.methods.extract_element.generate(I, n_inter_1);
+				var result_A = pg.planner.methods.extract_element.generate(I, n_inter_1);
 				//			B. (smaller elements) --[attribute]--> (text' list: not exactly the same)
-				result_B = pg.planner.methods.attribute_text.generate(n_inter_1, n_inter_2);
+				var result_B = pg.planner.methods.attribute_text.generate(n_inter_1, n_inter_2);
 				//			C. (text' list) --[string-transform]--> (text list)
-				result_C = pg.planner.methods.substring.generate(n_inter_2, O);
+				var result_C = pg.planner.methods.substring.generate(n_inter_2, O);
 
 				if(result_A &&result_B &&result_C) return _.union(result_A,result_B,result_C);
 				else return false;
@@ -158,75 +158,77 @@ pg.planner = {
 			// no need for execution
 
 		},
+		// modify_page: {
+		// 	// focuse on single objects I and O contain some modified elements
+		// 	// calls modify_element_attribute as subtask
+
+		// },
 		modify_element_attribute: {
 			pre: function(I, O) {
-				var I0 = (_.isArray(I))?I[0]:I;
+				// I and O must be same-structure elements with modified text attribute
+				// check they have same finger-print but different html
+				var I = (_.isArray(I))?I[0]:I;
 				// Initial_node value must contails all the goal_node values 
-				if (!isDomList(I0.V) || !isDomList(O.V)) return false;
-				if (I0.V.length!=1) return false;
-				var JQuery_path_to_O = _.map(O.V, function(o) {
-					return $(o).pathWithNth("html");
-				});
-				var original_el = _.map(JQuery_path_to_O, function(path) {
-					return $(I0.V).find(path).get(0);
-				});
-				if (original_el.length == JQuery_path_to_O.length) {
-					if (isDomList(original_el)) return true;
-				} 
-				return false;				
+				if (!isDomList(I.V) || !isDomList(O.V)) return false;
+				if (I.V.length!=O.V.length) return false;
+				for(var i=0;i<I.V.length;i++) {
+					var eI = I.V[i];  var eO = O.V[i];
+					if ($(eI).fingerprint() != $(eO).fingerprint()) return false;
+					if ($(eI).outerHTML() == $(eO).outerHTML()) return false;
+				}
+				return true;
 			},
 			generate: function(I, O) {
 				I = (_.isArray(I))?I[0]:I;
+				
 				// retrieve the original page DOM 
-				var backup_I = (pg.backup_page)? pg.backup_page: $("html").get(0);
+				// var backup_I = (pg.backup_page)? pg.backup_page: $("html").get(0);
 
-				var JQuery_path_generalized = $("html").findQuerySelector(O.V); 
-				var JQuery_path_strict = _.map(O.V, function(o) {
-					return $(o).pathWithNth("html");  // get exact JQuery selector paths to those output elements in the modified page
-				});
-				var modified_text = _.map(O.V, function(o){return $(o).text();});
-				var original_el = _.map(JQuery_path_to_modified_elements, function(path) {
-					return $(backup_I).find(path).get(0); // retrieve original elements from backup I
-				});
-				var original_text = _.map(original_el, function(el) { return $(el).text; });
-				var n_inter_1 = {I:I, V:original_el, P:undefined};
-				var n_inter_2 = {I:n_inter_1, V:original_text, P:undefined};
-				var n_inter_3 = {I:n_inter_2, V:modified_text, P:undefined};
+				// var JQuery_path_generalized = $("html").findQuerySelector(O.V); 
+				// var JQuery_path_strict = _.map(O.V, function(o) {
+				// 	return $(o).pathWithNth("html");  // get exact JQuery selector paths to those output elements in the modified page
+				// });
+				var modified_attr = _.map(O.V, function(o){return $(o).attr('download');});
+				// var original_el = _.map(JQuery_path_to_modified_elements, function(path) {
+				// 	return $(backup_I).find(path).get(0); // retrieve original elements from backup I
+				// });
+				var original_attr = _.map(I.V, function(el) { return $(el).attr('download'); });
+				// var n_inter_1 = {I:I, V:original_el, P:undefined};
+				var n_original_attr = {I:I, V:original_attr, P:undefined};
+				var n_modified_attr = {I:n_original_attr, V:modified_attr, P:undefined};
 				
 				var rep_el = findRepElements(O.V);  // rep_el is the top-most non-overlapping elements of modified elements
-				var n_rep_el = {I:n_inter_1, V:rep_el, P:{type:"select-representative", param:""}};
-				// first, try to find the entire modified_text in the rep_el 
-				var mt_exist_in_rep_el = _.every(modified_text, function(mt, i) {
-					if( $(rep_el[i]).text().indexOf(mt) == -1) return false;
-					else return true;
+				var n_rep_el = {I:I, V:rep_el, P:{type:"select-representative", param:""}};
+				// first, try to find the entire modified_attr in the rep_el 
+				var mt_exist_in_rep_el = _.every(modified_attr, function(mt, i) {
+					if( $(rep_el[i]).text().indexOf(mt) == -1) {
+						return false;
+					} else return true;
 				});
-				if (mt_exist_in_rep_el) {
-					// we don't need decomposition. simply extract text from rep_el. 
-					var nodes_extract_original_el = pg.planner.methods.extract_element.generate(I, n_inter_1);			
-					var nodes_extract_rep_el = [n_rep_el];
-					var nodes_extraction = extract-text(n_rep_el, n_inter_3);
-					O = {I:n_inter_3, V:O.V, P:{type:"set_attribute",param:"text"}};
-					return _.union(nodes_extract_original_el, nodes_extract_rep_el, nodes_extraction, O);
+				if (mt_exist_in_rep_el) {	// if every modified-text text of single (consistent) element in rep_el, 
+					var program_extracting_text_from_rep = pg.planner.methods.extract_text.generate(n_rep_el, n_modified_attr);
+					O = {I:n_modified_attr, V:O.V, P:{type:"set_attribute",param:"text"}};
+					return _.union(n_rep_el, program_extracting_text_from_rep, O);
 				} else {
-					// we need to try decomposing modified_text
-					// try to find a way to generate modified_text from I
-					var separator = getSeparator(modified_text);
-					var num_parts = modified_text[0].split(separator).length;
-					var modified_text_unzip = [];
+					// we need to try decomposing modified_attr
+					// try to find a way to generate modified_attr from I
+					var separator = getSeparator(modified_attr);
+					var num_parts = modified_attr[0].split(separator).length;
+					var modified_attr_unzip = [];
 					try{
 						for (var i in num_parts) {
 							var list = [];
-							for (var j in modified_text) {
-								var splitted = modified_text[j].split(separator);
+							for (var j in modified_attr) {
+								var splitted = modified_attr[j].split(separator);
 								list.push(splitted[i]);
 							}
-							modified_text_unzip.push(list);
+							modified_attr_unzip.push(list);
 						}
-						var nodes_modified_text_unzip = _.map(modified_text_unzip, function(mt) {
+						var nodes_modified_attr_unzip = _.map(modified_attr_unzip, function(mt) {
 							return {I:undefined, V:mt, P:undefined};
 						});
 						// for each decomposed word group, find an extraction program
-						var extraction_programs = _.map(nodes_modified_text_unzip, function(node_mt, i) {
+						var extraction_programs = _.map(nodes_modified_attr_unzip, function(node_mt, i) {
 							var I=n_rep_el;
 							var O=node_mt;
 							return extract-text(I,O);
@@ -244,7 +246,7 @@ pg.planner = {
 					var nodes_extract_rep_el = [n_rep_el];
 					var list_of_nodes_extracting_parts = extraction_programs;
 					var nodes_compose = compose-text(last_nodes, n_inter_3);
-					O = {I:n_inter_3, V:O.V, P:{type:"set_attribute",param:"text"}};
+					O = {I:n_inter_3, V:O.V, P:{type:"set_attribute",param:"download"}};
 					return _.union(nodes_extract_original_el, nodes_extract_rep_el, list_of_nodes_extacting_parts, nodes_compose, O);
 				}
 				// no need for execution
@@ -286,21 +288,58 @@ pg.planner = {
 			pre: function(I, O) {
 				I = (_.isArray(I))?I[0]:I;
 				// I value must contails all the O values 
-				return isDom(I.V[0]) && isDomList(O.V) && containsAll(I.V[0],O.V);
+				if(I.V.length == O.V.length) { // n-to-n extraction
+					for (var i in I.V) {
+						if( !isDom(I.V[i]) || !isDom(O.V[i]) || $.contains(I.V[i], O.V[i])) return false;
+					}
+				} else if (I.V.length==1 && O.V.length>1) {
+					// 1-to-n extraction
+					if (!isDom(I.V[0]) || containsAll(I.V[0],O.V)) return false;
+				} else {
+					return false;
+				}
+				return true;
 			},
 			generate: function(I, O){
 				// find a consistent jquery paths selecting the O values (and possibly more)
 				I = (_.isArray(I))?I[0]:I;
-				var JQueryPath = $(I.V[0]).findQuerySelector(O.V);
-				O.I = I;
-				O.P = {type:'extract_element',param:JQueryPath};
-				return O;
+				if(I.V.length == O.V.length) {
+					// n-to-n extraction
+					var paths = []; 
+					for(var i in I.V) {
+						paths.push(  $(I.V[i]).findQuerySelector([O.V[i]]));
+					}
+					var commonPath = _.uniq(paths);
+					if(commonPath.length==1) {
+						O.I = I;
+						O.P = {type:'extract_element',param:commonPath[0]};
+						return O;
+					} else {
+						return false;
+					}
+				} else if(I.V.length==1 && O.V.length>1) {
+					// 1-to-n extraction
+					var path = $(I.V[0]).findQuerySelector(O.V);
+					if(path===null) return false;
+					else {
+						O.I = I;
+						O.P = {type:'extract_element',param:JQueryPath};
+						return O;
+					}
+				}
 			},
 			execute: function(O) {
 				if (O.P.type !== 'extract_element') return false;
 				var path = O.P.param;
-				var updated_value = O.I.V.EXTRACT(path);
-				O.V = updated_value;
+				var new_V = [];
+				if (O.I.V.length==O.V.length) {
+					for(var i in O.V) {
+						new_V.push($(O.I.V[i]).find(path).get(0));
+					}
+				} else if(O.I.V.length==1) {
+					new_V = $(O.I.V[0]).find(path).toArray();
+				}
+				O.V = new_V;
 				return O;
 			}
 		},

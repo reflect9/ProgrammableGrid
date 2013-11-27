@@ -2,12 +2,13 @@
 	Sample problems
 */
 
-var test_execute = function() {
-	nodes = test('filter_element');
+var test_execute = function(problem_title) {
+	nodes = test(problem_title);
 	data = pg.planner.serialize(nodes[0]);
 	program = pg.planner.parse(data);
-	nodes = test('filter_element');
+	nodes = test(problem_title);
 	program[0].V = nodes[0][0].V;
+	//program[1].V = nodes[0][1].V;
 	program = pg.planner.execute(program);
 	return program;
 };
@@ -269,13 +270,12 @@ pg.problems = {
 				A:null,
 			}
 		];
-		var goal_nodes = [
+		var goal_nodes = 
 			{	V:value_title,
 				P:null,
 				I:null,
 				A:null,
-			}
-		];
+			};
 		// run planner
 		return [initial_nodes, goal_nodes];
 	},

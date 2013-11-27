@@ -304,7 +304,7 @@ pg.planner = {
 				var n_modified_attr = {I:n_original_attr, V:modified_attr, P:undefined};
 				
 				var rep_el = findRepElements(O.V);  // rep_el is the top-most non-overlapping elements of modified elements
-				var n_rep_el = {I:I, V:rep_el, P:{type:"select-representative", param:""}};
+				var n_rep_el = {I:I, V:rep_el, P:{type:"select_representative", param:""}};
 				// first, try to find the entire modified_attr in the rep_el 
 				var mt_exist_in_rep_el = _.every(modified_attr, function(mt, i) {
 					if( $(rep_el[i]).text().indexOf(mt) == -1) {

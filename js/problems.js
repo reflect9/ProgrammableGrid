@@ -2,6 +2,7 @@
 	Sample problems
 */
 
+
 var test_serialize = function(problem_title) {
 	try{
 		prog_list = test(problem_title);
@@ -255,6 +256,7 @@ pg.problems = {
 	},
 
 
+
 	// 'scholar_extract_title': function() {
 	// 	BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
 	// 	if(window.location.href != BASE_URL) {
@@ -319,6 +321,71 @@ pg.problems = {
 	// 	var value_pdf_modified = _.map(value_pdf, function(node, index) {
 	// 		var article_el = $(node).parents(".gs_r");
 	// 		var title = $(article_el).find("h3.gs_rt>a").text();
+
+	// 'scholar_extract_title': function() {
+	// 	BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
+	// 	if(window.location.href != BASE_URL) {
+	// 		window.location.replace(BASE_URL);
+	// 		console.log("try again in this page.");
+	// 		return;
+	// 	}
+	// 	var value_body = $("body");
+	// 	var value_articles = $(".gs_r"); 
+	// 	var value_pdf = $(".gs_md_wp"); 
+	// 	var value_title = _.map(value_pdf, function(node){
+	// 		var article_el = $(node).parents(".gs_r");
+	// 		var title = $(article_el).find("h3.gs_rt>a").text();
+	// 		// title = title.replace(/\W/g,"-");
+	// 		return title;
+	// 	});
+	// 	var initial_nodes = [
+	// 		{	V:value_body.toArray(),
+	// 			P:null,
+	// 			I:null,
+	// 			A:null,
+	// 		}
+	// 	];
+	// 	var goal_nodes = 
+	// 		{	V:value_title,
+	// 			P:null,
+	// 			I:null,
+	// 			A:null,
+	// 		};
+	// 	// run planner
+	// 	return [initial_nodes, goal_nodes];
+	// },
+	// 'scholar_compose': function() {
+	// 	BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
+	// 	if(window.location.href != BASE_URL) {
+	// 		window.location.replace(BASE_URL);
+	// 		console.log("try again in this page.");
+	// 		return;
+	// 	}
+	// 	var value_body = $("body");
+	// 	var value_articles = $(".gs_r"); 
+	// 	var value_pdf = $(".gs_md_wp"); 
+	// 	var value_author = _.map(value_pdf, function(node){
+	// 		var article_el = $(node).parents(".gs_r");
+	// 		var author_name = $(article_el).find(".gs_a").text();
+	// 		first_author = author_name.replace(/[,-].*/g,"").replace(/ /g,"");
+	// 		return first_author;
+	// 	});
+	// 	var value_year = _.map(value_pdf, function(node){
+	// 		var article_el = $(node).parents(".gs_r");
+	// 		var author_name = $(article_el).find(".gs_a").text();
+	// 		var year = author_name.match(/\d{4}/);
+	// 		return (year)?year[0]:year;
+	// 	});
+	// 	var value_title = _.map(value_pdf, function(node){
+	// 		var article_el = $(node).parents(".gs_r");
+	// 		var title = $(article_el).find("h3.gs_rt>a").text();
+	// 		// title = title.replace(/\W/g,"-");
+	// 		return title;
+	// 	});
+	// 	var value_pdf_modified = _.map(value_pdf, function(node, index) {
+	// 		var article_el = $(node).parents(".gs_r");
+	// 		var title = $(article_el).find("h3.gs_rt>a").text();
+
 
 	// 		// title = title.replace(/\W/g,"-");
 	// 		var author_name = $(article_el).find(".gs_a").text();

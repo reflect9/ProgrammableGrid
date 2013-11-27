@@ -54,8 +54,14 @@ pg.planner = {
 		for (var i in nodes) {
 			var node = nodes[i];
 			if (!node.V) {
-				var gen = node.P.type;
-				pg.planner.methods[gen].execute(node);
+				if(node.P && node.P.type) {
+					var gen = node.P.type;
+					try{
+						pg.planner.methods[gen].execute(node);		
+					} catch(e) {
+						console.error(e.stack);
+					}
+				}
 			}
 		}
 		return nodes;
@@ -106,7 +112,7 @@ pg.planner = {
 			if (result && (!_.isArray(result) || result.indexOf(false)==-1)) return _.union(Is, result);
 			else return false;
 		});
-		return (solutions)? solutions:false;	
+		return (solutions)? _.filter(solutions,function(s){return s!=false;}):false;	
 	},
 	methods: {
 		page_modified: {
@@ -386,11 +392,11 @@ pg.planner = {
 				return O;
 			},
 			execute: function(O) {
-				copy = $(O.I[0]).clone();
+				copy = $(O.I[0].V).clone();
 				_.each(copy, function(el, index) {
-					$(el).text(O.I[1][index]);
+					$(el).text(O.I[1].V[index]);
 				});
-				O.V = copy;
+				O.V = $(copy).toArray();
 				return O;
 			}
 		},

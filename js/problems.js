@@ -91,7 +91,7 @@ pg.problems = {
 			};
 		return [initial_nodes, goal_node];
 	},
-	'modify_element_attribute': function() {
+	'modify_page': function() {
 		// initialize page and initial node set
 		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
 		if(window.location.href != BASE_URL) {
@@ -107,11 +107,11 @@ pg.problems = {
 			var article_el = $(node).parents(".gs_r");
 			var title = $(article_el).find("h3.gs_rt>a").text();
 			// title = title.replace(/\W/g,"-");
-			var author_name = $(article_el).find(".gs_a").text();
+			// var author_name = $(article_el).find(".gs_a").text();
 			//first_author = author_name.replace(/[,-].*/g,"").replace(/ /g,"");
-			first_author = author_name;
-			var year = author_name.match(/\d{4}/);
-			var file_name = title+"-"+first_author+"-"+year;
+			// first_author = author_name;
+			// var year = author_name.match(/\d{4}/);
+			var file_name = title
 
 			$(node).attr("download",file_name);
 			return $(node).get(0);
@@ -129,6 +129,56 @@ pg.problems = {
 		];
 		var goal_node = 
 			{	V:[$(value_body).get(0)],
+				P:null,
+				I:null,
+				A:null,
+			}
+		;
+		// run planner
+		//if (!pg.planner) pg.planner = new 
+		pg.planner.methods.compose_text.generate(initial_nodes, goal_node);
+		return [initial_nodes, goal_node];
+
+	},
+	'modify_element_attribute': function() {
+		// initialize page and initial node set
+		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
+		if(window.location.href != BASE_URL) {
+			window.location.replace(BASE_URL);
+			console.log("try again in this page.");
+			return;
+		}
+		pg.backup_page = (pg.backup_page)?pg.backup_page:("body").clone();
+		var original_el = $(pg.backup_page).find(".gs_md_wp");
+		var value_body = $("body");
+		var value_articles = $(value_body).find(".gs_r"); 
+		var value_pdf = $(value_body).find(".gs_md_wp"); 
+		var value_pdf_modified = _.map(value_pdf, function(node, index) {
+			var article_el = $(node).parents(".gs_r");
+			var title = $(article_el).find("h3.gs_rt").text();
+			// title = title.replace(/\W/g,"-");
+			// var author_name = $(article_el).find(".gs_a").text();
+			//first_author = author_name.replace(/[,-].*/g,"").replace(/ /g,"");
+			// first_author = author_name;
+			// var year = author_name.match(/\d{4}/);
+			var file_name = title
+
+			$(node).attr("download",file_name);
+			return $(node).get(0);
+		}); 
+		// var value_download_text = _.map(value_pdf_modified, function(node){
+		// 	return $(node).attr("download");
+		// });
+		var initial_nodes = [
+
+			{	V:$(original_el).toArray(),
+				P:null,
+				I:null,
+				A:null,
+			}
+		];
+		var goal_node = 
+			{	V:value_pdf_modified,
 				P:null,
 				I:null,
 				A:null,

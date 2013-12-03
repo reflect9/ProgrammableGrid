@@ -1,34 +1,83 @@
-/*
-	Sample problems
-*/
+// var test_serialize = function(problem_title) {
+// 	try {
+// 		prog_list = test(problem_title);
+// 		data = pg.planner.serialize(prog_list[0]);
+// 		program_loaded = pg.planner.parse(data);
 
+// 		// manually inject V of intial_nodes in the problem set
+// 		original_problem = pg.problems[problem_title]();
+// 		for(var i in original_problem[0]) {   
+// 			program_loaded[i].V = original_problem[0][i].V;
+// 		}
+// 		program_executed = pg.planner.execute(program_loaded);
+// 		return program_executed;
+// 	} catch(e) {
+// 		console.error(e.stack);
+// 	}
+	
+// };
 
-var test_serialize = function(problem_title) {
-	try{
-		prog_list = test(problem_title);
-		data = pg.planner.serialize(prog_list[0]);
-		program_loaded = pg.planner.parse(data);
-
-		// manually inject V of intial_nodes in the problem set
-		original_problem = pg.problems[problem_title]();
-		for(var i in original_problem[0]) {   
-			program_loaded[i].V = original_problem[0][i].V;
-		}
-		program_executed = pg.planner.execute(program_loaded);
-		return program_executed;
+var save_script = function(title, nodes_to_store) {
+	try {
+		var old_data = localStorage["prgr"];
+		if (old_data =="undefined" || old_data == "[object Object]" || old_data == "[]") old_data="{}";
+		programs = pg.planner.parse(old_data);
+		programs[title] = nodes_to_store;
+		new_data = pg.planner.serialize(programs);
+		localStorage.setItem("prgr",new_data);
+		return programs;
 	} catch(e) {
 		console.error(e.stack);
 	}
-	
 };
 
-var test = function(problem_title){
+var load_script = function(title) {
+	if (localStorage["prgr"]==undefined) return false;
+	else {
+		var data = localStorage.getItem("prgr");
+		var programs = pg.planner.parse(data);
+		if (programs[title]==undefined) return false 
+		else return programs[title];
+	}	
+};
+var execute_script = function(nodes) {
+	console.log("START SCRIPT");
+	// initialize states of the nodes
+	var n_queue = nodes;
+	var n_executed = [];
+	// execute nodes those are ready
+	try{
+	while(n_queue.length>0) {
+		// find an executable node
+		var node_to_execute = undefined;
+		for(var i=0; i<n_queue.length; i++) {
+			var n = n_queue[i];
+			var input_still_in_queue = _.filter(n.I, function(ni) { 
+				return n_queue.indexOf(ni)!=-1; 
+			},this);
+			if (input_still_in_queue.length==0 && n.P && n.P.type) {
+				node_to_execute = n;
+				break;
+			}
+		}
+		if(node_to_execute) {
+				node_to_execute = pg.planner.methods[n.P.type].execute(node_to_execute);
+				n_queue = _.without(n_queue, node_to_execute);	
+				console.log(node_to_execute);	
+		}
+	}}
+	catch(e) { console.error(e.stack);}
+	console.log("DONE EXECUTING SCRIPT");
+};
+
+
+var generate = function(problem_title){
 	try {
 		problem_nodes = pg.problems[problem_title]();
 		result = pg.planner.plan(problem_nodes[0],problem_nodes[1]);
 		return result;
 	} catch(e) {
-		console.log(e.stack);
+		console.error(e.stack);
 	}
 };
 
@@ -40,7 +89,7 @@ NODE_TYPE_VARIABLE = 'variable';
 NODE_TYPE_ACTION = 'action';
 NODE_TYPE_JS = 'javascript';
 
-pg.backup_page = $("html").clone().get(0);
+pg.backup_page = $("body").clone().get(0);
 
 pg.problems = {
 	'page_modified': function() {
@@ -51,10 +100,10 @@ pg.problems = {
 			console.log("try again in this page.");
 			return;
 		}
-		pg.backup_page = $("body").clone().get(0);
+		if (pg.backup_page==undefined)	pg.backup_page = $("body").clone().get(0);
 		var value_body = $("body");
 		var value_articles = $(value_body).find(".gs_r"); 
-		var value_pdf = $(value_body).find(".gs_md_wp"); 
+		var value_pdf = $(value_body).find(".gs_md_wp > a"); 
 		var value_pdf_modified = _.map(value_pdf, function(node, index) {
 			var article_el = $(node).parents(".gs_r");
 			var title = $(article_el).find("h3.gs_rt").text();
@@ -127,9 +176,9 @@ pg.problems = {
 			return;
 		}
 		var value_body = $("html").get(0);
-		var initial_node = {I:undefined, P:{type:"loadPage",param:""}, V:[value_body]};
+		var initial_nodes = [{I:undefined, P:{type:"loadPage",param:""}, V:[value_body]}];
 		var goal_node = {I:undefined, P:undefined, V:["Rule Creation in CTArcade: Teaching Abstract Computational Thinking From Concrete Guidelines", "CTArcade: Computational Thinking with Games in School Age Children", "Robobuilder: a computational thinking game", "Capstone Project–Designing a touch screen application to help young children develop programming skills"]};
-		return [initial_node, goal_node];
+		return [initial_nodes, goal_node];
 	},
 	'compose_text': function() {
 		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
@@ -159,19 +208,16 @@ pg.problems = {
 			{	V:value_title,
 				P:null,
 				I:null,
-				A:null,
 			},
 			{	V:value_author,
 				P:null,
 				I:null,
-				A:null,
 			}
 		];
 		var goal_node = 
 			{	V:value_pdf_modified,
 				P:null,
 				I:null,
-				A:null,
 			};
 		return [initial_nodes, goal_node];
 	},
@@ -210,14 +256,12 @@ pg.problems = {
 			{	V:$(original_el).toArray(),
 				P:null,
 				I:null,
-				A:null,
 			}
 		];
 		var goal_node = 
 			{	V:value_pdf_modified,
 				P:null,
 				I:null,
-				A:null,
 			}
 		;
 		// run planner
@@ -241,14 +285,12 @@ pg.problems = {
 			{	V:$(org_list).toArray(),
 				P:null,
 				I:null,
-				A:null,
 			}
 		];
 		var goal_node = 
 			{	V:$(filtered_list).toArray(),
 				P:null,
 				I:null,
-				A:null,
 			};
 		// run planner
 		pg.planner.methods.filter_element.generate(initial_nodes, goal_node);
@@ -479,46 +521,4 @@ pg.problems = {
 	// 	// run planner
 	// 	return [initial_nodes, goal_nodes];
 	// }
-}
-
-
-nodes:[
-		{
-			id:'trigger_1',
-			type:'trigger',
-			position:[0,0],
-			value:undefined,
-			operation:{
-				type: 'Action:Hide',
-				description: 'Trigger when page is loaded.',
-				I: undefined,
-				A: undefined,
-				param:''
-			}
-     	},
-     	{	id:1,
-     		type:'variable',
-			position:[1,0],
-			value:['a','b','c'],
-			operation: {
-				type: 'Transform:Map:StringExpr:JoinSingleArgBackward',
-				description : 'desc',
-				I: 'top',
-				A: undefined,
-				param:''
-			}
-     	},
-     	{
-			id:2,
-			type:'element',
-			position:[1,1],
-			value:['abc'],
-			operation: {
-				type: 'Select:Attribute',
-				description : 'desc',
-				I: 'left',
-				A: undefined,
-				param:''
-			}
-     	}
-	]
+};

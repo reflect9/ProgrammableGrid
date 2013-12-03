@@ -602,4 +602,11 @@ function html_differ_without_children(el1, el2) {
 	return $(el1).html_no_children() != $(el2).html_no_children();
 }
 
+function toArray(obj) {
+	return (_.isArray(obj))?obj:[obj];
+}
+
+
+
+
 

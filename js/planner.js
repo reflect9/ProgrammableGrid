@@ -131,7 +131,12 @@ pg.planner = {
 			if (result && (!_.isArray(result) || result.indexOf(false)==-1)) {
 				return _.union(Is, result);
 			}
-			else return false;
+			var result = null;
+			try {
+				result = method.generate(Is, O);
+			} catch (e) {
+				result = null;
+			}
 		});
 		return (solutions)? _.filter(solutions,function(s){return s!=false;}):false;	
 	},

@@ -56,7 +56,8 @@ var getSeparator = function(str_list) {
 findRepElements = function(elements) {
 	var commonAncester = getCommonAncestorMultiple(elements);
 	var representativeElements = _.map(elements, function(el) {
-		return $(commonAncester).children().has(el).get(0);
+		if ($(commonAncester).children().toArray().indexOf(el)!=-1) return el;  // in case el is just below the commonAncester, rep is el itself.
+		else return $(commonAncester).children().has(el).get(0);
 	});
 	return representativeElements;
 };
@@ -71,7 +72,7 @@ jQuery.fn.findQuerySelector = function(elements) {
 		var pathFromRepToLeaf = _.uniq(_.map(elements, function(o,i) { // collect paths from anscester's children to output nodes
 			return $(o).leafNodePath(commonAncester);	}));
 		if(pathFromRepToLeaf.length>1) return [];
-		return path = pathToAncester+" "+pathFromRepToLeaf[0];	
+		return path = pathToAncester+" > "+pathFromRepToLeaf[0];	
 	}
 };
 jQuery.fn.fingerprint = function() {
@@ -93,7 +94,7 @@ jQuery.fn.leafNodePath = function(commonAncester) {
 	if($(this)[0]===$(commonAncester)[0]) return "";
 	var listOfParents = $(this).parentsUntil($(commonAncester));
 	return _.reduce(listOfParents, function(memo, p) {
-		return $(p).prop("tagName")+" > "+memo;
+		return $(p).tagAndClass()+" > "+memo;
 	},(listOfParents.length>0)? $(this).tagClassNth(): $(this).tagAndClass());
 };
 jQuery.fn.path = function() {
@@ -300,6 +301,12 @@ var isSameArray = function(a1, a2, option) {
 	}
 	return true;
 };
+var same_values = function(list) {
+	for(var i=1 ;i<list.length;i++){
+		if (list[i]!=list[i-1]) return false;
+	}
+	return true;
+}
 var isPermutation = function(a1, a2) {
 	if(a1.length != a2.length) return false;
 	var a2c = a2.slice(0);

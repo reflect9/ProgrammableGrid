@@ -150,6 +150,10 @@ pg.planner = {
 		{	'attr_key': "download", 
 			'getter': function(el) { return $(el).attr('download');},
 			'setter': function(el,val) { return $(el).attr('download',val);}	
+		},
+		{	'attr_key': "visibility", 
+			'getter': function(el) { return $(el).css('display');},
+			'setter': function(el,val) { return $(el).css('display',val);}	
 		}
 	],
 
@@ -178,110 +182,50 @@ pg.planner = {
 				}
 				
 				var n_original_el = {I:toArray(I),V:el_differ_I,P:undefined}; 
-				var n_modified_el = {I:toArray(I),V:el_differ_O,P:undefined};
-				// infering original page to original elements node
+				var n_modified_el = {I:undefined,V:el_differ_O,P:undefined};
+				// infering element extractor from original page to original elements node
 				var program_extract_original_elements = pg.planner.methods.extract_element.generate(I,n_original_el);
-				var program_modify_element_attribute = pg.planner.methods.modify_element_attribute.generate(n_original_el, n_modified_el);
-				return _.union(program_extract_original_elements,program_modify_element_attribute);
+				if (n_original_el.V.length > n_modified_el.V.length) {
+					// if filtering is required. 
+					var n_original_filtered_el = {I:toArray(n_original_el), V: el_differ_I, P:undefined};
+					var program_filter_original_elements = pg.planner.methods.filter_element.generate(n_original_el, n_original_filtered_el);
+					var program_modify_element_attribute = pg.planner.methods.modify_element_attribute.generate(n_original_filtered_el, n_modified_el);
+					return _.union(program_extract_original_elements,program_filter_original_elements, program_modify_element_attribute);	
+				} else {
+					// if filtering is unnecessary
+					var program_modify_element_attribute = pg.planner.methods.modify_element_attribute.generate(n_original_el, n_modified_el);
+					return _.union(program_extract_original_elements,program_modify_element_attribute);	
+				}
 			}
 		},
 		page_filtered: {
 			pre: function(I,O) {
-				I = (_.isArray(I))?I[0]:I;
-				if(I.V.length!=1 || O.V.length!=1) return false;
-				var pI = I.V[0];  var pO = O.V[0];
-				if(!isDom(pI) || !isDom(pO)) return false;
-				if(pI.tagName!="BODY" || pO.tagName!="BODY") return false;
-				return true; 
+				return false;
+
+				// I = (_.isArray(I))?I[0]:I;
+				// if(I.V.length!=1 || O.V.length!=1) return false;
+				// var pI = I.V[0];  var pO = O.V[0];
+				// if(!isDom(pI) || !isDom(pO)) return false;
+				// if(pI.tagName!="BODY" || pO.tagName!="BODY") return false;
+				// return true; 
 			}, 
 			generate: function(I,O) {
-				// TBD
+				
 			}
 		},
-		filter_element: {
+		literal: {
 			pre: function(I, O) {
-				I = (_.isArray(I))?I[0]:I;
-				// The texts in the goal node must exist in one of the I' content.
-				if (!isDomList(O.V)) return false;
-				if (!isDomList(I.V) ) return false;
-				if (!_.every(O.V, function(el) {return I.V.indexOf(el) != -1;})) return false;
-				if (I.V.length == 0) return false;
-				return true;
-			},
-			generate: function(I, O) {
-				I = (_.isArray(I))?I[0]:I;
-				// get all the sub elements
-				var all_sub_elements = $(I.V[0]).find("*");
-				var sub_elements = all_sub_elements.filter(function(el) {
-					return $(el).text() != null;
-				});
-				// get element path
-				var el_paths = _.map(sub_elements, function(el, index) {
-					return $(el).pathWithNth(I.V[0]);
-				})
-				// use path to all the list items
-				for (var i in el_paths) {
-					var path = el_paths[i];
-					var i_els = _.map(I.V, function(item, index) {
-						// To Do: parse string into number
-						return $(item).find(path);
-					});
-					var o_els = _.map(O.V, function(item, index) {
-						// To Do: parse string into number
-						return $(item).find(path);
-					});
-					var i_texts = _.map(i_els, function(item, index) {
-						// To Do: parse string into number
-						return $(item).text();
-					});
-					var o_texts = _.map(o_els, function(item, index) {
-						// To Do: parse string into number
-						return $(item).text();
-					});
-
-					// create intermediate nodes
-					var i_inter = {I:toArray(I), V:i_texts, P:undefined};
-					var o_inter = {I:undefined, V:o_texts, P:undefined};
-					if (pg.planner.methods.filter.pre(i_inter, o_inter)) {
-						var result = pg.planner.methods.filter.generate(i_inter, o_inter);
-						if (result) {
-							var el_node = {I:toArray(I), V:i_els, P:{type:"extract_element", param:path}};
-
-							i_inter = result[0];
-							i_inter.P = {type:"get_attribute", param:"text"};
-							i_inter.I = el_node;
-
-							o_inter = result[1];
-							O.I = [I, i_inter];
-							O.P = {type:"filter_element", param:o_inter.P.param};
-							return _.union(I, el_node, i_inter, O);
-							
-						} else {
-							return false;
-						}
-					}
-				}
-				
 				return false;
 			},
+			generate: function(I,O) {
+				// NA
+			},
 			execute: function(O) {
-				if (O.P.type !== "filter_element") return false;
-				var original_els = O.I[0];
-				var extracted_keys = O.I[1];
-				var temp_node = {I:toArray(extracted_keys), V:null, P:{type:'filter', param: O.P.param}};
-				var booleans = pg.planner.methods.filter.execute_helper(temp_node);
-
-				
-				var filtered = []
-				for (var i = 0; i < booleans.length; i++) {
-					if (booleans[i]) {
-						filtered.push(original_els.V[i]);
-					}
-				}
-				O.V = filtered;
+				O.V = O.P.param;
 				return O;
 			}
 		},
+		
 		extract_text: {
 			pre: function(I, O) {
 				I = (_.isArray(I))?I[0]:I;
@@ -339,7 +283,7 @@ pg.planner = {
 		// },
 		modify_element_attribute: {
 			pre: function(I, O) {
-				// I and O must be same-structure elements with modified text attribute
+				// I and O must be same-structure elements with modified attributes
 				// check they have same finger-print but different html
 				var I = (_.isArray(I))?I[0]:I;
 				// Initial_node value must contails all the goal_node values 
@@ -375,6 +319,7 @@ pg.planner = {
 				// FIND OUT WHICH ATTRIBUTE IS MODIFIED AND FIND GETTER and SETTER
 				var valid_attr_func_list = pg.planner.methods.modify_element_attribute.helper_attribute_func(I,O);	
 				if(valid_attr_func_list.length!=1) return false;	// TBD: handle when multiple attributes are modified
+				var attr_key = valid_attr_func_list[0]['attr_key'];
 				var attr_getter = valid_attr_func_list[0]['getter'];
 				var attr_setter = valid_attr_func_list[0]['setter'];   
 				
@@ -398,6 +343,10 @@ pg.planner = {
 					O = pg.planner.methods.set_attribute.generate([I,n_modified_attr], O);
 					// O = {I:[I, n_modified_attr], V:O.V, P:{type:"set_attribute",param:"text"}};
 					return _.union(n_rep_el, program_extracting_text_from_rep, O);
+				} else if (_.unique(modified_attr).length==1) {  // case of LITERAL VALUE : if all the new attribute values are same
+					n_modified_attr = {I:undefined, V:_.unique(modified_attr), P:{type:"literal",param:_.unique(modified_attr)}};
+					O = pg.planner.methods.set_attribute.generate([I,n_modified_attr], O);
+					return _.union(n_modified_attr, O);
 				} else {
 					// we need to try decomposing modified_attr
 					// try to find a way to generate modified_attr from I
@@ -452,20 +401,20 @@ pg.planner = {
 				var original_el = Is[0].V;
 				var new_attribute = Is[1].V;
 				var modified_el = O.V;
-				if (	original_el.length != new_attribute.length  
-					||	new_attribute.length != modified_el.length) return false; 
+				if (	original_el.length != modified_el.length) return false; 
+				if ( new_attribute.length != 1 || new_attribute.length == original_el.length) return false;
 				for(var i=0; i<original_el.length; i++) {
 					if($(original_el[i]).fingerprint() != $(modified_el[i]).fingerprint()) return false;
-					if (new_attribute[i] != $(modified_el[i]).text()) return false;
+					// if (new_attribute[i] != $(modified_el[i]).text()) return false;
 				}
 				return true;
 			}, 
 			generate: function(Is, O) {
 				if(!_.isArray(Is) || Is.length<2) return false;
 				var original_el = Is[0].V;
-				var new_value = Is[1].V;
+				var new_values = Is[1].V;
 				var attr_func = _.filter(pg.planner.attr_func_list, function(func) {
-					if (new_value[0] == func.getter(O.V[0])) return true;
+					if (new_values[0] == func.getter(O.V[0])) return true;
 					else return false;
 				},this)[0];
 				if (!attr_func) return false;
@@ -478,7 +427,8 @@ pg.planner = {
 				var I_new_value = O.I[1];
 				var attr_func = _.filter(pg.planner.attr_func_list, function(f){ return f.attr_key==O.P.param; },this)[0];
 				for(var i in I_original_el.V) {
-					attr_func.setter.call(undefined, I_original_el.V[i], I_new_value.V[i]);
+					var newVal = (I_new_value.V.length==1)? I_new_value.V[0]: I_new_value.V[i];
+					attr_func.setter.call(undefined, I_original_el.V[i], newVal);
 				};
 				O.V = I_original_el.V;
 				return O;
@@ -503,6 +453,7 @@ pg.planner = {
 			generate: function(I, O){
 				// find a consistent jquery paths selecting the O values (and possibly more)
 				I = (_.isArray(I))?I[0]:I;
+				var n_extracted_el, n_filtered_el;
 				if(I.V.length == O.V.length) {
 					// n-to-n extraction
 					var paths = []; 
@@ -523,6 +474,7 @@ pg.planner = {
 					if(path===null) return false;
 					else {
 						O.I = toArray(I);
+						O.V = $(I.V[0]).find(path).toArray();
 						O.P = {type:'extract_element',param:path};
 						return O;
 					}
@@ -745,7 +697,88 @@ pg.planner = {
 			}
 		},
 
+		filter_element: {
+			pre: function(I, O) {
+				I = (_.isArray(I))?I[0]:I;
+				// The texts in the goal node must exist in one of the I' content.
+				if (!isDomList(O.V)) return false;
+				if (!isDomList(I.V) ) return false;
+				if (!_.every(O.V, function(el) {return I.V.indexOf(el) != -1;})) return false;
+				if (I.V.length == 0) return false;
+				return true;
+			},
+			generate: function(I, O) {
+				I = (_.isArray(I))?I[0]:I;
+				// get all the sub elements
+				var all_sub_elements = $(I.V[0]).find("*");
+				var sub_elements = all_sub_elements.filter(function(el) {
+					return $(el).text() != null;
+				});
+				// get element path
+				var el_paths = _.map(sub_elements, function(el, index) {
+					return $(el).pathWithNth(I.V[0]);
+				})
+				// use path to all the list items
+				for (var i in el_paths) {
+					var path = el_paths[i];
+					var i_els = _.map(I.V, function(item, index) {
+						// To Do: parse string into number
+						return $(item).find(path);
+					});
+					var o_els = _.map(O.V, function(item, index) {
+						// To Do: parse string into number
+						return $(item).find(path);
+					});
+					var i_texts = _.map(i_els, function(item, index) {
+						// To Do: parse string into number
+						return $(item).text();
+					});
+					var o_texts = _.map(o_els, function(item, index) {
+						// To Do: parse string into number
+						return $(item).text();
+					});
 
+					// create intermediate nodes
+					var i_inter = {I:toArray(I), V:i_texts, P:undefined};
+					var o_inter = {I:undefined, V:o_texts, P:undefined};
+					if (pg.planner.methods.filter.pre(i_inter, o_inter)) {
+						var result = pg.planner.methods.filter.generate(i_inter, o_inter);
+						if (result) {
+							var el_node = {I:toArray(I), V:i_els, P:{type:"extract_element", param:path}};
+
+							i_inter = result[0];
+							i_inter.P = {type:"get_attribute", param:"text"};
+							i_inter.I = el_node;
+
+							o_inter = result[1];
+							O.I = [I, i_inter];
+							O.P = {type:"filter_element", param:o_inter.P.param};
+							return _.union(I, el_node, i_inter, O);
+							
+						} else {
+							continue;
+						}
+					}
+				}
+				
+				return false;
+			},
+			execute: function(O) {
+				if (O.P.type !== "filter_element") return false;
+				var original_els = O.I[0];
+				var extracted_keys = O.I[1];
+				var temp_node = {I:toArray(extracted_keys), V:null, P:{type:'filter', param: O.P.param}};
+				var booleans = pg.planner.methods.filter.execute_helper(temp_node);
+				var filtered = []
+				for (var i = 0; i < booleans.length; i++) {
+					if (booleans[i]) {
+						filtered.push(original_els.V[i]);
+					}
+				}
+				O.V = filtered;
+				return O;
+			}
+		},
 
 		filter: {
 			// (list of object) -> (list of subtexts)  
@@ -783,11 +816,11 @@ pg.planner = {
 							}
 						});
 					});
-
 					// find the words that may be filter criteria
-					key_words = [];
+					p_key_words = [];   n_key_words = [];	// p is words for string_contain case,  n is words for strong_not_contain
 					_.each(bagOfWords, function(word, index) {
 						var word = bagOfWords[word];
+						// finding positive keyword
 						match_indexs = []
 						for (var i = 0; i < I.V.length; i++) {
 							if (I.V[i].indexOf(word) != -1) {
@@ -796,17 +829,28 @@ pg.planner = {
 						}
 						match_indexs.sort();
 						if (JSON.stringify(indexs) == JSON.stringify(match_indexs)) {
-							key_words.push(word)
+							p_key_words.push(word)
+						}
+						// finding negative keyword
+						match_indexs = []
+						for (var i = 0; i < I.V.length; i++) {
+							if (I.V[i].indexOf(word) == -1) {
+								match_indexs.push(i);
+							}
+						}
+						match_indexs.sort();
+						if (JSON.stringify(indexs) == JSON.stringify(match_indexs)) {
+							n_key_words.push(word)
 						}
 					});
-						
-					
-					if (key_words.length == 0) {
-						return null;
-					}
-					node_goal = {V:O.V, I:toArray(I), A:null, P:{type:'filter',param:{type: "string_contain", param: key_words[0]}} };
+					// p_key_words have higher-priority
+					if (p_key_words.length>0) 
+						node_goal = {V:O.V, I:toArray(I), A:null, P:{type:'filter',param:{type: "string_contain", param: p_key_words[0]}} };	
+					else if (n_key_words.length>0) 
+						node_goal = {V:O.V, I:toArray(I), A:null, P:{type:'filter',param:{type: "string_not_contain", param: n_key_words[0]}} };	
+					else return false;
 				} else {
-					// check equal
+					// numeric predicate case
 					unique = O.V[0];
 					fail = false;
 					for (var i in O.V) {
@@ -873,37 +917,43 @@ pg.planner = {
 				var booleans = [];
 				switch(O.P.param.type) {
 					case 'string_contain':
-						_.each(O.I.V, function(item, index) {
+						_.each(O.I[0].V, function(item, index) {
 							if (item.indexOf(arg) >= 0) booleans.push(true);
 							else booleans.push(false);
 						})
 						break;
+					case 'string_not_contain':
+						_.each(O.I[0].V, function(item, index) {
+							if (item.indexOf(arg) == -1) booleans.push(true);
+							else booleans.push(false);
+						})
+						break;						
 					case '==':
-						_.each(O.I.V, function(item, index) {
+						_.each(O.I[0].V, function(item, index) {
 							if (item == arg) booleans.push(true);
 							else booleans.push(false);
 						})
 						break;
 					case '<=':
-						_.each(O.I.V, function(item, index) {
+						_.each(O.I[0].V, function(item, index) {
 							if (item <= arg) booleans.push(true);
 							else booleans.push(false);
 						})
 						break;
 					case '>=':
-						_.each(O.I.V, function(item, index) {
+						_.each(O.I[0].V, function(item, index) {
 							if (item <= arg) booleans.push(true);
 							else booleans.push(false);
 						})
 						break;
 					case 'odd':
-						_.each(O.I.V, function(item, index) {
+						_.each(O.I[0].V, function(item, index) {
 							if (item % 2 == 1) booleans.push(true);
 							else booleans.push(false);
 						})
 						break;
 					case 'even':
-						_.each(O.I.V, function(item, index) {
+						_.each(O.I[0].V, function(item, index) {
 							if (item % 2 == 0) booleans.push(true);
 							else booleans.push(false);
 						})
@@ -914,99 +964,3 @@ pg.planner = {
 		}
 	}	// END OF METHODS //
 };
-
-	// // OLD CODE //
-	// generateGraph : function(ContextNodes,OutputNode) {
-	// 	// a Node has V and P[], and id. 
-	// 	//		data is an array of data
-	// 	//		operations is an operation that contains,
-	// 	//			inputNodes: a list of input nodes,
-	// 	//			expr: the expression
-	// 	// a Node may have multiple operations 
-	// 	console.log("================================================");
-	// 	console.log("Input:");
-	// 	console.log(_.map(ContextNodes,function(node){ return node.V.join(",");}));
-	// 	console.log("Output:");
-	// 	console.log(OutputNode.V.join(","));
-	// 	console.log("================================================");
-	// 	var i = 0;
-	// 	while(true) {// start generating new nodes from context nodes
-	// 		console.log("Round "+i+" starts");
-	// 		// create all combinations of (inputNode,argNode)
-	// 		var IAList = chooseInputArgNodes(ContextNodes);
-	// 		var emptyNode = new pg.Node();
-	// 		emptyNode.id = emptyNode.id+"_empty";
-	// 		// if(IAList.length>200) break;
-	// 		_.each(IAList, function(IA) {
-	// 			var nI=IA[0]; var nA=IA[1]; var nO=OutputNode;
-	// 			console.log("Inference start----------");
-	// 			// 1. try each (nI,nA,nO) to check whether the outputNode is reachable 
-	// 			// add the result procedure to the OutputNode's operation
-	// 			try{
-	// 				var OperationReachingOutput = this.GenerateProcedureForGraph(nI,nO,nA,pg.language.Operation);	
-	// 			} catch(e) {
-	// 				console.error(e.stack);
-	// 			}
-	// 			if(OperationReachingOutput && OperationReachingOutput.length>0) {
-	// 				OutputNode.candidateP = _.without(_.union(OutputNode.candidateP,OperationReachingOutput),null);
-	// 			}
-	// 			// 2. try each (nI,nA,[]) to create intermediate nodes
-	// 			try{
-	// 				var Ps = this.GenerateProcedureForGraph(nI,emptyNode,nA,pg.language.Operation);
-	// 			} catch(e) {
-	// 				console.error(e.stack);
-	// 			}
-	// 			_.each(_.without(Ps,null), function(p) {
-	// 				var newValue = pg.language.evaluate(nI,nA,p);
-	// 				if(_.filter(ContextNodes, function(existingNode) {
-	// 					return isSameArray(existingNode.V,newValue);
-	// 				}).length===0) {
-	// 					ContextNodes.push(new pg.Node(pg.language.evaluate(nI,nA,p),p));
-	// 				}
-	// 			});
-	// 		},this);
-	// 		console.log("Round "+i+" is over");
-	// 		console.log(_.map(ContextNodes,function(node){ return node.V.join(",");}));
-	// 		if(OutputNode.candidateP.length>0 || i>=this.maxInferenceSteps) break;
-	// 		else i++;
-	// 	}
-	// 	console.log("********************* END RESULT");
-	// 	console.log(ContextNodes);
-	// 	console.log(OutputNode);
-	// 	console.log("*********************");
-	// 	// return ContextNodes;
-	// 	// now get the paths to reach OutputNode
-	// 	// var pathToOutput = PathFromGraph(ContextNodes, OutputNode);
-	// 	var resultGraph = new pg.Graph(ContextNodes);
-	// 	resultGraph.sanityCheck();
-	// 	if(OutputNode.candidateP===null) { // if no path found, then return paths to all the intermediate nodes
-	// 		return resultGraph;  
-	// 	} else { // if there's any path reaching to the output, then return paths to the output node
-	// 		OutputNode.P 
-	// 		resultGraph.addNode(OutputNode);
-	// 		return resultGraph.getSubGraph(OutputNode.id);
-	// 	}
-	// 	// in the end, 
-
-	// },
-	// // it returns P[] which also contains links to input and arg nodes
-	// generateProcedureForGraph : function(nI,nO,nA,L) {
-	// 	// console.log("[GenerateProcedureForGraph]\t:");
-	// 	// console.log(nI,nO,nA,L);
-	// 	if(!L.constraint(nI,nO,nA)) return null;
-	// 	var Op=null;
-	// 	if(L.expr!==null) {  // if L is not leafnode of the language tree, then dig deeper
-	// 		Op = _.map(L.expr, function(e) {
-	// 			return this.GenerateProcedureForGraph(nI,nO,nA,e);
-	// 		},this);
-	// 	} else { // if L is a leaf, then return a new array of operations
-	// 		Op = L.generateOperation(nI,nO,nA);
-	// 	}
-	// 	Op = _.flatten(_.without(Op,null));  // remove null operations
-	// 	// if(L.type=="Operation" && Op!==null) {
-	// 		// console.log("Inference finished for a set of IOA");
-	// 		// console.log(nI.V,nO.V,nA.V);
-	// 		// console.log(_.map(Op, function(p){return p.type;}));
-	// 	// }
-	// 	return Op;
-	// }

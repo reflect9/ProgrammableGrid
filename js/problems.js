@@ -22,13 +22,14 @@ var save_script = function(title, nodes_to_store) {
 		var old_data = localStorage["prgr"];
 		if (old_data =="undefined" || old_data == "[object Object]" || old_data == "[]") old_data="{}";
 		programs = pg.planner.parse(old_data);
-		programs[title] = nodes_to_store;
-		new_data = pg.planner.serialize(programs);
-		localStorage.setItem("prgr",new_data);
-		return programs;
 	} catch(e) {
-		console.error(e.stack);
-	}
+		programs = {};
+	}	
+	programs[title] = nodes_to_store;
+	new_data = pg.planner.serialize(programs);
+	localStorage.setItem("prgr",new_data);
+	return programs;
+	
 };
 
 var load_script = function(title) {
@@ -45,10 +46,12 @@ var execute_script = function(nodes) {
 	// initialize states of the nodes
 	var n_queue = nodes;
 	var n_executed = [];
+	var counter=0;
 	// execute nodes those are ready
 	try{
-	while(n_queue.length>0) {
+	while(n_queue.length>0 && counter<100) {
 		// find an executable node
+		counter++;
 		var node_to_execute = undefined;
 		for(var i=0; i<n_queue.length; i++) {
 			var n = n_queue[i];
@@ -126,21 +129,20 @@ pg.problems = {
 				A:null,
 			}
 		;
-		pg.planner.methods.compose_text.generate(initial_nodes, goal_node);
 		return [initial_nodes, goal_node];
 
 
 	},
 	'page_filtered': function() {
 		// some elements in the input page is hidden
-		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
+		BASE_URL = 'http://washingtondc.craigslist.org/search/ara/mld?catAbb=ara&query=silk&zoomToPosting=&minAsk=&maxAsk=';
 		if(window.location.href != BASE_URL) {
 			window.location.replace(BASE_URL);
 			console.log("try again in this page.");
 			return;
 		}
 		pg.backup_page = $("body").clone().get(0);
-		var filtered_list = $(".gs_r:contains('Lee')").hide();
+		var filtered_list = $("p.row:contains('from')").hide();
 		var initial_nodes = [
 			{	V:[pg.backup_page],
 				P:{type:"loadPage",param:""},
@@ -154,7 +156,6 @@ pg.problems = {
 				I:null,
 				A:null,
 			};
-		pg.planner.methods.filter_element.generate(initial_nodes, goal_node);
 		return [initial_nodes, goal_node];
 	},
 	'set_attribute': function() {

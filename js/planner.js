@@ -75,22 +75,22 @@ pg.planner = {
 		return programs;
 	},
 
-	execute: function(nodes) {
-		for (var i in nodes) {
-			var node = nodes[i];
-			if (!node.V) {	
-				if(node.P && node.P.type) {
-					var gen = node.P.type;
-					try{
-						pg.planner.methods[gen].execute(node);		
-					} catch(e) {
-						console.error(e.stack);
-					}
-				}
-			}
-		}
-		return nodes;
-	},
+	// execute: function(nodes) {
+	// 	for (var i in nodes) {
+	// 		var node = nodes[i];
+	// 		if (!node.V) {	
+	// 			if(node.P && node.P.type) {
+	// 				var gen = node.P.type;
+	// 				try{
+	// 					pg.planner.methods[gen].execute(node);		
+	// 				} catch(e) {
+	// 					console.error(e.stack);
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// 	return nodes;
+	// },
 
 	plan: function(Is, O){
 		Is = toArray(Is);

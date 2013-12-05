@@ -24,10 +24,10 @@ function reportOnLoad() {
 		action: "reportOnLoad",
 		url: $(location).attr('host')
 	}, function(response) {
-		if(response.action=='openWorksheet') {
-			// wg.init(response.tab);
-			// TBD: panel should load specific enhancement or procedure
-		}
+		// if(response.action=='openWorksheet') {
+		// 	// wg.init(response.tab);
+		// 	// TBD: panel should load specific enhancement or procedure
+		// }
 	});
 }
 function loadURL(url,callback) {

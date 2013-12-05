@@ -1,0 +1,227 @@
+
+body{
+	
+}
+
+ol, ul {
+    list-style: none outside none;
+    margin:none;  padding:0;
+}
+
+
+#tiles{
+	position:absolute;
+	z-index:101;
+	top:0px; left:0px;
+	width:3000px;
+	height:3000px;
+}
+
+#plate{
+	/*background:#ddd;*/
+	width:3000px;
+	height:3000px;
+	z-index:100;
+}
+
+#container {
+	position:relative;
+	width:1024px;
+	height:800px;
+	border:1px solid #dcc;
+	overflow:scroll;
+}
+#node_size_slider {
+	margin:5px;
+	width:200px;
+}
+.node {
+	position:absolute;
+	background:gray; 
+	/*border:1px solid black;*/
+	box-shadow: inset 0 0 0 1px #ffffff;
+	overflow:hidden;
+}
+.node-selected {
+	box-shadow: inset 0 0 0 5px #0022ee;
+}
+.node-trigger {
+	background-color:#635a52;
+}
+.node-page {	
+	background-color:#b495c7;
+}
+.node-element {
+	background-color:#5abad1;
+}
+.node-variable{
+	background-color:#e67975;
+}
+.node-operation{
+	background-color:#e0e0e0;
+}
+
+.node-head {
+	/*height:30px;*/
+	margin:5px;
+	position:relative;
+}
+/***********************/
+/* icon for different tile sizes */
+.node-icon {
+	width:30px;
+	height:30px;
+	background-repeat:no-repeat;
+	background-position: center center;
+}
+
+.node-icon-low {
+	position:absolute;
+	top:50%;
+	left:50%;
+	margin-top:-15px;
+	margin-left:-15px;
+	
+}
+.node-icon-mid {
+	float:left;
+}
+/*.node-icon-high {
+	position:absolute;
+	width:26px;
+	height:26px;
+	top:0px; left:0px;
+	margin-top:7px; margin-left:7px;
+}*/
+/***********************/
+/* icon for tile types */
+.node-icon-trigger {
+	background-image:url("glyphicons/glyphicons_055_stopwatch.png")
+}
+.node-icon-page {
+	background-image:url("glyphicons/glyphicons_160_imac.png")
+}
+.node-icon-element {
+	background-image:url("glyphicons/glyphicons_393_sound_stereo.png")
+}
+.node-icon-variable {
+	background-image:url("glyphicons/glyphicons_114_list.png")
+}
+
+.node-icon-pick {
+	background-image:url("glyphicons/glyphicons_377_riflescope.png")
+}
+.node-icon-inspect {
+	background-image:url("glyphicons/glyphicons_027_search.png")
+}
+.node-icon-create {
+	background-image:url("glyphicons/glyphicons_009_magic.png")
+}
+.node-icon-transform {
+	background-image:url("glyphicons/glyphicons_164_iphone_transfer.png")
+}
+.node-icon-modify {
+	background-image:url("glyphicons/glyphicons_280_settings.png")
+}
+.node-icon-call {
+	background-image:url("glyphicons/glyphicons_205_electricity.png")
+}
+.node-icon-loadURL {
+	background-image:url("glyphicons/glyphicons_371_global.png")
+}
+/************************/
+/* other items in nodes */
+.node-number-of-values {
+	position:absolute;
+	top:10px;
+	left:40px;
+	text-align:left;
+	color:white;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 16px;
+	line-height: 1.428571429;
+}
+.node-values-mid {
+	width:100%;
+	padding:5px;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 15px;
+	color:white;	
+	overflow:hidden;
+}
+.node-type {
+	/* mid-level detail when there's no value in the node */
+	position:absolute;
+	top:5px; left: 32px;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 15px;
+	white-space:nowrap;
+	color:white;
+}
+/*.node-operation-high {
+	
+	position:absolute;
+	top:10px;
+	left:40px;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 15px;
+	color:black;
+}*/
+.node-description-high {
+	clear:both;
+	width:100%;
+/*	height:25px;*/
+	padding-left:5px;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 13px;
+	white-space:nowrap;
+}
+.node-values-high {
+	width:100%;
+	padding:5px;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 15px;
+	color:white;	
+	overflow:hidden;
+}
+
+.node-table {
+	/* general node table css*/
+	overflow:hidden;
+	padding:3px;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 13px;
+}
+.node-table-mid {
+	/* mid detail value table style */
+}
+.node-table-high {
+	/* high detail value table style */
+}
+.node-table li {
+	padding:0px 2px 0px 2px;
+	white-space: nowrap;
+}
+.node-table li:nth-child(even) {
+	background-color: none
+}
+.node-table li:nth-child(odd) {
+	background-color: rgba(0,0,0,0.2)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/***********************/

@@ -16,13 +16,13 @@
       "matches" : ["<all_urls>"],
       "js" : [	"js/lib/jquery-2.0.3.min.js",
             "js/lib/jquery-ui-1.10.3.custom.min.js",
+            "js/lib/d3.min.js",
       			"js/lib/underscore-min.js",
             "js/lib/async.js",
             "js/utils.js",
             "js/pg.js",
             "js/node.js",
             "js/operation.js",
-            "js/graph.js",
             "js/language.js",
             "js/synthesizer.js",
             "js/planner.js",
@@ -31,6 +31,8 @@
             "contentscript.js"
       		],
       "css": [  
+            "js/lib/ui-lightness/jquery-ui-1.10.3.custom.css",
+            "js/style.css"
               ],
       "run_at" : "document_idle",
       "all_frames" : false

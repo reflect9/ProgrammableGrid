@@ -4,10 +4,7 @@
   "version" : "1.0",
   "description" : "Programmable Grid Project",
   "background" : {
-    "scripts": ["js/lib/jquery.min.js",
-                "js/lib/underscore-min.js",
-                "js/lib/purl.js",
-                "background.js"]
+    "scripts": []
   },
   "browser_action" :
   {
@@ -18,6 +15,7 @@
     {
       "matches" : ["<all_urls>"],
       "js" : [	"js/lib/jquery-2.0.3.min.js",
+            "js/lib/jquery-ui-1.10.3.custom.min.js",
       			"js/lib/underscore-min.js",
             "js/lib/async.js",
             "js/utils.js",

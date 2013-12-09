@@ -8,6 +8,21 @@ ol, ul {
     margin:none;  padding:0;
 }
 
+#pg_panel button{
+	all: none;
+}
+#pg_panel {
+	position:fixed;
+	z-index:999;
+	width:100%;
+	height:300px;
+	bottom:0px;
+	background:white;
+	overflow:auto;
+}
+#node_size_slider {
+	display: inline-block;
+}
 
 #tiles{
 	position:absolute;
@@ -23,10 +38,36 @@ ol, ul {
 	height:3000px;
 	z-index:100;
 }
-
-#container {
+#script_selector{
+	width:200px;
+}
+#edit_ui {
+	position:fixed;
+	z-index:99999;
+	background:white;
+	border:1px solid #aaa;
+	border-radius: 8px;
+	max-width:100px;
+	padding:5px;
+	top:30px;  left:30px;
+}
+#edit_ui button {
+	width:100%;
+}
+#control_ui {
 	position:relative;
-	width:1024px;
+	background:white;
+	vertical-align: middle;
+	padding-left:10px;
+	height:26px;
+	padding-top:5px;
+	border-top:1px solid #ccc;
+	overflow: hidden;
+}
+
+#plate_container {
+	position:relative;
+	width:100%;
 	height:800px;
 	border:1px solid #dcc;
 	overflow:scroll;
@@ -42,8 +83,8 @@ ol, ul {
 	box-shadow: inset 0 0 0 1px #ffffff;
 	overflow:hidden;
 }
-.node-selected {
-	box-shadow: inset 0 0 0 5px #0022ee;
+.node[selected] {
+	box-shadow: inset 0 0 0 3px #9b4681;
 }
 .node-trigger {
 	background-color:#635a52;
@@ -93,42 +134,6 @@ ol, ul {
 	top:0px; left:0px;
 	margin-top:7px; margin-left:7px;
 }*/
-/***********************/
-/* icon for tile types */
-.node-icon-trigger {
-	background-image:url("glyphicons/glyphicons_055_stopwatch.png")
-}
-.node-icon-page {
-	background-image:url("glyphicons/glyphicons_160_imac.png")
-}
-.node-icon-element {
-	background-image:url("glyphicons/glyphicons_393_sound_stereo.png")
-}
-.node-icon-variable {
-	background-image:url("glyphicons/glyphicons_114_list.png")
-}
-
-.node-icon-pick {
-	background-image:url("glyphicons/glyphicons_377_riflescope.png")
-}
-.node-icon-inspect {
-	background-image:url("glyphicons/glyphicons_027_search.png")
-}
-.node-icon-create {
-	background-image:url("glyphicons/glyphicons_009_magic.png")
-}
-.node-icon-transform {
-	background-image:url("glyphicons/glyphicons_164_iphone_transfer.png")
-}
-.node-icon-modify {
-	background-image:url("glyphicons/glyphicons_280_settings.png")
-}
-.node-icon-call {
-	background-image:url("glyphicons/glyphicons_205_electricity.png")
-}
-.node-icon-loadURL {
-	background-image:url("glyphicons/glyphicons_371_global.png")
-}
 /************************/
 /* other items in nodes */
 .node-number-of-values {

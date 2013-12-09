@@ -1,78 +1,40 @@
-var save_script = function(title, nodes_to_store) {
-	try {
-		var old_data = localStorage["prgr"];
-		if (old_data =="undefined" || old_data == "[object Object]" || old_data == "[]") old_data="{}";
-		programs = pg.planner.parse(old_data);
-	} catch(e) {
-		programs = {};
-	}	
-	programs[title] = nodes_to_store;
-	new_data = pg.planner.serialize(programs);
-	localStorage.setItem("prgr",new_data);
-	return programs;
-	
-};
 
-var load_script = function(title) {
-	if (localStorage["prgr"]==undefined) return false;
-	else {
-		var data = localStorage.getItem("prgr");
-		var programs = pg.planner.parse(data);
-		if (programs[title]==undefined) return false 
-		else return programs[title];
-	}	
-};
-var execute_script = function(nodes) {
-	console.log("START SCRIPT");
-	// initialize states of the nodes
-	var n_queue = nodes;
-	var n_executed = [];
-	var counter=0;
-	// execute nodes those are ready
-	try{
-	while(n_queue.length>0 && counter<100) {
-		// find an executable node
-		counter++;
-		var node_to_execute = undefined;
-		for(var i=0; i<n_queue.length; i++) {
-			var n = n_queue[i];
-			var input_still_in_queue = _.filter(n.I, function(ni) { 
-				return n_queue.indexOf(ni)!=-1; 
-			},this);
-			if (input_still_in_queue.length==0 && n.P && n.P.type) {
-				node_to_execute = n;
-				break;
-			}
+
+pg.train = {
+	'google_pdf': function() {
+		var nodes = pg.generate("google_pdf")[0];
+		if(nodes && nodes.length>0){
+			pg.save_script("google_pdf",nodes);
 		}
-		if(node_to_execute) {
-				node_to_execute = pg.planner.methods[n.P.type].execute(node_to_execute);
-				n_queue = _.without(n_queue, node_to_execute);	
-				console.log(node_to_execute);	
+		return nodes;
+	},
+	'craigslist_filter': function() {
+		var nodes = pg.generate("craigslist_filter")[0];
+		if(nodes && nodes.length>0){
+			pg.save_script("craigslist_filter",nodes);
 		}
-	}}
-	catch(e) { console.error(e.stack);}
-	console.log("DONE EXECUTING SCRIPT");
-};
+		return nodes;
+	},
+	'testudo_filter': function() {
+		var nodes = pg.generate("testudo_filter")[0];
+		if(nodes && nodes.length>0){
+			pg.save_script("testudo_filter",nodes);
+		}
+		return nodes;
+	},
 
 
-var generate = function(problem_title){
-	try {
-		problem_nodes = pg.problems[problem_title]();
-		result = pg.planner.plan(problem_nodes[0],problem_nodes[1]);
-		return result;
-	} catch(e) {
-		console.error(e.stack);
-	}
+
 };
+
 
 
 pg.problems = {
-	'page_modified': function() {
+	'google_pdf': function() {
 		// initialize page and initial node set
 		BASE_URL = 'http://scholar.google.com/scholar?q=ctarcade&btnG=&hl=en&as_sdt=0%2C21v';
 		if(window.location.href != BASE_URL) {
 			window.location.replace(BASE_URL);
-			console.log("try again in this page.");
 			return;
 		}
 		if (pg.backup_page==undefined)	pg.backup_page = $("body").clone().get(0);
@@ -102,10 +64,33 @@ pg.problems = {
 			}
 		;
 		return [initial_nodes, goal_node];
-
-
 	},
-	'page_filtered': function() {
+	'testudo_filter': function() {
+		// some elements in the input page is hidden
+		BASE_URL = 'https://ntst.umd.edu/soc/201401/CMSC';
+		if(window.location.href != BASE_URL) {
+			window.location.replace(BASE_URL);
+			console.log("try again in this page.");
+			return;
+		}
+		pg.backup_page = $("body").clone().get(0);
+		var filtered_list = $(".course:not(:contains('Introduction'))").hide();
+		var initial_nodes = [
+			{	V:[pg.backup_page],
+				P:{type:"loadPage",param:""},
+				I:null,
+				A:null,
+			}
+		];
+		var goal_node = 
+			{	V:$("body").toArray(),
+				P:null,
+				I:null,
+				A:null,
+			};
+		return [initial_nodes, goal_node];
+	},
+	'craigslist_filter': function() {
 		// some elements in the input page is hidden
 		BASE_URL = 'http://washingtondc.craigslist.org/search/ara/mld?catAbb=ara&query=silk&zoomToPosting=&minAsk=&maxAsk=';
 		if(window.location.href != BASE_URL) {
@@ -114,7 +99,7 @@ pg.problems = {
 			return;
 		}
 		pg.backup_page = $("body").clone().get(0);
-		var filtered_list = $("p.row:contains('from')").hide();
+		var filtered_list = $("p.row:not(:contains('map'))").hide();
 		var initial_nodes = [
 			{	V:[pg.backup_page],
 				P:{type:"loadPage",param:""},
@@ -268,5 +253,131 @@ pg.problems = {
 		// run planner
 		pg.planner.methods.filter_element.generate(initial_nodes, goal_node);
 		return [initial_nodes, goal_node];
+	}
+};
+
+
+
+
+
+
+
+
+
+///
+
+pg.test = {
+	'sum': function() {
+		var context = [
+			new pg.Node(["1","2","3"], null),
+			new pg.Node(["a","b","c"], null)
+		];
+		var output = new pg.Node(["6"], null);
+		var gen = new pg.Synthesizer();
+		pg.language = new pg.Language();
+		var graph = gen.GenerateGraph(context,output);
+		return graph;
+	},
+	'manyWaysToDoIt': function() {
+		var context = [
+			new pg.Node([1,2,3], null),
+			new pg.Node(["a","b","c"], null),
+			new pg.Node([1,1,1], null)
+		];
+		var output = new pg.Node([3], null);
+		var gen = new pg.Synthesizer();
+		pg.language = new pg.Language();
+		var graph = gen.GenerateGraph(context,output);
+		return graph;
+	},
+	'calcTwoStep': function() {
+		var context = [
+			new pg.Node([1,2,3,4,5,6,7,8,9,10], null),
+			new pg.Node([3], null)
+		];
+		var output = new pg.Node([9,18,27], null);
+		var gen = new pg.Synthesizer();
+		pg.language = new pg.Language();
+		var graph = gen.GenerateGraph(context,output);
+		return graph;
+	},
+	'concat': function() {
+		var context = [
+			new pg.Node([1,2,3], null),
+			new pg.Node(["a","b","c"], null)
+		];
+		var output = new pg.Node(["abc"], null);
+		var gen = new pg.Synthesizer();
+		pg.language = new pg.Language();
+		var graph = gen.GenerateGraph(context,output);
+		return graph;
+	},
+	'count': function() {
+		var context = [
+			new pg.Node([1,2,3], null),
+			new pg.Node(["a","b","c"], null),
+			new pg.Node([3,2,1], null),
+			new pg.Node(["a"], null),
+			new pg.Node([6], null)
+		];
+		var output = new pg.Node([3], null);
+		var gen = new pg.Synthesizer();
+		pg.language = new pg.Language();
+		var graph = gen.GenerateGraph(context,output);
+		return graph;
+	},
+	'multiply': function() {
+		var context = [
+			new pg.Node([1,2,3], null),
+			new pg.Node(["a","b","c"], null),
+			new pg.Node([2], null),
+			new pg.Node(["a"], null),
+			new pg.Node([6], null)
+		];
+		var output = new pg.Node([12], null);
+		var gen = new pg.Synthesizer();
+		pg.language = new pg.Language();
+		var graph = gen.GenerateGraph(context,output);
+		return graph;
+	},
+	'filterByString': function() {
+		var context = [
+			new pg.Node(["abcde","abdeas","ghfgh","qerqwer23413","1345"], null),
+			// new pg.Node(["a","b","c"], null),
+			new pg.Node(["13"], null),
+			// new pg.Node(["a"], null),
+			new pg.Node([6], null)
+		];
+		var output = new pg.Node(["qerqwer23413","1345"], null);
+		var gen = new pg.Synthesizer();
+		pg.language = new pg.Language();
+		var graph = gen.GenerateGraph(context,output);
+		return graph;
+	},
+	'filterAndJoin': function() {
+		var context = [
+			new pg.Node(["cardSharing","cardTool","dont Worry"], null),
+			new pg.Node(["card"], null),
+			new pg.Node(["Aha:"], null)
+		];
+		var output = new pg.Node(["Aha:cardSharing","Aha:cardTool"], null);
+		var gen = new pg.Synthesizer();
+		pg.language = new pg.Language();
+		var graph = gen.GenerateGraph(context,output);
+		return graph;
+	},
+	'stringJoinTwoStep': function() {
+		var context = [
+			new pg.Node(["a","b","c"], null),
+			new pg.Node(["a","b","c"], null),
+			new pg.Node(["1","2","3"], null),
+			new pg.Node([" "], null),
+			new pg.Node([6], null)
+		];
+		var output = new pg.Node(["a 1","b 1","c 1"], null);
+		var gen = new pg.Synthesizer();
+		pg.language = new pg.Language();
+		var graph = gen.GenerateGraph(context,output);
+		return graph;
 	}
 };

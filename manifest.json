@@ -4,7 +4,9 @@
   "version" : "1.0",
   "description" : "Programmable Grid Project",
   "background" : {
-    "scripts": []
+    "scripts": ["js/lib/jquery-2.0.3.min.js",
+                "js/lib/underscore-min.js",
+                "background.js"]
   },
   "browser_action" :
   {
@@ -16,18 +18,16 @@
       "matches" : ["<all_urls>"],
       "js" : [	"js/lib/jquery-2.0.3.min.js",
             "js/lib/jquery-ui-1.10.3.custom.min.js",
-            "js/lib/d3.min.js",
       			"js/lib/underscore-min.js",
             "js/lib/async.js",
             "js/utils.js",
             "js/pg.js",
+            "js/panel.js",
             "js/node.js",
-            "js/operation.js",
-            "js/language.js",
-            "js/synthesizer.js",
             "js/planner.js",
             "js/problems.js",
-            
+            "js/selectionBox.js",
+            "js/inspector.js",
             "contentscript.js"
       		],
       "css": [  
@@ -52,7 +52,20 @@
     "http://*/", "https://*/"
   ],
   "web_accessible_resources": [
-    "js/lib/jquery-2.0.3.min.map"
+    "js/lib/jquery-2.0.3.min.js",
+    "js/lib/jquery-2.0.3.min.map",
+    "js/lib/glyphicons/glyphicons_153_unchecked.png",
+    "js/lib/glyphicons/glyphicons_055_stopwatch.png",
+    "js/lib/glyphicons/glyphicons_160_imac.png",
+    "js/lib/glyphicons/glyphicons_393_sound_stereo.png",
+    "js/lib/glyphicons/glyphicons_114_list.png",
+    "js/lib/glyphicons/glyphicons_377_riflescope.png",
+    "js/lib/glyphicons/glyphicons_027_search.png",
+    "js/lib/glyphicons/glyphicons_009_magic.png",
+    "js/lib/glyphicons/glyphicons_164_iphone_transfer.png",
+    "js/lib/glyphicons/glyphicons_280_settings.png",
+    "js/lib/glyphicons/glyphicons_205_electricity.png",
+    "js/lib/glyphicons/glyphicons_371_global.png"
   ],
   "manifest_version": 2
 }

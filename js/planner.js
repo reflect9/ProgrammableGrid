@@ -1,79 +1,5 @@
 pg.planner = {
-	serialize: function(programs) {
-		_.each(programs, function(nodes) {
-			var output = {};
-			id_counter = 0;
-			_.each(nodes, function(node, index) {
-				node.ID = id_counter++;
-				node.V = null;
-				output[node.ID] = node;
-			});
-			_.each(nodes, function(node, index) {
-				if (node.I) {
-					if (_.isArray(node.I)) {
-						node.I_ID = _.map(node.I, function(n, i) {
-						return n.ID;
-						});
-					} else {
-						node.I_ID = node.I.ID;
-					}
-					
-				} else {
-					node.I_ID = "";
-				}
-				node.I = null;
-			});
-			_.each(nodes, function(node, index) {
-				node.ID = null;
-			});
-			return nodes;		
-		});
-		return JSON.stringify(programs);
-	},
-	serialize_nodes: function(nodes) {
-		var output = {};
-		id_counter = 0;
-		_.each(nodes, function(node, index) {
-			node.ID = id_counter++;
-			node.V = null;
-			output[node.ID] = node;
-		});
-		_.each(nodes, function(node, index) {
-			if (node.I) {
-				if (_.isArray(node.I)) {
-					node.I_ID = _.map(node.I, function(n, i) {
-					return n.ID;
-					});
-				} else {
-					node.I_ID = node.I.ID;
-				}
-				
-			} else {
-				node.I_ID = "";
-			}
-			node.I = null;
-		});
-		_.each(nodes, function(node, index) {
-			node.ID = null;
-		});
-		return JSON.stringify(nodes);	
-	},
-	parse: function(data) {
-		var programs = JSON.parse(data);
-		_.each(programs, function(nodes, title) {
-			_.each(nodes, function(node, j) {
-				if (_.isArray(node.I_ID)) {
-					node.I = _.map(node.I_ID, function(id, i) {
-						return nodes[id];
-					})
-				} else {
-					node.I = nodes[node.I_ID];
-				}
-				node.I_ID = null;
-			});
-		});
-		return programs;
-	},
+	
 
 	// execute: function(nodes) {
 	// 	for (var i in nodes) {
@@ -113,7 +39,7 @@ pg.planner = {
 				console.log(method_name + " is doable;");
 				doable_methods.push(method);
 			} else {
-				console.log(method_name + " is not doable;");
+				// console.log(method_name + " is not doable;");
 			}
 		},this);
 		if (doable_methods.length == 0) {
@@ -130,13 +56,7 @@ pg.planner = {
 			result = method.generate(Is, O);
 			if (result && (!_.isArray(result) || result.indexOf(false)==-1)) {
 				return _.union(Is, result);
-			}
-			var result = null;
-			try {
-				result = method.generate(Is, O);
-			} catch (e) {
-				result = null;
-			}
+			} else return false;
 		});
 		return (solutions)? _.filter(solutions,function(s){return s!=false;}):false;	
 	},
@@ -318,7 +238,7 @@ pg.planner = {
 				
 				// FIND OUT WHICH ATTRIBUTE IS MODIFIED AND FIND GETTER and SETTER
 				var valid_attr_func_list = pg.planner.methods.modify_element_attribute.helper_attribute_func(I,O);	
-				if(valid_attr_func_list.length!=1) return false;	// TBD: handle when multiple attributes are modified
+				if(valid_attr_func_list.length==0) return false;	// TBD: handle when multiple attributes are modified
 				var attr_key = valid_attr_func_list[0]['attr_key'];
 				var attr_getter = valid_attr_func_list[0]['getter'];
 				var attr_setter = valid_attr_func_list[0]['setter'];   
@@ -708,60 +628,87 @@ pg.planner = {
 				return true;
 			},
 			generate: function(I, O) {
-				I = (_.isArray(I))?I[0]:I;
-				// get all the sub elements
-				var all_sub_elements = $(I.V[0]).find("*");
-				var sub_elements = all_sub_elements.filter(function(el) {
-					return $(el).text() != null;
+				var i_texts = _.map(I.V, function(item, index) {
+					// To Do: parse string into number
+					return $(item).text();
 				});
-				// get element path
-				var el_paths = _.map(sub_elements, function(el, index) {
-					return $(el).pathWithNth(I.V[0]);
-				})
-				// use path to all the list items
-				for (var i in el_paths) {
-					var path = el_paths[i];
-					var i_els = _.map(I.V, function(item, index) {
-						// To Do: parse string into number
-						return $(item).find(path);
-					});
-					var o_els = _.map(O.V, function(item, index) {
-						// To Do: parse string into number
-						return $(item).find(path);
-					});
-					var i_texts = _.map(i_els, function(item, index) {
-						// To Do: parse string into number
-						return $(item).text();
-					});
-					var o_texts = _.map(o_els, function(item, index) {
-						// To Do: parse string into number
-						return $(item).text();
-					});
+				var o_texts = _.map(O.V, function(item, index) {
+					// To Do: parse string into number
+					return $(item).text();
+				});
+				var i_inter = {I:toArray(I), V:i_texts, P:undefined};
+				var o_inter = {I:undefined, V:o_texts, P:undefined};
+				if (pg.planner.methods.filter.pre(i_inter, o_inter)) {
+					var result = pg.planner.methods.filter.generate(i_inter, o_inter);
+					if (result) {
+						// var el_node = {I:toArray(I), V:i_els, P:{type:"extract_element", param:path}};
 
-					// create intermediate nodes
-					var i_inter = {I:toArray(I), V:i_texts, P:undefined};
-					var o_inter = {I:undefined, V:o_texts, P:undefined};
-					if (pg.planner.methods.filter.pre(i_inter, o_inter)) {
-						var result = pg.planner.methods.filter.generate(i_inter, o_inter);
-						if (result) {
-							var el_node = {I:toArray(I), V:i_els, P:{type:"extract_element", param:path}};
+						i_inter = result[0];
+						i_inter.P = {type:"get_attribute", param:"text"};
+						i_inter.I = toArray(I);
 
-							i_inter = result[0];
-							i_inter.P = {type:"get_attribute", param:"text"};
-							i_inter.I = el_node;
-
-							o_inter = result[1];
-							O.I = [I, i_inter];
-							O.P = {type:"filter_element", param:o_inter.P.param};
-							return _.union(I, el_node, i_inter, O);
-							
-						} else {
-							continue;
-						}
-					}
+						o_inter = result[1];
+						O.I = [I, i_inter];
+						O.P = {type:"filter_element", param:o_inter.P.param};
+						return _.union(I, i_inter, O);
+						
+					} 
 				}
-				
 				return false;
+				// I = (_.isArray(I))?I[0]:I;
+				// // get all the sub elements
+				// var all_sub_elements = $(I.V[0]).find("*");
+				// var sub_elements = all_sub_elements.filter(function(el) {
+				// 	return $(el).text() != null;
+				// });
+				// // get element path
+				// var el_paths = _.map(sub_elements, function(el, index) {
+				// 	return $(el).pathWithNth(I.V[0]);
+				// })
+				// // use path to all the list items
+				// for (var i in el_paths) {
+				// 	var path = el_paths[i];
+				// 	var i_els = _.map(I.V, function(item, index) {
+				// 		// To Do: parse string into number
+				// 		return $(item).find(path);
+				// 	});
+				// 	var o_els = _.map(O.V, function(item, index) {
+				// 		// To Do: parse string into number
+				// 		return $(item).find(path);
+				// 	});
+				// 	var i_texts = _.map(i_els, function(item, index) {
+				// 		// To Do: parse string into number
+				// 		return $(item).text();
+				// 	});
+				// 	var o_texts = _.map(o_els, function(item, index) {
+				// 		// To Do: parse string into number
+				// 		return $(item).text();
+				// 	});
+
+				// 	// create intermediate nodes
+				// 	var i_inter = {I:toArray(I), V:i_texts, P:undefined};
+				// 	var o_inter = {I:undefined, V:o_texts, P:undefined};
+				// 	if (pg.planner.methods.filter.pre(i_inter, o_inter)) {
+				// 		var result = pg.planner.methods.filter.generate(i_inter, o_inter);
+				// 		if (result) {
+				// 			var el_node = {I:toArray(I), V:i_els, P:{type:"extract_element", param:path}};
+
+				// 			i_inter = result[0];
+				// 			i_inter.P = {type:"get_attribute", param:"text"};
+				// 			i_inter.I = el_node;
+
+				// 			o_inter = result[1];
+				// 			O.I = [I, i_inter];
+				// 			O.P = {type:"filter_element", param:o_inter.P.param};
+				// 			return _.union(I, el_node, i_inter, O);
+							
+				// 		} else {
+				// 			continue;
+				// 		}
+				// 	}
+				// }
+				
+				
 			},
 			execute: function(O) {
 				if (O.P.type !== "filter_element") return false;

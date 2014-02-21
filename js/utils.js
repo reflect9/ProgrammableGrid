@@ -2,6 +2,124 @@
 ///////////////////////////////////////////////////////////////////////////
 // HELPER METHODS ///
 ///////////////////////////////////////////////////////////////////////////
+
+
+jQuery.fn.findQuerySelector = function(elements) {
+	if(elements.length==1) {
+		var exact_path = $(elements).pathWithNth(this);	// finding path from this(enclosing el) to the single element
+		return exact_path;
+	} else {
+		var commonAncester = getCommonAncestorMultiple(elements);	// check whether all the output elements are within the input dom
+		if(commonAncester!==$(this).get(0) && $(commonAncester).parents().hasElement(this.get(0))===false) return null; // if Input does not contain
+		var pathToAncester = $(commonAncester).pathWithEverything(this); // find two step paths 1. Input->CommonAncester,  2. CommonAncester->O
+		var pathFromRepToLeaf = _.map(elements, function(o,i) { // collect paths from anscester's children to output nodes
+			return $(o).leafNodePath(commonAncester);	});
+		if(_.uniq(pathFromRepToLeaf).length==1) return path = pathToAncester+" > "+pathFromRepToLeaf[0];	
+		else {
+			// if multiple paths found, then use the shortest one (which is not "")
+			var shortedPath = pathToAncester+" > "+_.first(pathFromRepToLeaf.sort());
+			return shortedPath;
+		}
+		
+	}
+};
+jQuery.fn.pathWithEverything = function(root) {
+	// if this(commonAncester) and root(I[0]) are same, then return ""
+	if($(this)[0]===$(root)[0]) return "";
+	return _.reduce($(this).parentsUntil(root), function(memo,p) {
+			return $(p).tagIdClassNth()+" > "+memo;
+	},$(this).tagIdClassNth());
+};
+jQuery.fn.tagIdClassNth = function() {
+	var Id, cls, nth;
+	var tag = $(this).prop("tagName");
+	if ($(this).attr("class")) cls = "."+$(this).attr("class").trim().replace(/\s+/g,".");
+	else cls="";
+	Id = ($(this).attr("id"))? "#"+$(this).attr("id"): "";
+	var siblings = $(this).parent().children();
+	if(siblings.length>1) {
+		nth = ":nth-child("+(siblings.index(this)+1)+")";
+	} else nth = "";
+	return tag+Id+cls+nth;
+};
+jQuery.fn.pathWithNth = function(root) {
+	// if this(commonAncester) and root(I[0]) are same, then return ""
+	if($(this)[0]===$(root)[0]) return "";
+	return _.reduce($(this).parentsUntil(root), function(memo,p) {
+			return $(p).tagNth()+" > "+memo;
+	},$(this).tagNth());
+};
+jQuery.fn.tagNth = function() {
+	var nth;
+	var tag = $(this).prop("tagName");
+	//if ($(this).attr("class"))  var cls = "."+$(this).attr("class").trim().replace(/\s+/g,".");
+	//else var cls="";
+	var siblings = $(this).parent().children();
+	if(siblings.length>1) {
+		nth = ":nth-child("+(siblings.index(this)+1)+")";
+	} else nth = "";
+	return tag+nth;
+};
+
+jQuery.fn.tagClassNth = function() {
+	var cls, nth;
+	var tag = $(this).prop("tagName");
+	if ($(this).attr("class")) cls = "."+$(this).attr("class").trim().replace(/\s+/g,".");
+	else cls="";
+	var siblings = $(this).parent().children();
+	if(siblings.length>1) {
+		nth = ":nth-child("+(siblings.index(this)+1)+")";
+	} else nth = "";
+	return tag+cls+nth;
+};
+jQuery.fn.leafNodePath = function(commonAncester) {
+	if($(this)[0]===$(commonAncester)[0]) return "";
+	var listOfParents = $(this).parentsUntil($(commonAncester));
+	return _.reduce(listOfParents, function(memo, p) {
+		return $(p).tagAndClass()+" > "+memo;
+	},(listOfParents.length>0)? $(this).tagClassNth(): $(this).tagAndClass());
+};
+jQuery.fn.path = function() {
+	return _.reduce($(this).parents(), function(memo,p) {
+			return $(p).tag()+" "+memo;
+	},"");
+};
+
+
+jQuery.fn.ohtml = function() {
+	return $(this).clone().wrap('<p>').parent().html();
+};
+jQuery.fn.tagAndClass = function() {
+	var q = $(this).prop("tagName");
+	if ($(this).attr("class")) q = q+"."+$(this).attr("class").trim().replace(/\s+/g,".");
+	return q;
+};
+jQuery.fn.tagAndId = function() {
+	var q = $(this).prop("tagName");
+	if ($(this).attr("id")) q = q+"#"+$(this).attr("id");
+	return q;
+};
+jQuery.fn.tag = function() {
+	var q = $(this).prop("tagName");
+	return q;
+};
+findRepElements = function(elements) {
+	var commonAncester = getCommonAncestorMultiple(elements);
+	var representativeElements = _.map(elements, function(el) {
+		if ($(commonAncester).children().toArray().indexOf(el)!=-1) return el;  // in case el is just below the commonAncester, rep is el itself.
+		else return $(commonAncester).children().has(el).get(0);
+	});
+	return representativeElements;
+};
+jQuery.fn.fingerprint = function() {
+	var  childrenPrint = "";
+	if($(this).children().length>0)
+		childrenPrint = "["+ _.reduce($(this).children(), function(memo,child) {
+			return memo + "," + $(child).fingerprint();
+		},"") +"]";
+	return $(this).prop("tagName")+childrenPrint;
+};
+
 jQuery.fn.myIndex = function(selector) {
 	var i = $(this).parent().children(selector).index(this);
 	return (i && i>-1)? i:0;
@@ -53,94 +171,6 @@ var getSeparator = function(str_list) {
 	});
 	return separators[targetIndex];
 }
-findRepElements = function(elements) {
-	var commonAncester = getCommonAncestorMultiple(elements);
-	var representativeElements = _.map(elements, function(el) {
-		if ($(commonAncester).children().toArray().indexOf(el)!=-1) return el;  // in case el is just below the commonAncester, rep is el itself.
-		else return $(commonAncester).children().has(el).get(0);
-	});
-	return representativeElements;
-};
-jQuery.fn.findQuerySelector = function(elements) {
-	if(elements.length==1) {
-		var exact_path = $(elements).pathWithNth(this);	// finding path from this(enclosing el) to the single element
-		return exact_path;
-	} else {
-		var commonAncester = getCommonAncestorMultiple(elements);	// check whether all the output elements are within the input dom
-		if(commonAncester!==this && $(commonAncester).parents().hasElement(this.get(0))===false) return null; // if Input does not contain
-		var pathToAncester = $(commonAncester).pathWithNth(this); // find two step paths 1. Input->CommonAncester,  2. CommonAncester->O
-		var pathFromRepToLeaf = _.uniq(_.map(elements, function(o,i) { // collect paths from anscester's children to output nodes
-			return $(o).leafNodePath(commonAncester);	}));
-		if(pathFromRepToLeaf.length>1) return [];
-		return path = pathToAncester+" > "+pathFromRepToLeaf[0];	
-	}
-};
-jQuery.fn.fingerprint = function() {
-	var  childrenPrint = "";
-	if($(this).children().length>0)
-		childrenPrint = "["+ _.reduce($(this).children(), function(memo,child) {
-			return memo + "," + $(child).fingerprint();
-		},"") +"]";
-	return $(this).prop("tagName")+childrenPrint;
-};
-jQuery.fn.pathWithNth = function(root) {
-	// if this(commonAncester) and root(I[0]) are same, then return ""
-	if($(this)[0]===$(root)[0]) return "";
-	return _.reduce($(this).parentsUntil(root), function(memo,p) {
-			return $(p).tagNth()+" > "+memo;
-	},$(this).tagNth());
-};
-jQuery.fn.leafNodePath = function(commonAncester) {
-	if($(this)[0]===$(commonAncester)[0]) return "";
-	var listOfParents = $(this).parentsUntil($(commonAncester));
-	return _.reduce(listOfParents, function(memo, p) {
-		return $(p).tagAndClass()+" > "+memo;
-	},(listOfParents.length>0)? $(this).tagClassNth(): $(this).tagAndClass());
-};
-jQuery.fn.path = function() {
-	return _.reduce($(this).parents(), function(memo,p) {
-			return $(p).tag()+" "+memo;
-	},"");
-};
-jQuery.fn.tagClassNth = function() {
-	var cls, nth;
-	var tag = $(this).prop("tagName");
-	if ($(this).attr("class")) cls = "."+$(this).attr("class").trim().replace(/\s+/g,".");
-	else cls="";
-	var siblings = $(this).parent().children();
-	if(siblings.length>1) {
-		nth = ":nth-child("+(siblings.index(this)+1)+")";
-	} else nth = "";
-	return tag+cls+nth;
-};
-jQuery.fn.tagNth = function() {
-	var nth;
-	var tag = $(this).prop("tagName");
-	//if ($(this).attr("class"))  var cls = "."+$(this).attr("class").trim().replace(/\s+/g,".");
-	//else var cls="";
-	var siblings = $(this).parent().children();
-	if(siblings.length>1) {
-		nth = ":nth-child("+(siblings.index(this)+1)+")";
-	} else nth = "";
-	return tag+nth;
-};
-jQuery.fn.ohtml = function() {
-	return $(this).clone().wrap('<p>').parent().html();
-};
-jQuery.fn.tagAndClass = function() {
-	var q = $(this).prop("tagName");
-	if ($(this).attr("class")) q = q+"."+$(this).attr("class").trim().replace(/\s+/g,".");
-	return q;
-};
-jQuery.fn.tagAndId = function() {
-	var q = $(this).prop("tagName");
-	if ($(this).attr("id")) q = q+"#"+$(this).attr("id");
-	return q;
-};
-jQuery.fn.tag = function() {
-	var q = $(this).prop("tagName");
-	return q;
-};
 jQuery.fn.trimArray = function() {
 	var result = [];   var validity = true;
 	_.each(this, function(v) {
@@ -619,6 +649,24 @@ function html_differ_without_children(el1, el2) {
 
 function toArray(obj) {
 	return (_.isArray(obj))?obj:[obj];
+}
+
+function getElementFeatures(eL) {
+	// from an element list, find common features and return them 
+	var ft = {};
+	var left = _.uniq(_.map(eL, function(e) {  return $(e).offset().left; }));
+	var top = _.uniq(_.map(eL, function(e) {  return $(e).offset().top; }));
+	var width = _.uniq(_.map(eL, function(e) {  return $(e).width(); }));
+	var height = _.uniq(_.map(eL, function(e) {  return $(e).height(); }));
+	var cl = _.uniq(_.map(eL, function(e) {  return $(e).attr('class'); }));
+	var fingerPrint = _.uniq(_.map(eL, function(e) {  return $(e).fingerprint(); }));	
+	ft.left = (left.length==1)? left[0] : undefined;
+	ft.top = (top.length==1)? top[0] : undefined;
+	ft.width = (width.length==1)? width[0] : undefined;
+	ft.height = (height.length==1)? height[0] : undefined;
+	ft.cl = (cl.length==1)? cl[0] : undefined;
+	ft.fingerPrint = (fingerPrint.length==1)? fingerPrint[0] : undefined;
+	return ft;
 }
 
 jQuery.fn.extend({ 

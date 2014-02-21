@@ -55,7 +55,7 @@ pg.planner = {
 		var solutions = _.map(doable_methods, function(method){
 			result = method.generate(Is, O);
 			if (result && (!_.isArray(result) || result.indexOf(false)==-1)) {
-				return _.union(Is, result);
+				return _.union(result);
 			} else return false;
 		});
 		return (solutions)? _.filter(solutions,function(s){return s!=false;}):false;	
@@ -90,6 +90,7 @@ pg.planner = {
 			generate: function(I,O){
 				// find differences
 				I = (_.isArray(I))?I[0]:I;
+				I.P={type:'loadPage',param:''};
 				var pI = I.V[0];  var pO = O.V[0];
 				var all_el_I = $(pI).find("*").toArray(); 	var all_el_O = $(pO).find("*").toArray();
 				var el_differ_I = [];
@@ -100,11 +101,11 @@ pg.planner = {
 						el_differ_O.push(all_el_O[i]);
 					}
 				}
-				
 				var n_original_el = {I:toArray(I),V:el_differ_I,P:undefined}; 
 				var n_modified_el = {I:undefined,V:el_differ_O,P:undefined};
 				// infering element extractor from original page to original elements node
 				var program_extract_original_elements = pg.planner.methods.extract_element.generate(I,n_original_el);
+				// trick to replace I with loadpage node
 				if (n_original_el.V.length > n_modified_el.V.length) {
 					// if filtering is required. 
 					var n_original_filtered_el = {I:toArray(n_original_el), V: el_differ_I, P:undefined};
@@ -118,34 +119,6 @@ pg.planner = {
 				}
 			}
 		},
-		page_filtered: {
-			pre: function(I,O) {
-				return false;
-
-				// I = (_.isArray(I))?I[0]:I;
-				// if(I.V.length!=1 || O.V.length!=1) return false;
-				// var pI = I.V[0];  var pO = O.V[0];
-				// if(!isDom(pI) || !isDom(pO)) return false;
-				// if(pI.tagName!="BODY" || pO.tagName!="BODY") return false;
-				// return true; 
-			}, 
-			generate: function(I,O) {
-				
-			}
-		},
-		literal: {
-			pre: function(I, O) {
-				return false;
-			},
-			generate: function(I,O) {
-				// NA
-			},
-			execute: function(O) {
-				O.V = O.P.param;
-				return O;
-			}
-		},
-		
 		extract_text: {
 			pre: function(I, O) {
 				I = (_.isArray(I))?I[0]:I;
@@ -374,19 +347,23 @@ pg.planner = {
 				// find a consistent jquery paths selecting the O values (and possibly more)
 				I = (_.isArray(I))?I[0]:I;
 				var n_extracted_el, n_filtered_el;
+				var element_features = getElementFeatures(O.V);
 				if(I.V.length == O.V.length) {
 					// n-to-n extraction
 					var paths = []; 
 					for(var i in I.V) {
 						paths.push(  $(I.V[i]).findQuerySelector([O.V[i]]));
 					}
-					var commonPath = _.uniq(paths);
-					if(commonPath.length==1) {
+					var commonPath = _.uniq(paths);	
+					if(commonPath.length==1) {	// if all the path are same, it's easy
 						O.I = toArray(I);
-						O.P = {type:'extract_element',param:commonPath[0]};
+						O.P = {type:'extract_element',param:commonPath[0], features:element_features};
 						return O;
-					} else {
-						return false;
+					} else {  // if some paths are different, then follow the majority
+						var shortedPath = _.first(commonPath.sort());
+						O.I = toArray(I);
+						O.P = {type:'extract_element',param:shortedPath, features:element_features};
+						return O;
 					}
 				} else if(I.V.length==1 && O.V.length>1) {
 					// 1-to-n extraction
@@ -395,7 +372,7 @@ pg.planner = {
 					else {
 						O.I = toArray(I);
 						O.V = $(I.V[0]).find(path).toArray();
-						O.P = {type:'extract_element',param:path};
+						O.P = {type:'extract_element',param:path, features:element_features};
 						return O;
 					}
 				}
@@ -518,6 +495,18 @@ pg.planner = {
 			execute: function(O) {
 				var I = (_.isArray(O.I))?O.I[0]:O.I;
 				O.V = I.V;
+				return O;
+			}
+		},
+		literal: {
+			pre: function(I, O) {
+				return false;
+			},
+			generate: function(I, O) {
+				return false;
+			},
+			execute: function(O) {
+				O.V = O.P.param;
 				return O;
 			}
 		},

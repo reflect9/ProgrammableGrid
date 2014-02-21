@@ -140,7 +140,11 @@ pg.Node = {
 		$(icon).css('background-image', 'url('+ url + ')');
 		
 		var clickEventHandler = $.proxy(function() {
-			pg.panel.infer(this);
+			var nodes = pg.panel.infer(this);
+			if(nodes && nodes.length>0) {
+				pg.panel.insert(nodes[0],node);
+				pg.panel.redraw();
+			}
 			event.stopPropagation();
 		},node);
 		$(icon).click(clickEventHandler);

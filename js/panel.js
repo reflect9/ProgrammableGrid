@@ -6,6 +6,7 @@
 pg.panel = {
 	init: function(target_el){
 		this.el = target_el;
+		this.title = "untitled";
 		$('body').append(this.createEditUI());
 		$(this.el).append(this.createControlUI());
 		this.el_container = $("<div id='plate_container'></div>").appendTo(this.el);
@@ -78,6 +79,9 @@ pg.panel = {
 	},
 	select: function(node) {
 		// if(!_.isArray(node)) node = [node];
+		if (node && !_.isElement(node)) {
+			node = $("#"+node.ID).get(0);
+		}
 		var prev_selected = $(node).attr("selected")!==undefined; 
 		$("#tiles .node").removeAttr("selected");
 		_.each(pg.panel.nodes, function(n){n.selected=false;});
@@ -87,9 +91,31 @@ pg.panel = {
 		}
 	},
 	delete: function(target) {
+		pg.inspector.unhighlight_list();
 		if(target=="selected_node") {
 			pg.panel.nodes = _.filter(pg.panel.nodes, function(n) { return n.selected!==true;});
+		} else {
+			pg.panel.nodes = _.filter(pg.panel.nodes, function(n) { return target!=n; },target);
 		}
+	},
+	insert: function(new_nodes, target_node) {
+		// replace target_node with nodes and push nodes on the right side to right
+		var target_position = target_node.position;
+		this.delete(target_node);
+		for(var ni=0; ni<this.nodes.length;ni++) {
+			var n = this.nodes[ni];
+			if(n.position[0] == target_position[0] && n.position[1]>target_position[1]) {
+				// if the node is on the right side of the target node, then push it as the legnth of new nodes
+				n.position[1]+= new_nodes.length-1;
+			}
+		}
+		// place new_nodes
+		for(var ni=0; ni<new_nodes.length;ni++) {
+			var nd = new_nodes[ni]; 	
+			nd.position=[target_position[0], target_position[1]+ni];
+			pg.panel.nodes.push(nd);
+		}
+		
 	},
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//  executions methods
@@ -100,20 +126,23 @@ pg.panel = {
 		// 		evaluate the operation of the node, and update value
 		// 		repeat until there's no node in node_queue 
 	},
-	infer: function(empty_node) {
-		if(_.isElement(empty_node)) {
-			empty_node = pg.panel.get_node_by_id($(empty_node).attr("id"));
+	infer: function(output_node) {
+		if(_.isElement(output_node)) {
+			output_node = pg.panel.get_node_by_id($(output_node).attr("id"));
 		}
-		var I = this.get_node_by_position([empty_node.position[0], empty_node.position[1]-1]);
-		var O = this.get_node_by_position([empty_node.position[0],empty_node.position[1]+1]);
+		var I = this.get_node_by_position([output_node.position[0], output_node.position[1]-1]);
+		var O = output_node;
 		var solutions = pg.planner.plan(I,O);
 		console.log(solutions);
+		if(!solutions || solutions==[]) alert("no solution found");
+		return solutions;
 	},
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//  view methods
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 	redraw: function() {
 		$(this.el_tiles).empty();
+		$("#control_ui").find(".pg_title").text(pg.panel.title);
 		this.drawPlate();
 		// draw nodes based on current module
 		_.each(this.nodes, function(n,ni){
@@ -151,6 +180,7 @@ pg.panel = {
 						<button class='hide_button'>Hide Elements</button>\
 					</div>\
 					<div>\
+						<button class='load_page_button'>Current Page</button>\
 						<button class='snapshot_button'>Page Snapshot</button>\
 					</div>\
 				</div>\
@@ -187,6 +217,17 @@ pg.panel = {
 			}
 			
 		});
+		$(ui_el).find(".load_page_button").click(function() {
+			var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
+			if(currently_selected_nodes.length>0) {
+				var n = currently_selected_nodes[0];
+				n.V = $("body").toArray();
+				n.P = {"type":"loadPage","param":""};
+			} else {
+				console.log("no node is selected now.");
+			}
+			pg.panel.redraw();
+		});
 		$(ui_el).find(".snapshot_button").click(function() {
 			var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
 			if(currently_selected_nodes.length>0) {
@@ -207,9 +248,13 @@ pg.panel = {
 	createControlUI: function() {
 		var ui_el = $("<div id='control_ui'>		\
 			<div class='resize_handle'></div> \
+			<span class='pg_title'></span>\
 			<select id='script_selector'>	<option selected disabled>Load script</option>\
-											<option>new script</option>\
 			</select>	\
+			<button id='button_remove'>remove</button>\
+			<button id='button_clear'>clear</button>\
+			<button id='button_new'>new</button>\
+			<button id='button_save'>save</button>\
 			<button id='button_execute'>execute</button>\
 			&nbsp;&nbsp;&nbsp;ZOOM: \
 			<button class='zoom_button' id='zoom_to_low'  node_size=50>small</button>\
@@ -222,6 +267,7 @@ pg.panel = {
 			</span>\
 			</div>\
 		");
+		$(ui_el).find(".pg_title").text(pg.panel.title);
 		_.each(pg.load_all_scripts(), function(script,title) {
 			var option = $("<option></option")
 				.attr('value',title)
@@ -229,8 +275,40 @@ pg.panel = {
 		},this);
 		$(ui_el).find("#script_selector").change(function() {
 			$("#script_selector option:selected").each(function() {
-				pg.open_panel(pg.load_script($(this).attr('value')));
+				var title = $(this).attr('value');
+				pg.open_panel(title, pg.load_script(title));
 			});
+		});
+		$(ui_el.find("#button_remove")).click(function() {
+			pg.remove_script(pg.panel.title);
+			var programs = pg.load_all_scripts();
+			for(var k in programs) {
+				pg.open_panel(k, programs[k]);
+				break;
+			}
+		});
+		$(ui_el.find("#button_clear")).click(function() {
+			pg.clear_script();
+		});
+		$(ui_el.find("#button_new")).click(function() {
+			// use modal to get title of new script
+			var diag_content = $("	<div class='dialog_content'> \
+	  					<p> New Script </p>\
+	  					<p> Please enter a name for the script. </p> \
+	  					<p><input type='text' id='new_script_title'></input></p> \
+	  					<p><button class='button_ok'>OK</button> \
+	  						<button class='button_cancel'>Cancel</button> \
+	  					</p> \
+					</div>");
+			$(diag_content).find(".button_ok").click(function() {
+				pg.new_script($("#new_script_title").val());
+				pg.close_dialog();
+			});
+			$(diag_content).find(".button_cancel").click(pg.close_dialog);
+			pg.open_dialog(diag_content);
+		});
+		$(ui_el.find("#button_save")).click(function() {
+			pg.save_script(pg.panel.title,pg.panel.nodes);
 		});
 		$(ui_el.find("#button_execute")).click(function() {
 			pg.execute();
@@ -257,8 +335,9 @@ pg.panel = {
 			stop: function() {
 				// console.log($(window).height()-$(this).offset().top);
 				// console.log($(this).offset());
-				$(pg.panel.el).height($(window).height()-$(this).offset().top);
+				$(pg.panel.el).height($(window).height()-$(this).offset().top+$(window).scrollTop());
 				$(this).offset({'top':$(pg.panel.el).offset().top});
+				$("#pg_spacer").height($(pg.panel.el).height());
 			}
 		});
 		// $(ui_el).find('#node_size_slider').slider( {
@@ -284,6 +363,7 @@ pg.panel = {
 					if(node) {
 						var position = [ Math.floor($(this).position().top / pg.panel.node_dimension),
 											Math.floor($(this).position().left / pg.panel.node_dimension)	];
+						if (_.isEqual(position,node.position)) return;
 						var existing_node = pg.panel.get_node_by_position(position);
 						if(existing_node) pg.panel.delete(existing_node);
 						node.position = position;
@@ -309,16 +389,19 @@ pg.panel = {
 			});
 		// now attach event handlers
 		// 1. create a new tile when empty plate is clicked
-		$(this.el_tiles).off('click').click(function(e) {
+		$(this.el_tiles).off('dblclick').dblclick(function(e) {
 			var mouse_coord = {left: e.pageX - $(this).offset().left,
 								top: e.pageY - $(this).offset().top};
 			var mouse_pos = {left: Math.floor(mouse_coord.left/pg.panel.node_dimension), 
 							top: Math.floor(mouse_coord.top/pg.panel.node_dimension)};
+			e.stopPropagation();
 			console.log("plate clicked "+ mouse_pos.left + "," +mouse_pos.top);
 			var new_node = pg.Node.emptyNode();
 			new_node.position = [mouse_pos.top, mouse_pos.left];
 			pg.panel.nodes.push(new_node);
 			pg.panel.redraw();
+			pg.panel.select(new_node);
+
 		});
 		// 2. drag plate to pan
 	},

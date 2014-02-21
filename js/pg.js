@@ -1,13 +1,35 @@
 pg = {
 	init: function() {
 		console.log("open pg");
-		this.open_panel([]);
+		this.open_panel("untitled",[]);
+
+		// basic event handler
+		$(document).keydown(function (e) {
+            var element = e.target.nodeName.toLowerCase();
+            if ((element != 'input' && element != 'textarea') || $(e.target).attr("readonly")) {
+                if (e.keyCode === 8 || e.keyCode === 46) {
+                    pg.panel.delete("selected_node");
+                    pg.panel.redraw();
+                    return false;
+                }
+            }
+		});
 	},
-	open_panel : function(nodes) {
+	open_panel : function(title, nodes) {
 		$("#pg_panel").remove();
 		var el_panel = $("<div id='pg_panel' class='panel'></div>").appendTo($("body"));
+		$("<div id='pg_spacer'></div>").css({
+			'display':'block',
+			'position':'relative',
+			'clear':'both',
+			'width':'100%'
+		}).appendTo($("body"));
+		$("#pg_spacer").height($(el_panel).height());
 		pg.panel.init(el_panel.get(0));
-		if (nodes) pg.panel.nodes = nodes;
+		if (nodes) {
+			pg.panel.nodes = nodes;
+			pg.panel.title= title;
+		}
 		pg.panel.redraw();
 	},
 	execute: function() {
@@ -19,6 +41,13 @@ pg = {
 	////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////
+	new_script: function(title) {
+		pg.save_script(title,[
+				{ I: undefined, ID:0, I_ID:"", V:[], P:{type:"loadPage",param:""}, position:[0,0], selected:false, type:"Variable" }
+			]);
+		pg.panel.title= title;
+		pg.open_panel(title, pg.load_script(title));
+	},
 	save_script : function(title, nodes_to_store) {
 		try {
 			var old_data = localStorage["prgr"];
@@ -31,16 +60,28 @@ pg = {
 		new_data = pg.serialize(programs);
 		localStorage.setItem("prgr",new_data);
 		return programs;
-		
 	},
 	load_script : function(title) {
-		if (title=="new script") {
-			return [];
-		}
 		var programs = pg.load_all_scripts();
 		if(programs && programs[title]) {
 			return programs[title];
 		} else return false;
+	},
+	clear_script: function() {
+		pg.open_panel(pg.panel.title, []);
+	},
+	remove_script: function(title) {
+		try {
+			var old_data = localStorage["prgr"];
+			if (old_data =="undefined" || old_data == "[object Object]" || old_data == "[]") old_data="{}";
+			programs = pg.parse(old_data);
+		} catch(e) {
+			programs = {};
+		}	
+		delete programs[title];
+		new_data = pg.serialize(programs);
+		localStorage.setItem("prgr",new_data);
+		return programs;
 	},
 	load_all_scripts : function() {
 		if (localStorage["prgr"]==undefined) return false;
@@ -158,13 +199,37 @@ pg = {
 	},
 	generate : function(problem_title){
 		try {
-			problem_nodes = pg.problems[problem_title]();
-			result = pg.planner.plan(problem_nodes[0],problem_nodes[1]);
-			return result;
+			var problem_nodes = pg.problems[problem_title]();
+			var plans = pg.planner.plan(problem_nodes[0],problem_nodes[1]);
+			var plansWithI = _.map(plans, function(p) {
+				return _.union(problem_nodes[0], p);
+			},this);
+			return plansWithI;
 		} catch(e) {
 			console.error(e.stack);
 		}
+	},
+
+	////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////
+	//					UTILITY FUNCTIONS
+	////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////
+	open_dialog : function(content) {
+		$("<div class='pg_dialog_backdrop'></div>").appendTo($("body"));
+		var diag_el = $("<div class='pg_dialog'></div>")
+		.append(content).appendTo("body");
+		$(diag_el).offset({
+			'top': $(window).height()/2 - $(diag_el).height()/2,
+			'left': $(window).width()/2 - $(diag_el).width()/2
+		});
+		$(diag_el).find(".button_close").click(pg.close_dialog);
+	},
+	close_dialog : function() {
+		$(".pg_dialog").remove();
+		$(".pg_dialog_backdrop").remove();
 	}
+
 
 };
 

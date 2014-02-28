@@ -6,7 +6,7 @@ pg.Node = {
 				ID: makeid(),
 				I_ID: undefined,
 				P: undefined,
-				V: undefined,
+				V: [],
 				position: undefined,
 				type: undefined
 			};

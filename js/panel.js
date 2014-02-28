@@ -7,14 +7,16 @@ pg.panel = {
 	init: function(target_el){
 		this.el = target_el;
 		this.title = "untitled";
-		$('body').append(this.createEditUI());
-		$(this.el).append(this.createControlUI());
+		$('#pg').append(this.editUI.create());
+		$('#pg').append(this.commandUI.create());
+		$(this.el).append("<div id='resize_handle_panel'></div>");
 		this.el_container = $("<div id='plate_container'></div>").appendTo(this.el);
 		this.el_tiles = $("<div id='tiles'></div>").appendTo(this.el_container);
 		this.el_plate = $("<div id='plate'></div>").appendTo(this.el_container); 
+		$(this.el).append(this.toolbar.create());
 		this.nodes = [];
-		// this.offset = [0,0];
-		// this.detail_level = DEFAULT_DETAIL;
+		this.commands = [];
+		this.selected_elements = [];
 		this.node_dimension = DEFAULT_NODE_DIMENSION;
 	},
 	load_json: function(json){
@@ -82,13 +84,15 @@ pg.panel = {
 		if (node && !_.isElement(node)) {
 			node = $("#"+node.ID).get(0);
 		}
+		var nodeObj = this.get_node_by_id($(node).attr("id"));
 		var prev_selected = $(node).attr("selected")!==undefined; 
 		$("#tiles .node").removeAttr("selected");
 		_.each(pg.panel.nodes, function(n){n.selected=false;});
 		if(!prev_selected) {
 			$(node).attr("selected",true);
-			this.get_node_by_id($(node).attr("id")).selected = true;
+			nodeObj.selected = true;
 		}
+		pg.panel.commandUI.find_command(nodeObj); 
 	},
 	delete: function(target) {
 		pg.inspector.unhighlight_list();
@@ -117,6 +121,18 @@ pg.panel = {
 		}
 		
 	},
+	get_left_node:function(node) {
+		return pg.panel.get_node_by_position([node.position[0], node.position[1]-1]);
+	},
+	get_right_node:function(node) {
+		return pg.panel.get_node_by_position([node.position[0], node.position[1]+1]);
+	},
+	get_above_node:function(node) {
+		return pg.panel.get_node_by_position([node.position[0]-1, node.position[1]]);
+	},
+	get_below_node:function(node) {
+		return pg.panel.get_node_by_position([node.position[0]+1, node.position[1]]);
+	},
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//  executions methods
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -130,9 +146,10 @@ pg.panel = {
 		if(_.isElement(output_node)) {
 			output_node = pg.panel.get_node_by_id($(output_node).attr("id"));
 		}
-		var I = this.get_node_by_position([output_node.position[0], output_node.position[1]-1]);
+		var I = pg.panel.get_left_node(output_node);
 		var O = output_node;
 		var solutions = pg.planner.plan(I,O);
+		this.commandUI.update(solutions);
 		console.log(solutions);
 		if(!solutions || solutions==[]) alert("no solution found");
 		return solutions;
@@ -168,191 +185,239 @@ pg.panel = {
 								this.node_dimension-NODE_MARGIN*2, this.node_dimension-NODE_MARGIN*2);		
 			}
 		}
-
-
 	},
-	createEditUI: function() {
-		var ui_el = $("\
-				<div id='edit_ui'>\
-					<div>\
-						<button class='page_editable_button'>Make Page Editable</button>\
-						<button class='selected_element_button'>Select Elements</button>\
-						<button class='hide_button'>Hide Elements</button>\
-					</div>\
-					<div>\
-						<button class='load_page_button'>Current Page</button>\
-						<button class='snapshot_button'>Page Snapshot</button>\
+	editUI: {
+		create: function() {
+			
+			var ui_el = $("<div id='pg_edit_ui'>  \
+				<div>\
+					<button class='edit_button'>Edit</button>\
+					<button class='select_button'>Select</button>\
+					<button class='load_page_button'>Current Page</button>\
+					<button class='snapshot_button'>Page Snapshot</button>\
+				</div>\
+				<div id='inspector_all_sel'>\
+					<div class='label_selected_elements'>no selection</div>\
+					<div class='table_inspector'>\
+						<ul></ul>\
 					</div>\
 				</div>\
-				");
-		$(ui_el).find(".selected_element_button").click(function() {
-			if(pg.inspector.flag_inspect) {
-				pg.inspector.off();
-			} else {
-				pg.inspector.on(function(e) {
-					// add selected elements to the V of the current node
-					var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
-					if(currently_selected_nodes.length>0) {
-						var n = currently_selected_nodes[0];
-						if(n.V==undefined) n.V=[];
-						n.V.push(e);
-					} else {
-						console.log("no node is selected now.");
-					}
-					pg.panel.redraw();
-				});	
-			}
-		});
-		$(ui_el).find(".page_editable_button").click(function() {
-			if($("body").attr('contenteditable')) $("body").attr('contenteditable','false');
-			else $("body").attr('contenteditable',"true");
-		});
-		$(ui_el).find(".hide_button").click(function() {
-			if(pg.inspector.flag_inspect) {
-				pg.inspector.off();
-			} else {
-				pg.inspector.on(function(e) {
-					$(e).css("display","none");
-				});	
-			}
-			
-		});
-		$(ui_el).find(".load_page_button").click(function() {
+			</div>");
+			$(ui_el).find(".edit_button").click(function() {
+				// Turn PBD ON.  User still can interact with page elements. 
+				// It monitors and suggests relevant commands for user's interaction
+				if(pg.editor.flag_inspect) {
+					pg.editor.off();
+				} else {
+					pg.editor.on();
+				}
+			});
+			$(ui_el).find(".select_button").click(function(event) {
+				if(pg.inspector.flag_inspect) {
+					pg.inspector.off();
+					pg.panel.selected_elements=[];
+					$(event.target).removeClass("selected");
+					var attr_table_el = $("#pg_edit_ui").find(".table_inspector").find("ul");
+					pg.panel.editUI.updateInspector(pg.panel.selected_elements, $(attr_table_el).get(0));
+				} else {
+					$(event.target).addClass("selected");
+					pg.inspector.on(pg.panel.editUI.select_element);	
+				}
+			});
+			$(ui_el).find(".load_page_button").click(function() {
+				var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
+				if(currently_selected_nodes.length>0) {
+					var n = currently_selected_nodes[0];
+					n.V = $("body").toArray();
+					n.P = {"type":"loadPage","param":""};
+				} else {
+					console.log("no node is selected now.");
+				}
+				pg.panel.redraw();
+			});
+			$(ui_el).find(".snapshot_button").click(function() {
+				var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
+				if(currently_selected_nodes.length>0) {
+					var n = currently_selected_nodes[0];
+					var body = $("body").clone();
+					$(body).find("#pg_panel").remove();
+					$(body).find("#pg_edit_ui").remove();
+					$(body).find("#pg_command_ui").remove();
+					n.V = $(body).toArray();
+				} else {
+					console.log("no node is selected now.");
+				}
+				pg.panel.redraw();
+			});
+
+
+			return ui_el;
+		},
+		select_element: function(el) {
+			if(!(el in pg.panel.selected_elements)) 
+				pg.panel.selected_elements.push(el);
+			var attr_table_el = $("#pg_edit_ui").find(".table_inspector").find("ul");
+			pg.panel.editUI.updateInspector(pg.panel.selected_elements, $(attr_table_el).get(0));
+		},
+		deselect_elements: function() {
+			pg.panel.selected_elements = [];
+			$("#pg_edit_ui").find(".table_inspector").find("ul").empty();
+		},
+		extract_selected_elements: function(els) {
+			// add selected elements to the V of the current node
 			var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
 			if(currently_selected_nodes.length>0) {
 				var n = currently_selected_nodes[0];
-				n.V = $("body").toArray();
-				n.P = {"type":"loadPage","param":""};
+				if(n.V==undefined) n.V=[];
+				n.V = _.union(n.V, els);
 			} else {
-				console.log("no node is selected now.");
+				console.log("no tile is selected now.");
 			}
 			pg.panel.redraw();
-		});
-		$(ui_el).find(".snapshot_button").click(function() {
-			var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
-			if(currently_selected_nodes.length>0) {
-				var n = currently_selected_nodes[0];
-				var body = $("body").clone();
-				$(body).find("#pg_panel").remove();
-				$(body).find("#edit_ui").remove();
-				n.V = $(body).toArray();
-			} else {
-				console.log("no node is selected now.");
+		},
+		updateInspector: function(els, target_ul) {
+			$(target_ul).empty();
+			var attr_dict = get_attr_dict(els);
+			var num_label = $("#inspector_all_sel > .label_selected_elements");
+			if(els.length>0) {
+				$(num_label).text(els.length+" selected.");
+				_.each(attr_dict, function(value,key) {
+					$(target_ul).append("	<li class='attr'><span class='attr_key'>"+ key +":</span>   \
+											<span class='attr_value'>"+value+"</span></li>	\
+						");
+				});	
+				$(target_ul).append("<button>Extract above elements</button>").click(function() {
+					pg.panel.editUI.extract_selected_elements(pg.panel.selected_elements);
+				});
+			} else { // when nothing is selected
+				$(num_label).text("Nothing selected.");
 			}
-			pg.panel.redraw();
-		});
-
-
-		return ui_el;
-	},
-	createControlUI: function() {
-		var ui_el = $("<div id='control_ui'>		\
-			<div class='resize_handle'></div> \
-			<span class='pg_title'></span>\
-			<select id='script_selector'>	<option selected disabled>Load script</option>\
-			</select>	\
-			<button id='button_remove'>remove</button>\
-			<button id='button_clear'>clear</button>\
-			<button id='button_new'>new</button>\
-			<button id='button_save'>save</button>\
-			<button id='button_execute'>execute</button>\
-			&nbsp;&nbsp;&nbsp;ZOOM: \
-			<button class='zoom_button' id='zoom_to_low'  node_size=50>small</button>\
-			<button class='zoom_button' id='zoom_to_mid'  node_size=150>medium</button>\
-			<button class='zoom_button' id='zoom_to_high' node_size=300>large</button>\
-			<button class='zoom_button' id='zoom_to_high' node_size='showAll'>show all</button>\
-			&nbsp;&nbsp;&nbsp;Edit node: \
-			<span id='edit_button_group'> \
-				<button class='delete_button' id='delete_node'>delete</button>\
-			</span>\
-			</div>\
-		");
-		$(ui_el).find(".pg_title").text(pg.panel.title);
-		_.each(pg.load_all_scripts(), function(script,title) {
-			var option = $("<option></option")
-				.attr('value',title)
-				.text(title).appendTo($(ui_el).find("#script_selector"));
-		},this);
-		$(ui_el).find("#script_selector").change(function() {
-			$("#script_selector option:selected").each(function() {
-				var title = $(this).attr('value');
-				pg.open_panel(title, pg.load_script(title));
-			});
-		});
-		$(ui_el.find("#button_remove")).click(function() {
-			pg.remove_script(pg.panel.title);
-			var programs = pg.load_all_scripts();
-			for(var k in programs) {
-				pg.open_panel(k, programs[k]);
-				break;
-			}
-		});
-		$(ui_el.find("#button_clear")).click(function() {
-			pg.clear_script();
-		});
-		$(ui_el.find("#button_new")).click(function() {
-			// use modal to get title of new script
-			var diag_content = $("	<div class='dialog_content'> \
-	  					<p> New Script </p>\
-	  					<p> Please enter a name for the script. </p> \
-	  					<p><input type='text' id='new_script_title'></input></p> \
-	  					<p><button class='button_ok'>OK</button> \
-	  						<button class='button_cancel'>Cancel</button> \
-	  					</p> \
-					</div>");
-			$(diag_content).find(".button_ok").click(function() {
-				pg.new_script($("#new_script_title").val());
-				pg.close_dialog();
-			});
-			$(diag_content).find(".button_cancel").click(pg.close_dialog);
-			pg.open_dialog(diag_content);
-		});
-		$(ui_el.find("#button_save")).click(function() {
-			pg.save_script(pg.panel.title,pg.panel.nodes);
-		});
-		$(ui_el.find("#button_execute")).click(function() {
-			pg.execute();
-		});
-		$(ui_el).find('button.zoom_button').click(function() {
-			pg.panel.zoom($(this).attr('node_size'));
-		});
-		$(ui_el).find("#delete_node").click(function() {
-			pg.panel.delete("selected_node");
-			pg.panel.redraw();
-		});
-		$(ui_el).find(".resize_handle").css({
-			'position' : 'absolute',
-			'z-index':10000,
-			'top': '0px',
-			'left': '0px',
-			'width': '100%',
-			'height': '4px',
-			'cursor': 'pointer',
-			'background-color': '#ddd',
 			
-		}).draggable({
-			axis: "y",
-			stop: function() {
-				// console.log($(window).height()-$(this).offset().top);
-				// console.log($(this).offset());
-				$(pg.panel.el).height($(window).height()-$(this).offset().top+$(window).scrollTop());
-				$(this).offset({'top':$(pg.panel.el).offset().top});
-				$("#pg_spacer").height($(pg.panel.el).height());
-			}
-		});
-		// $(ui_el).find('#node_size_slider').slider( {
-		// 	max: 299, min: 50,
-		// 	slide: function(event, ui) {
-		// 		// if(plate.module==undefined) { 
-		// 		// 	plate.init();
-		// 		// 	plate.load(sample);
-		// 		// }
-		// 		pg.panel.node_dimension = ui.value;
-		// 		pg.panel.redraw();
-		// 	}
-		// });
-		return ui_el;
+			// 
+			// get all the property keys of els 
+
+		}
 	},
+	commandUI: {
+		create: function() {
+			var ui_el = $("<div id='pg_command_ui' title='commands'>\
+				<div id='command_container'>\
+				</div>\
+				</div>");
+			return ui_el;
+		},
+		update: function(commands) {
+			pg.panel.commands = commands;
+			$("#command_container").empty();
+			_.each(commands, function(c,ci) {
+				$("#command_container").append(this.makeCommandEl(c));
+			},this);
+		},
+		find_command: function(focused_node) {
+			if(!focused_node) return;
+			var Is = [];
+			if(pg.panel.get_left_node(focused_node)) Is.push(pg.panel.get_left_node(focused_node));
+			if(pg.panel.get_above_node(focused_node)) Is.push(pg.panel.get_above_node(focused_node));
+			var commands = pg.planner.find_applicable_commands(Is);
+			if(_.isArray(commands) && commands.length>0) {
+				pg.panel.commandUI.update(commands);
+			}
+		},
+		close: function() {
+			$("#pg_command_ui").remove();
+			pg.panel.commands=[];
+		},
+		makeCommandEl: function(command) {
+			return $("<div class='command'>\
+				<div class='com_icon'></div>\
+				<div class='com_title'>"+ command.type +"</div>\
+				</div>\
+				").click(function() {
+					console.log("umha");
+				},this);
+		}
+
+
+	},
+	toolbar: {
+		create: function() {
+			var ui_el = $("<div id='control_ui'>		\
+				<span class='pg_title'></span>\
+				<select id='script_selector'>	<option selected disabled>Load script</option>\
+				</select>	\
+				<button id='button_remove'>remove</button>\
+				<button id='button_clear'>clear</button>\
+				<button id='button_new'>new</button>\
+				<button id='button_save'>save</button>\
+				<button id='button_execute'>execute</button>\
+				<label>ZOOM:</label>\
+				<button class='zoom_button' id='zoom_to_low'  node_size=50>small</button>\
+				<button class='zoom_button' id='zoom_to_mid'  node_size=150>medium</button>\
+				<button class='zoom_button' id='zoom_to_high' node_size=300>large</button>\
+				<button class='zoom_button' id='zoom_to_high' node_size='showAll'>show all</button>\
+				&nbsp;&nbsp;&nbsp;Edit node: \
+				<span id='edit_button_group'> \
+					<button class='delete_button' id='delete_node'>delete</button>\
+				</span>\
+				</div>\
+			");
+			$(ui_el).find(".pg_title").text(pg.panel.title);
+			_.each(pg.load_all_scripts(), function(script,title) {
+				var option = $("<option></option")
+					.attr('value',title)
+					.text(title).appendTo($(ui_el).find("#script_selector"));
+			},this);
+			$(ui_el).find("#script_selector").change(function() {
+				$("#script_selector option:selected").each(function() {
+					var title = $(this).attr('value');
+					pg.open_panel(title, pg.load_script(title));
+				});
+			});
+			$(ui_el.find("#button_remove")).click(function() {
+				pg.remove_script(pg.panel.title);
+				var programs = pg.load_all_scripts();
+				for(var k in programs) {
+					pg.open_panel(k, programs[k]);
+					break;
+				}
+			});
+			$(ui_el.find("#button_clear")).click(function() {
+				pg.clear_script();
+			});
+			$(ui_el.find("#button_new")).click(function() {
+				// use modal to get title of new script
+				var diag_content = $("	<div class='dialog_content'> \
+		  					<p> New Script </p>\
+		  					<p> Please enter a name for the script. </p> \
+		  					<p><input type='text' id='new_script_title'></input></p> \
+		  					<p><button class='button_ok'>OK</button> \
+		  						<button class='button_cancel'>Cancel</button> \
+		  					</p> \
+						</div>");
+				$(diag_content).find(".button_ok").click(function() {
+					pg.new_script($("#new_script_title").val());
+					pg.close_dialog();
+				});
+				$(diag_content).find(".button_cancel").click(pg.close_dialog);
+				pg.open_dialog(diag_content);
+			});
+			$(ui_el.find("#button_save")).click(function() {
+				pg.save_script(pg.panel.title,pg.panel.nodes);
+			});
+			$(ui_el.find("#button_execute")).click(function() {
+				pg.execute();
+			});
+			$(ui_el).find('button.zoom_button').click(function() {
+				pg.panel.zoom($(this).attr('node_size'));
+			});
+			$(ui_el).find("#delete_node").click(function() {
+				pg.panel.delete("selected_node");
+				pg.panel.redraw();
+			});
+			return ui_el;
+		}
+	},
+
 	attachEventListeners: function() {
 		$(".node")
 			.off()
@@ -372,9 +437,9 @@ pg.panel = {
 				}
 			})
 			.dblclick(function(e) {
-				console.log($(this).attr('id') + " is double clicked");
-				var clicked_node = pg.panel.get_node_by_id($(this).attr("id"));
-				pg.panel.zoom([clicked_node]);
+				// console.log($(this).attr('id') + " is double clicked");
+				// var clicked_node = pg.panel.get_node_by_id($(this).attr("id"));
+				// pg.panel.zoom([clicked_node]);
 				e.stopPropagation();
 			})
 			.click(function(e) {
@@ -402,6 +467,16 @@ pg.panel = {
 			pg.panel.redraw();
 			pg.panel.select(new_node);
 
+		});
+		$(this.el).find("#resize_handle_panel").draggable({
+			axis: "y",
+			stop: function() {
+				// console.log($(window).height()-$(this).offset().top);
+				// console.log($(this).offset());
+				$(pg.panel.el).height($(window).height()-$(this).offset().top+$(window).scrollTop());
+				$(this).offset({'top':$(pg.panel.el).offset().top});
+				$("#pg_spacer").height($(pg.panel.el).height());
+			}
 		});
 		// 2. drag plate to pan
 	},

@@ -1,261 +1,362 @@
+#pg {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  /* #pg_panel */
 
-body{
-	
 }
+#pg #pg_panel {
+  position: fixed;
+  z-index: 999;
+  width: 100%;
+  height: 300px;
+  bottom: 0px;
+  background: white;
+  overflow: auto;
+  font-size: 13px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: black;
+  text-align: left;
+  /* NODE  */
 
-ol, ul {
-    list-style: none outside none;
-    margin:none;  padding:0;
-}
+  /***********************/
 
-#pg_panel button{
-	all: none;
-}
-#pg_panel {
-	position:fixed;
-	z-index:999;
-	width:100%;
-	height:300px;
-	bottom:0px;
-	background:white;
-	overflow:hidden;
-}
-#node_size_slider {
-	display: inline-block;
-}
+  /* icon for different tile sizes */
 
-#tiles{
-	position:absolute;
-	z-index:101;
-	top:0px; left:0px;
-	width:3000px;
-	height:3000px;
-}
+  /*.node-icon-high {
+		position:absolute;
+		width:26px;
+		height:26px;
+		top:0px; left:0px;
+		margin-top:7px; margin-left:7px;
+	}*/
 
-#plate{
-	/*background:#ddd;*/
-	width:3000px;
-	height:3000px;
-	z-index:100;
-}
-#script_selector{
-	width:200px;
-}
-#edit_ui {
-	position:fixed;
-	z-index:99999;
-	background:white;
-	border:1px solid #aaa;
-	border-radius: 8px;
-	max-width:100px;
-	padding:5px;
-	top:30px;  left:30px;
-}
-#edit_ui button {
-	width:100%;
-}
-#control_ui {
-	position:relative;
-	background:white;
-	vertical-align: middle;
-	padding-left:10px;
-	height:26px;
-	padding-top:5px;
-	border-top:1px solid #ccc;
-	overflow: hidden;
-}
+  /************************/
 
-#plate_container {
-	position:relative;
-	width:100%;
-	height:800px;
-	border:1px solid #dcc;
-	overflow:scroll;
-}
-#node_size_slider {
-	margin:5px;
-	width:200px;
-}
+  /* other items in nodes */
 
-.pg_dialog {
-	position:fixed;
-	z-index:100001;
-	width:400px;
-	height:auto;
-	-webkit-box-shadow: 0 4px 16px rgba(0,0,0,.2);
-	-moz-box-shadow: 0 4px 16px rgba(0,0,0,.2);
-	box-shadow: 0 4px 16px rgba(0,0,0,.2);
-	background: #fff;
-	border: 1px solid #acacac;
-	border: 1px solid rgba(0,0,0,.333);
-	outline: 0;
-	padding:20px;
+  /*.node-operation-high {
+		
+		position:absolute;
+		top:10px;
+		left:40px;
+		font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+		font-size: 15px;
+		color:black;
+	}*/
+
 }
-.pg_dialog_backdrop{ 
-	position:fixed;
-	z-index:100000;
-	width:100%; height:100%;
-	top:0px; left:0px;
-	background: rgba(255,255,255,0.8);
+#pg #pg_panel ol,
+#pg #pg_panel ul {
+  list-style: none outside none;
+  margin: 0;
+  padding: 0;
 }
-
-
-
-
-
-/* NODE  */
-
-.node {
-	position:absolute;
-	background:gray; 
-	/*border:1px solid black;*/
-	box-shadow: inset 0 0 0 1px #ffffff;
-	overflow:hidden;
+#pg #pg_panel #resize_handle_panel {
+  position: absolute;
+  z-index: 10000;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 6px;
+  cursor: pointer;
+  background-color: #aaaabb;
 }
-.node[selected] {
-	box-shadow: inset 0 0 0 3px #9b4681;
+#pg #pg_panel #control_ui {
+  position: fixed;
+  bottom: 0px;
+  background: white;
+  vertical-align: middle;
+  padding-left: 10px;
+  height: 26px;
+  padding-top: 5px;
+  border-top: 1px solid #ccc;
+  width: 100%;
+  z-index: 102;
+  overflow: hidden;
 }
-.node-trigger {
-	background-color:#635a52;
+#pg #pg_panel #control_ui button,
+#pg #pg_panel #control_ui label {
+  margin: 1px;
+  padding: 2px 4px 2px 4px;
+  height: 20px;
 }
-.node-page {	
-	background-color:#b495c7;
+#pg #pg_panel #control_ui button {
+  font-size: 13px;
+  border-radius: 4px;
+  color: #444;
+  background-color: white;
+  border: 1px solid #444;
 }
-.node-element {
-	background-color:#5abad1;
+#pg #pg_panel #node_size_slider {
+  display: inline-block;
 }
-.node-variable{
-	background-color:#e67975;
+#pg #pg_panel #tiles {
+  position: absolute;
+  z-index: 101;
+  top: 0px;
+  left: 0px;
+  width: 3000px;
+  height: 3000px;
 }
-.node-operation{
-	background-color:#e0e0e0;
-}
+#pg #pg_panel #plate {
+  /*background:#ddd;*/
 
-.node-head {
-	/*height:30px;*/
-	margin:5px;
-	position:relative;
+  width: 3000px;
+  height: 3000px;
+  z-index: 100;
 }
-/***********************/
-/* icon for different tile sizes */
-.node-icon {
-	width:30px;
-	height:30px;
-	background-repeat:no-repeat;
-	background-position: center center;
+#pg #pg_panel #script_selector {
+  width: 200px;
 }
-
-.node-icon-low {
-	position:absolute;
-	top:50%;
-	left:50%;
-	margin-top:-15px;
-	margin-left:-15px;
-	
+#pg #pg_panel #plate_container {
+  position: relative;
+  width: 100%;
+  height: 800px;
+  border: 1px solid #dcc;
+  overflow: scroll;
 }
-.node-icon-mid {
-	float:left;
+#pg #pg_panel #node_size_slider {
+  margin: 5px;
+  width: 200px;
 }
-/*.node-icon-high {
-	position:absolute;
-	width:26px;
-	height:26px;
-	top:0px; left:0px;
-	margin-top:7px; margin-left:7px;
-}*/
-/************************/
-/* other items in nodes */
-.node-number-of-values {
-	position:absolute;
-	top:10px;
-	left:40px;
-	text-align:left;
-	color:white;
-	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-	font-size: 16px;
-	line-height: 1.428571429;
+#pg #pg_panel .node {
+  position: absolute;
+  background: gray;
+  /*border:1px solid black;*/
+
+  box-shadow: inset 0 0 0 1px #ffffff;
+  overflow: hidden;
 }
-.node-values-mid {
-	width:100%;
-	padding:5px;
-	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-	font-size: 15px;
-	color:white;	
-	overflow:hidden;
+#pg #pg_panel .node[selected] {
+  box-shadow: inset 0 0 0 3px #9b4681;
 }
-.node-type {
-	/* mid-level detail when there's no value in the node */
-	position:absolute;
-	top:5px; left: 32px;
-	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-	font-size: 15px;
-	white-space:nowrap;
-	color:white;
+#pg #pg_panel .node-trigger {
+  background-color: #635a52;
 }
-/*.node-operation-high {
-	
-	position:absolute;
-	top:10px;
-	left:40px;
-	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-	font-size: 15px;
-	color:black;
-}*/
-.node-description-high {
-	clear:both;
-	width:100%;
-/*	height:25px;*/
-	padding-left:5px;
-	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-	font-size: 13px;
-	white-space:nowrap;
+#pg #pg_panel .node-page {
+  background-color: #b495c7;
 }
-.node-values-high {
-	width:100%;
-	padding:5px;
-	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-	font-size: 15px;
-	color:white;	
-	overflow:hidden;
+#pg #pg_panel .node-element {
+  background-color: #5abad1;
 }
-
-.node-table {
-	/* general node table css*/
-	overflow:hidden;
-	padding:3px;
-	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-	font-size: 13px;
+#pg #pg_panel .node-variable {
+  background-color: #e67975;
 }
-.node-table-mid {
-	/* mid detail value table style */
+#pg #pg_panel .node-operation {
+  background-color: #e0e0e0;
 }
-.node-table-high {
-	/* high detail value table style */
+#pg #pg_panel .node-head {
+  /*height:30px;*/
+
+  margin: 5px;
+  position: relative;
 }
-.node-table li {
-	padding:0px 2px 0px 2px;
-	white-space: nowrap;
+#pg #pg_panel .node-icon {
+  width: 30px;
+  height: 30px;
+  background-repeat: no-repeat;
+  background-position: center center;
 }
-.node-table li:nth-child(even) {
-	background-color: none
+#pg #pg_panel .node-icon-low {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -15px;
+  margin-left: -15px;
 }
-.node-table li:nth-child(odd) {
-	background-color: rgba(0,0,0,0.2)
+#pg #pg_panel .node-icon-mid {
+  float: left;
 }
+#pg #pg_panel .node-number-of-values {
+  position: absolute;
+  top: 10px;
+  left: 40px;
+  text-align: left;
+  color: white;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.428571429;
+}
+#pg #pg_panel .node-values-mid {
+  width: 100%;
+  padding: 5px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  color: white;
+  overflow: hidden;
+}
+#pg #pg_panel .node-type {
+  /* mid-level detail when there's no value in the node */
 
+  position: absolute;
+  top: 5px;
+  left: 32px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  white-space: nowrap;
+  color: white;
+}
+#pg #pg_panel .node-description-high {
+  clear: both;
+  width: 100%;
+  /*	height:25px;*/
 
+  padding-left: 5px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  white-space: nowrap;
+}
+#pg #pg_panel .node-values-high {
+  width: 100%;
+  padding: 5px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  color: white;
+  overflow: hidden;
+}
+#pg #pg_panel .node-table {
+  /* general node table css*/
 
+  overflow: hidden;
+  padding: 3px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 13px;
+}
+#pg #pg_panel .node-table-mid {
+  /* mid detail value table style */
 
+}
+#pg #pg_panel .node-table-high {
+  /* high detail value table style */
 
-
-
-
-
-
-
-
-
-
-
-
+}
+#pg #pg_panel .node-table li {
+  padding: 0px 2px 0px 2px;
+  white-space: nowrap;
+}
+#pg #pg_panel .node-table li:nth-child(even) {
+  background-color: none;
+}
+#pg #pg_panel .node-table li:nth-child(odd) {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+#pg #pg_command_ui {
+  position: absolute;
+  min-width: 60px;
+  max-width: 600px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #888;
+  padding: 5px;
+}
+#pg #pg_command_ui #command_container {
+  width: 50px;
+  height: 400px;
+}
+#pg #pg_command_ui #command_container .command {
+  margin: 5px;
+  height: 40px;
+  width: 40px;
+  background: #aaa;
+  border: 1px solid #222;
+  border-radius: 3px;
+}
+#pg #pg_command_ui #command_container .command .com_title {
+  font-size: 14px;
+  font-weight: 600;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+#pg .pg_dialog {
+  position: fixed;
+  z-index: 100001;
+  width: 400px;
+  height: auto;
+  -webkit-box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  background: #fff;
+  border: 1px solid #acacac;
+  border: 1px solid rgba(0, 0, 0, 0.333);
+  outline: 0;
+  padding: 20px;
+  font-size: 13px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: black;
+  text-align: left;
+}
+#pg .pg_dialog button,
+#pg .pg_dialog label {
+  margin: 1px;
+  padding: 2px 4px 2px 4px;
+  height: 20px;
+}
+#pg .pg_dialog button {
+  font-size: 13px;
+  border-radius: 4px;
+  color: #444;
+  background-color: white;
+  border: 1px solid #444;
+}
+#pg .pg_dialog_backdrop {
+  position: fixed;
+  z-index: 100000;
+  width: 100%;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+  background: rgba(255, 255, 255, 0.8);
+}
+#pg #pg_edit_ui {
+  position: absolute;
+  z-index: 10001;
+  top: 30px;
+  left: 30px;
+  background: white;
+  border: 1px solid #aaa;
+  border-radius: 8px;
+  width: 200px;
+  padding: 5px;
+}
+#pg #pg_edit_ui button {
+  margin: 1px;
+  padding: 2px 4px 2px 4px;
+  font-size: 13px;
+  height: 20px;
+  border-radius: 4px;
+  color: #444;
+  background-color: white;
+  border: 1px solid #444;
+  width: 100%;
+}
+#pg #pg_edit_ui button.selected {
+  background-color: red;
+}
+#pg #pg_edit_ui .label_selected_elements {
+  margin-top: 10px;
+  text-align: center;
+  width: 100%;
+  font-size: 14px;
+  color: #888;
+}
+#pg #pg_edit_ui .table_inspector ul,
+#pg #pg_edit_ui .table_inspector li {
+  list-style: none outside none;
+  margin: 0;
+  padding: 0;
+}
+#pg #pg_edit_ui .table_inspector li.attr {
+  font-size: 13px;
+  padding-left: 15px;
+  text-indent: -15px;
+  max-height: 80px;
+  overflow: hidden;
+}
+#pg #pg_edit_ui .table_inspector li.attr span.attr_key {
+  color: red;
+}
+#pg #pg_edit_ui .table_inspector li.attr span.attr_value {
+  color: #555;
+  padding-left: 5px;
+}
+/* pg */
 /***********************/

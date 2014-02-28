@@ -1,0 +1,393 @@
+#pg{
+	position:fixed;
+	top:0px; left:0px;
+
+#pg_panel {
+	position:fixed;
+	z-index:999;
+	width:100%;
+	height:300px;
+	bottom:0px;
+	background:white;
+	overflow:auto;
+	font-size:13px;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	color:black;
+	text-align:left;
+
+	ol, ul {
+	    list-style: none outside none;
+	    margin:0;  
+	    padding:0;
+	}
+	#resize_handle_panel {
+		position : absolute;
+		z-index:10000;
+		top: 0px;
+		left: 0px;
+		width: 100%;
+		height: 6px;
+		cursor: pointer;
+		background-color: #aab
+	}
+
+	#control_ui {
+		position:fixed;
+		bottom:0px;
+		background:white;
+		vertical-align: middle;
+		padding-left:10px;
+		height:26px;
+		padding-top:5px;
+		border-top:1px solid #ccc;
+		width:100%;
+		z-index:102;
+		overflow: hidden;
+
+
+		button, label{
+			margin:1px; padding: 2px 4px 2px 4px;
+			height: 20px;
+		}
+		button{
+			font-size:13px;
+			border-radius:4px;
+			color:#444;
+			background-color:white;
+			border:1px solid #444;
+		}
+	}
+	
+	#node_size_slider {
+		display: inline-block;
+	}
+
+	#tiles{
+		position:absolute;
+		z-index:101;
+		top:0px; left:0px;
+		width:3000px;
+		height:3000px;
+	}
+
+	#plate{
+		/*background:#ddd;*/
+		width:3000px;
+		height:3000px;
+		z-index:100;
+	}
+	#script_selector{
+		width:200px;
+	}
+
+
+
+	#plate_container {
+		position:relative;
+		width:100%;
+		height:800px;
+		border:1px solid #dcc;
+		overflow:scroll;
+	}
+	#node_size_slider {
+		margin:5px;
+		width:200px;
+	}
+
+
+	/* NODE  */
+
+	.node {
+		position:absolute;
+		background:gray; 
+		/*border:1px solid black;*/
+		box-shadow: inset 0 0 0 1px #ffffff;
+		overflow:hidden;
+	}
+	.node[selected] {
+		box-shadow: inset 0 0 0 3px #9b4681;
+	}
+	.node-trigger {
+		background-color:#635a52;
+	}
+	.node-page {	
+		background-color:#b495c7;
+	}
+	.node-element {
+		background-color:#5abad1;
+	}
+	.node-variable{
+		background-color:#e67975;
+	}
+	.node-operation{
+		background-color:#e0e0e0;
+	}
+
+	.node-head {
+		/*height:30px;*/
+		margin:5px;
+		position:relative;
+	}
+	/***********************/
+	/* icon for different tile sizes */
+	.node-icon {
+		width:30px;
+		height:30px;
+		background-repeat:no-repeat;
+		background-position: center center;
+	}
+
+	.node-icon-low {
+		position:absolute;
+		top:50%;
+		left:50%;
+		margin-top:-15px;
+		margin-left:-15px;
+		
+	}
+	.node-icon-mid {
+		float:left;
+	}
+	/*.node-icon-high {
+		position:absolute;
+		width:26px;
+		height:26px;
+		top:0px; left:0px;
+		margin-top:7px; margin-left:7px;
+	}*/
+	/************************/
+	/* other items in nodes */
+	.node-number-of-values {
+		position:absolute;
+		top:10px;
+		left:40px;
+		text-align:left;
+		color:white;
+		font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+		font-size: 16px;
+		line-height: 1.428571429;
+	}
+	.node-values-mid {
+		width:100%;
+		padding:5px;
+		font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+		font-size: 15px;
+		color:white;	
+		overflow:hidden;
+	}
+	.node-type {
+		/* mid-level detail when there's no value in the node */
+		position:absolute;
+		top:5px; left: 32px;
+		font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+		font-size: 15px;
+		white-space:nowrap;
+		color:white;
+	}
+	/*.node-operation-high {
+		
+		position:absolute;
+		top:10px;
+		left:40px;
+		font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+		font-size: 15px;
+		color:black;
+	}*/
+	.node-description-high {
+		clear:both;
+		width:100%;
+	/*	height:25px;*/
+		padding-left:5px;
+		font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+		font-size: 13px;
+		white-space:nowrap;
+	}
+	.node-values-high {
+		width:100%;
+		padding:5px;
+		font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+		font-size: 15px;
+		color:white;	
+		overflow:hidden;
+	}
+
+	.node-table {
+		/* general node table css*/
+		overflow:hidden;
+		padding:3px;
+		font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+		font-size: 13px;
+	}
+	.node-table-mid {
+		/* mid detail value table style */
+	}
+	.node-table-high {
+		/* high detail value table style */
+	}
+	.node-table li {
+		padding:0px 2px 0px 2px;
+		white-space: nowrap;
+	}
+	.node-table li:nth-child(even) {
+		background-color: none
+	}
+	.node-table li:nth-child(odd) {
+		background-color: rgba(0,0,0,0.2)
+	}
+
+
+
+
+       
+
+
+
+}	/* #pg_panel */
+
+
+
+#pg_command_ui {
+	position:absolute;
+	min-width:60px;
+	max-width:600px;
+	background: rgba(255,255,255,0.8);
+	border:1px solid #888;
+	padding:5px;
+
+	#command_container {
+		width:50px;
+		height:400px; 
+		.command{
+			margin:5px;
+			height:40px; width:40px;
+			background: #aaa;
+			border:1px solid #222;
+			border-radius: 3px;
+			.com_title{
+				font-size:14px;
+				font-weight:600;
+				font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+			}
+		}
+	}
+
+}
+
+
+
+.pg_dialog {
+	position:fixed;
+	z-index:100001;
+	width:400px;
+	height:auto;
+	-webkit-box-shadow: 0 4px 16px rgba(0,0,0,.2);
+	-moz-box-shadow: 0 4px 16px rgba(0,0,0,.2);
+	box-shadow: 0 4px 16px rgba(0,0,0,.2);
+	background: #fff;
+	border: 1px solid #acacac;
+	border: 1px solid rgba(0,0,0,.333);
+	outline: 0;
+	padding:20px;
+	font-size:13px;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	color:black;
+	text-align:left;
+
+	button, label{
+		margin:1px; padding: 2px 4px 2px 4px;
+		height: 20px;
+	}
+	button{
+		font-size:13px;
+		border-radius:4px;
+		color:#444;
+		background-color:white;
+		border:1px solid #444;
+	}
+
+}
+.pg_dialog_backdrop{ 
+	position:fixed;
+	z-index:100000;
+	width:100%; height:100%;
+	top:0px; left:0px;
+	background: rgba(255,255,255,0.8);
+}
+
+
+
+#pg_edit_ui {
+	position:absolute;
+	z-index:10001;
+	top:30px;  left:30px;
+	background:white;
+	border:1px solid #aaa;
+	border-radius: 8px;
+	width:200px;
+	padding:5px;
+	
+
+	button {
+		margin:1px; padding: 2px 4px 2px 4px;
+		font-size:13px;
+		height: 20px;
+		border-radius:4px;
+		color:#444;
+		background-color:white;
+		border:1px solid #444;
+		width:100%;
+	}
+	button.selected {
+		background-color:red;
+	}
+	.label_selected_elements {
+		margin-top:10px;
+		text-align:center;
+		width:100%;
+		font-size:14px;
+		color:#888;
+	}
+	.table_inspector {
+		ul, li {
+			list-style: none outside none;
+	    	margin:0;  
+	    	padding:0;
+	    }
+		li.attr{ 
+			font-size:13px;
+			padding-left:15px;
+			text-indent:-15px;
+			max-height:80px;
+			overflow:hidden;
+			span.attr_key {
+				color:red;
+			}
+			span.attr_value {
+				color:#555;
+				padding-left:5px;
+			}
+		}
+
+
+	}
+
+} 
+
+
+
+
+} /* pg */
+
+
+
+
+
+
+
+
+
+
+
+
+
+/***********************/

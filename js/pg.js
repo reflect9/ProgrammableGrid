@@ -1,6 +1,7 @@
 pg = {
 	init: function() {
 		console.log("open pg");
+		$('body').append("<div id='pg'></div>");
 		this.open_panel("untitled",[]);
 
 		// basic event handler
@@ -17,13 +18,13 @@ pg = {
 	},
 	open_panel : function(title, nodes) {
 		$("#pg_panel").remove();
-		var el_panel = $("<div id='pg_panel' class='panel'></div>").appendTo($("body"));
+		var el_panel = $("<div id='pg_panel' class='panel'></div>").appendTo($("#pg"));
 		$("<div id='pg_spacer'></div>").css({
 			'display':'block',
 			'position':'relative',
 			'clear':'both',
 			'width':'100%'
-		}).appendTo($("body"));
+		}).appendTo($("#pg"));
 		$("#pg_spacer").height($(el_panel).height());
 		pg.panel.init(el_panel.get(0));
 		if (nodes) {
@@ -216,9 +217,9 @@ pg = {
 	////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////
 	open_dialog : function(content) {
-		$("<div class='pg_dialog_backdrop'></div>").appendTo($("body"));
+		$("<div class='pg_dialog_backdrop'></div>").appendTo($("#pg"));
 		var diag_el = $("<div class='pg_dialog'></div>")
-		.append(content).appendTo("body");
+		.append(content).appendTo("#pg");
 		$(diag_el).offset({
 			'top': $(window).height()/2 - $(diag_el).height()/2,
 			'left': $(window).width()/2 - $(diag_el).width()/2

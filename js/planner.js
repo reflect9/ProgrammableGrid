@@ -21,20 +21,23 @@ pg.planner = {
 	plan: function(Is, O){
 		Is = toArray(Is);
 		// HTN Planning Algorithm
-		var null_check = _.every([Is, O, O.V], function(obj) {
-			if (obj===null || obj===undefined) {
-				console.log(obj);
-				console.log("cannot be null or undefined");
-				return false;
-			} else return true;
-		})
-		if (!null_check) return false;
+		// var null_check = _.every([Is, O, O.V], function(obj) {
+		// 	if (obj===null || obj===undefined) {
+		// 		console.log(obj);
+		// 		console.log("cannot be null or undefined");
+		// 		return false;
+		// 	} else return true;
+		// })
+		// if (!null_check) return false;
 
+		// When Output is undefined, then consider Input only
+		if (O===null || O===undefined || O.V===undefined || O.V===null || O.V===[]) {
+			// return this.find_applicable_commands(Is);
+			return false;
+		}
 		// Get all the doable action (either primitive or non-primitive)
 		var doable_methods = [];
-		_.each(_.pairs(pg.planner.methods), function(ml) {
-			var method_name = ml[0];	var method = ml[1];
-			// console.log("checking whether "+method_name+" is doable.");
+		_.each(pg.planner.methods, function(method, method_name) {
 			if (method.pre(Is, O)) {
 				console.log(method_name + " is doable;");
 				doable_methods.push(method);
@@ -51,43 +54,248 @@ pg.planner = {
 		for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
 		doable_methods = o;
 		console.log("doable_methods: " + doable_methods);
-		// Try to execute each doable method
+		// Try to execute each doable method.  Failed solutions will become 'false'. 
 		var solutions = _.map(doable_methods, function(method){
 			result = method.generate(Is, O);
 			if (result && (!_.isArray(result) || result.indexOf(false)==-1)) {
 				return _.union(result);
 			} else return false;
 		});
+		// return non-false solutions
 		return (solutions)? _.filter(solutions,function(s){return s!=false;}):false;	
 	},
 
-
-	attr_func_list : [
-		{	'attr_key': "text",
-			'getter': function(el) { return $(el).text();},
-			'setter': function(el,val) { return $(el).text(val);}
-		},
-		{	'attr_key': "download", 
-			'getter': function(el) { return $(el).attr('download');},
-			'setter': function(el,val) { return $(el).attr('download',val);}	
-		},
-		{	'attr_key': "visibility", 
-			'getter': function(el) { return $(el).css('display');},
-			'setter': function(el,val) { return $(el).css('display',val);}	
+	find_applicable_commands: function(Is) {
+		if(Is && _.isArray(Is) && Is.length>0 && Is[0] && Is[0].V && Is[0].V.length>0) {
+			var commands = _.map(pg.planner.commands, function(command, commandName) {
+				try{
+					if(command.pre(Is) && command.generate(Is)) return command.generate(Is);
+				} catch(e) {
+					console.log(e.stack);
+				}
+			});
+			return _.filter(commands, function(c) { return c!==undefined; });
+		} else {
+			return _.map(pg.planner.commands, function(command) { return command.generate(Is); });
 		}
-	],
+	},
 
+	commands: {
+		get_attribute: {	// from elements, extract one of its attributes
+			pre: function(Is) {
+				var pI = Is[0].V[0]; 
+				if(!isDom(pI)) return false;
+				else return true;
+			},
+			generate: function(Is){	// return a get_attribute command
+				// valid_attributes = _.filter(pg.planner.attr_func_list, function(af) {
+				// 	if(af.getter(Is[0].V[0])!=undefined) return true;
+				// });
+				return {type:'get_attribute', param:{}};
+			},
+			execute: function(O) {
+				if (O.P.type !== 'get_attribute') return false;
+				var I = (_.isArray(O.I))?O.I[0]:O.I;
+				var getter = (_.filter(pg.planner.attr_func_list, function(f){ return f.attr_key==O.P.param; })[0]).getter;
+				O.V = _.map(I.V, function(el_input) {
+					return this.getter(el_input);
+				});
+				return O;
+			}
+		},
+		set_attribute: {  // from two Is (left: original elements, above: new values) 
+			pre: function(Is) {
+				var pI = Is[0].V[0]; 
+				if(!isDom(pI)) return false;
+				else return true;
+			},
+			generate: function(Is){	// return all get_attribute commands with all possible properties
+				// valid_attributes = _.filter(pg.planner.attr_func_list, function(af) {
+				// 	if(af.setter(Is[0].V[0])!=undefined) return true;
+				// });
+				return {type:'set_attribute', param:{}};
+			},
+			execute: function(O) {
+				if (O.P.type !== 'set_attribute') return false;
+				var I = (_.isArray(O.I))?O.I[0]:O.I;
+				var getter = (_.filter(pg.planner.attr_func_list, function(f){ return f.attr_key==O.P.param; },this)[0]).getter;
+				O.V = _.map(I.V, function(el_input) {
+					return this.setter(el_input);
+				});
+				return O;
+			}
+		},
+		compose_text: {
+			// if Is are all text tiles, then suggest composing all of them. 
+			//		the default separator is ' '.   
+			pre: function(Is) {
+				for(var i=0;i<Is.length;i++) {
+					if(!_.isString(Is[i].V[0])) return false;
+				}
+				return true;
+			},
+			generate: function(Is) {
+				var command = {type:'compose_text',param:{separator:" ", order: undefined}};
+				return command;
+			},
+			execute:function(O) {
+				var separator = O.P.param.separator;
+				var text_to_compose = _.map(O.I, function(Is) { return Is.V; });
+				var composed_text = _.map(_.zip(text_to_compose), function(e) { return e.join(this.separator); },this);
+				O.V= composed_text;
+				return O;
+			}
+		},
+		split_text: {
+			// if I[0] is simple text, then suggest splitting them. 
+			// separater can be either parameter or I[1] 
+			// this creates n-output tiles, for different parts of the subtasks
+			pre:function(Is) {
+				if(!_.isString(Is[0].V[0])) return false;
+				return true;
+			},
+			generate: function(Is) {
+				return {type:'split_text', param:{separator:" "}};
+			},
+			execute: function(O) {
+				var I = (_.isArray(O.I))?O.I[0]:O.I;
+				O.V = _.map(I.V, function(v) { return v.split(this.O.P.separator);},this);
+				return O;
+			}
+		},
+		create_span: {
+			// if I[0] is text or number, then suggest creating span.  
+			pre:function(Is) {
+				if(_.isString(Is[0].V[0]) || _.isNumber(Is[0].V[0]) ) return true;
+				return false;
+			},
+			generate: function(Is) {
+				return {type:'create_span', param:{}};
+			},
+			execute: function(O) {
+				var I = (_.isArray(O.I))?O.I[0]:O.I;
+				O.V = _.map(I.V, function(v) { return $("<span>"+v+"</span>")[0]; },this);
+				return O;
+			}
+		},
+		create_button: {
+			// if I[0] is text or number, then suggest creating button.  
+			// parameters are trigger or links. 
+			pre:function(Is) {
+				if(_.isString(Is[0].V[0]) || _.isNumber(Is[0].V[0]) ) return true;
+				return false;
+			},
+			generate: function(Is) {
+				return {type:'create_button', param:{}};
+			},
+			execute: function(O) {
+				var I = (_.isArray(O.I))?O.I[0]:O.I;
+				O.V = _.map(I.V, function(v) { return $("<button>"+v+"</button>")[0]; },this);
+				return O;
+			}			
+		},
+		create_image: {
+			// if I[0] is URL, then suggest creating image element.  
+			// the default parameters are sizes. 
+			pre:function(Is) {
+				if(_.isString(Is[0].V[0]) || _.isNumber(Is[0].V[0]) ) return true;
+				return false;
+			},
+			generate: function(Is) {
+				return {type:'create_image', param:{}};
+			},
+			execute: function(O) {
+				var I = (_.isArray(O.I))?O.I[0]:O.I;
+				O.V = _.map(I.V, function(v) { return $("<img src='"+v+"'></img>")[0]; },this);
+				return O;
+			}			
+		},
+		click: {
+			// when I[0] is DOM elements.   
+			pre:function(Is) {
+				if(isDom(Is[0].V[0])) return true;
+				return false;
+			},
+			generate: function(Is) {
+				return {type:'click', param:{}};
+			},
+			execute: function(O) {
+				var I = (_.isArray(O.I))?O.I[0]:O.I;
+				_.each(I.V, function(v) {  $(v).click(); });
+				return O;
+			}			
+		},
+		type: {
+			// when I[0] is input or textarea elements.  I[1] is text.  
+			// parameters are rounding / random / extend the last till the end. 
+			pre:function(Is) {
+				if(isDom(Is[0].V[0]) && $(Is[0].V[0]).prop("tagName")=="INPUT" && _.isString(Is[1].V[0])) return true;
+				return false;
+			},
+			generate: function(Is) {
+				return {type:'type', param:{}};
+			},
+			execute: function(O) {
+				var min_length = min(O.I[0].V.length,O.I[1].V.length);  
+				for(var i=0; i<min_length; i++) {
+					$(O.I[0].V[i]).val(O.I[1].V[i]);
+				}
+				O.V = O.I[0].V;
+				return O;
+			}				
+		},
+		store: {
+			// when I[0] is not DOM element.
+			// parameter is key of the data, and public / private.
+			pre:function(Is) {
+				if(!isDom(Is[0].V[0])) return true;
+				else return false;
+			},
+			generate: function(Is) {
+				return {type:'store', param:{permission:'private'}};
+			},
+			execute: function(O) {
+				// store data in localStorage
+			}
+		},
+		trigger: {
+			// without any condition, it triggers the next tile or connected tiles.  
+			pre:function(Is) {
+				return true;
+			},
+			generate: function(Is) {
+				return {type:'trigger', param:{}};
+			},
+			execute: function(O) {
+				// how to execute trigger?
+			}			
+		},
+		literal: {
+			// just copy the previous (or connected) item. 
+			// parameter is the value itself. 
+			pre:function(Is) {
+				if(!isDom(Is[0].V[0])) return true;
+				else return false;
+			},
+			generate: function(Is) {
+				return {type:'store', param:{permission:'private'}};
+			},
+			execute: function(O) {
+				// store data in localStorage
+			}
+		}
+	},
 	methods: {
 		page_modified: {
-			pre: function(I,O) {
-				I = (_.isArray(I))?I[0]:I;
+			pre: function(I,O) { // I and O must be single Body tags.
+				I = (_.isArray(I))?I[0]:I;	// take the first (left) Input tile.
 				if(I.V.length!=1 || O.V.length!=1) return false;
 				var pI = I.V[0];  var pO = O.V[0];
 				if(!isDom(pI) || !isDom(pO)) return false;
 				if(pI.tagName!="BODY" || pO.tagName!="BODY") return false;
 				return true; 
 			},
-			generate: function(I,O){
+			generate: function(I,O){	// I -> original_el -> modified (O)
 				// find differences
 				I = (_.isArray(I))?I[0]:I;
 				I.P={type:'loadPage',param:''};
@@ -119,8 +327,8 @@ pg.planner = {
 				}
 			}
 		},
-		extract_text: {
-			pre: function(I, O) {
+		extract_text: {	// extract text of some elements in I
+			pre: function(I, O) {	// O must be string[] that exist in I, dom[]. 	
 				I = (_.isArray(I))?I[0]:I;
 				// The texts in the goal node must exist in one of the I' content.
 				if (!isStringList(O.V)) return false;
@@ -136,7 +344,7 @@ pg.planner = {
 				}
 				return true;
 			},
-			generate: function(I, O) {
+			generate: function(I, O) {	//  I -> elements -> text (O)
 				I = (_.isArray(I))?I[0]:I;
 				// extract text from the first OR every element. 
 				var isNtoN, el_containing_O;
@@ -169,12 +377,7 @@ pg.planner = {
 			// no need for execution
 
 		},
-		// modify_page: {
-		// 	// focuse on single objects I and O contain some modified elements
-		// 	// calls modify_element_attribute as subtask
-
-		// },
-		modify_element_attribute: {
+		modify_element_attribute: {	//  
 			pre: function(I, O) {
 				// I and O must be same-structure elements with modified attributes
 				// check they have same finger-print but different html
@@ -288,7 +491,7 @@ pg.planner = {
 			// no need for execution
 		},
 		set_attribute: { // takes two input nodes (original el and new values) and returns modified elements
-			pre: function(Is, O) {
+			pre: function(Is, O) {	// Is[0] and O must be DOM[] with the same fingerprints. 
 				if(!_.isArray(Is) || Is.length<2) return false;
 				if(!isDomList(Is[0].V)) return false;
 				var original_el = Is[0].V;
@@ -898,5 +1101,37 @@ pg.planner = {
 				return booleans;
 			}
 		}
-	}	// END OF METHODS //
+	},	// END OF METHODS //
+
+	attr_func_list : [
+		{	'attr_key': "text",
+			'getter': function(el) { return $(el).text();},
+			'setter': function(el,val) { return $(el).text(val);}
+		},
+		{	'attr_key': "download", 
+			'getter': function(el) { return $(el).attr('download');},
+			'setter': function(el,val) { return $(el).attr('download',val);}	
+		},
+		{	'attr_key': "visibility", 
+			'getter': function(el) { return $(el).css('display');},
+			'setter': function(el,val) { return $(el).css('display',val);}	
+		},
+		{	'attr_key': "color", 
+			'getter': function(el) { return $(el).css('color');},
+			'setter': function(el,val) { return $(el).css('color',val);}	
+		},
+		{	'attr_key': "source", 
+			'getter': function(el) { return $(el).attr('src');},
+			'setter': function(el,val) { return $(el).attr('src',val);}	
+		},
+		{	'attr_key': "link", 
+			'getter': function(el) { return $(el).attr('href');},
+			'setter': function(el,val) { return $(el).attr('href',val);}	
+		}
+
+	],
+
+
+
+
 };

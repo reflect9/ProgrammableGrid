@@ -117,7 +117,7 @@ pg.inspector = {
 	},
 	belongsToPallette: function(el) {
 		var $el = $(el);
-		var parent = $el.closest('#pg_panel, #edit_ui');
+		var parent = $el.closest('#pg');
 		if (parent.length !== 0)
 			return true;
 		return false;

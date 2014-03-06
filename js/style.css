@@ -1,9 +1,44 @@
 #pg {
+  /* DEFAULT STYLE */
+
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  font-size: 100%;
+  vertical-align: baseline;
+  background: transparent;
   position: fixed;
   top: 0px;
   left: 0px;
+  z-index: 9999;
   /* #pg_panel */
 
+}
+#pg nav ul {
+  list-style: none;
+}
+#pg a {
+  margin: 0;
+  padding: 0;
+  font-size: 100%;
+  vertical-align: baseline;
+  background: transparent;
+}
+#pg button,
+#pg label {
+  margin: 1px;
+  padding: 2px 4px 2px 4px;
+  height: 20px;
+}
+#pg button {
+  font-size: 13px;
+  border-radius: 4px;
+  color: #444;
+  font-weight: 400;
+  background-color: white;
+  background-image: none;
+  border: 1px solid #444;
 }
 #pg #pg_panel {
   position: fixed;
@@ -12,7 +47,7 @@
   height: 300px;
   bottom: 0px;
   background: white;
-  overflow: auto;
+  overflow: hidden;
   font-size: 13px;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   color: black;
@@ -74,19 +109,6 @@
   width: 100%;
   z-index: 102;
   overflow: hidden;
-}
-#pg #pg_panel #control_ui button,
-#pg #pg_panel #control_ui label {
-  margin: 1px;
-  padding: 2px 4px 2px 4px;
-  height: 20px;
-}
-#pg #pg_panel #control_ui button {
-  font-size: 13px;
-  border-radius: 4px;
-  color: #444;
-  background-color: white;
-  border: 1px solid #444;
 }
 #pg #pg_panel #node_size_slider {
   display: inline-block;
@@ -241,30 +263,54 @@
 #pg #pg_panel .node-table li:nth-child(odd) {
   background-color: rgba(0, 0, 0, 0.2);
 }
+#pg #pg_data_ui {
+  position: fixed;
+  z-index: 10002;
+  top: 30px;
+  right: 30px;
+  background: white;
+  border: 1px solid #aaa;
+  border-radius: 8px;
+  width: 200px;
+  padding: 20px 5px;
+}
 #pg #pg_command_ui {
-  position: absolute;
+  position: fixed;
+  bottom: 299px;
+  left: 30px;
   min-width: 60px;
-  max-width: 600px;
-  background: rgba(255, 255, 255, 0.8);
+  max-width: 1024px;
+  background: rgba(255, 255, 255, 0.9);
   border: 1px solid #888;
   padding: 5px;
+  z-index: 10005;
 }
 #pg #pg_command_ui #command_container {
-  width: 50px;
-  height: 400px;
+  position: relative;
+  width: 100%;
 }
 #pg #pg_command_ui #command_container .command {
+  display: inline-block;
   margin: 5px;
-  height: 40px;
-  width: 40px;
+  height: 70px;
+  width: 70px;
+  overflow: hidden;
   background: #aaa;
   border: 1px solid #222;
   border-radius: 3px;
 }
 #pg #pg_command_ui #command_container .command .com_title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
+  word-wrap: break-word;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+#pg #pg_command_ui #command_container .command[selected=selected] {
+  background: #9b4681;
+}
+#pg #pg_command_ui #command_parameters {
+  width: 100%;
+  margin: 10px;
 }
 #pg .pg_dialog {
   position: fixed;
@@ -307,15 +353,15 @@
   background: rgba(255, 255, 255, 0.8);
 }
 #pg #pg_edit_ui {
-  position: absolute;
+  position: fixed;
   z-index: 10001;
   top: 30px;
-  left: 30px;
+  right: 30px;
   background: white;
   border: 1px solid #aaa;
   border-radius: 8px;
   width: 200px;
-  padding: 5px;
+  padding: 20px 5px;
 }
 #pg #pg_edit_ui button {
   margin: 1px;

@@ -114,14 +114,17 @@ pg = {
 				}
 			}
 			if(node_to_execute) {
-					node_to_execute = pg.planner.methods[n.P.type].execute(node_to_execute);
+					node_executed = pg.planner.methods[n.P.type].execute(node_to_execute);
 					n_queue = _.without(n_queue, node_to_execute);	
 					console.log(node_to_execute);	
 			}
 		}}
 		catch(e) { console.error(e.stack);}
 		console.log("DONE EXECUTING SCRIPT");
-	},	
+	},
+	execute_node: function(nodeObj) {
+		nodeObj = pg.planner.methods
+	},
 	serialize: function(programs) {
 		_.each(programs, function(nodes) {
 			var output = {};

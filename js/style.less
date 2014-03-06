@@ -1,6 +1,41 @@
 #pg{
+
+	/* DEFAULT STYLE */
+	margin:0;
+    padding:0;
+    border:0;
+    outline:0;
+    font-size:100%;
+    vertical-align:baseline;
+    background:transparent;
 	position:fixed;
 	top:0px; left:0px;
+	z-index:9999;
+
+	nav ul {
+	    list-style:none;
+	}
+	a {
+	    margin:0;
+	    padding:0;
+	    font-size:100%;
+	    vertical-align:baseline;
+	    background:transparent;
+	}
+	button, label{
+		margin:1px; padding: 2px 4px 2px 4px;
+		height: 20px;
+	}
+	button{
+		font-size:13px;
+		border-radius:4px;
+		color:#444;
+		font-weight: 400;
+		background-color:white;
+		background-image:none;
+		border:1px solid #444;
+	}
+
 
 #pg_panel {
 	position:fixed;
@@ -9,7 +44,7 @@
 	height:300px;
 	bottom:0px;
 	background:white;
-	overflow:auto;
+	overflow:hidden;
 	font-size:13px;
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 	color:black;
@@ -43,19 +78,6 @@
 		width:100%;
 		z-index:102;
 		overflow: hidden;
-
-
-		button, label{
-			margin:1px; padding: 2px 4px 2px 4px;
-			height: 20px;
-		}
-		button{
-			font-size:13px;
-			border-radius:4px;
-			color:#444;
-			background-color:white;
-			border:1px solid #444;
-		}
 	}
 	
 	#node_size_slider {
@@ -245,29 +267,57 @@
 }	/* #pg_panel */
 
 
+#pg_data_ui {
+	position:fixed;
+	z-index:10002;
+	top:30px;  right:30px;
+	background:white;
+	border:1px solid #aaa;
+	border-radius: 8px;
+	width:200px;
+	padding:20px 5px;
+	
+
+}
+
 
 #pg_command_ui {
-	position:absolute;
+	position:fixed;
+	bottom:299px;
+	left:30px;
 	min-width:60px;
-	max-width:600px;
-	background: rgba(255,255,255,0.8);
+	max-width:1024px;
+	background: rgba(255,255,255,0.9);
 	border:1px solid #888;
 	padding:5px;
+	z-index:10005;
 
 	#command_container {
-		width:50px;
-		height:400px; 
+		position:relative;
+		width:100%;
 		.command{
+			display:inline-block;
 			margin:5px;
-			height:40px; width:40px;
+			height:70px; width:70px;
+			overflow:hidden;
 			background: #aaa;
 			border:1px solid #222;
 			border-radius: 3px;
 			.com_title{
-				font-size:14px;
+				font-size:13px;
 				font-weight:600;
+				word-wrap: break-word;
 				font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 			}
+		}
+		.command[selected=selected] {
+			background: rgb(155, 70, 129);
+		}
+	}
+	#command_parameters {
+		width:100%;
+		margin:10px;
+		.parameters {
 		}
 	}
 
@@ -317,14 +367,14 @@
 
 
 #pg_edit_ui {
-	position:absolute;
+	position:fixed;
 	z-index:10001;
-	top:30px;  left:30px;
+	top:30px;  right:30px;
 	background:white;
 	border:1px solid #aaa;
 	border-radius: 8px;
 	width:200px;
-	padding:5px;
+	padding:20px 5px;
 	
 
 	button {

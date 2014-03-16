@@ -353,7 +353,7 @@ var remove = function(list, removeItem) {
 	});
 };
 var obj2text = function(obj) {
-	if(obj.nodeType!==null && obj.nodeType!==undefined) {
+	if(obj && obj.nodeType!==null && obj.nodeType!==undefined) {
 		// DOM
 		return "[D:"+$(obj).prop('tagName')+"]"+$(obj).text();
 	} else {
@@ -737,21 +737,19 @@ function testCommand(id) {
 
 function get_attr_dict(elements) {
 	var dict = {};
-	if (!_.isArray(elements) || elements.length==0) return [];
-	else if(elements.length>=1) {
-		_.each(elements, function(el) {
-			_.each(pg.planner.attr_func_list, function(attr, key) {
-				var value = attr.getter(el);
-				if(value) {
-					if((attr.attr_key in dict) && dict[attr.attr_key]!=value)
-						dict[attr.attr_key] = "(multiple values)";
-					else 
-						dict[attr.attr_key] = value;
-				}	 
-			});
+	if (!isDom(elements) && !isDomList(elements)) return false;
+	_.each($.makeArray(elements), function(el) {
+		_.each(pg.planner.attr_func_list, function(attr, key) {
+			var value = attr.getter(el);
+			if(value) {
+				if((attr.attr_key in dict) && dict[attr.attr_key]!=value)
+					dict[attr.attr_key] = "(multiple values)";
+				else 
+					dict[attr.attr_key] = value;
+			}	 
 		});
-		return dict;
-	} 
+	});
+	return dict;
 }
 
 

@@ -5,6 +5,7 @@ pg.inspector = {
 	selectionBox: null,
 	hoveredElement: null,
 	callback:null,
+	selectionBox_list:[],
 	toggle: function() {
 		if(!pg.inspector.flag_inspect) {
 			pg.inspector.on();
@@ -75,6 +76,7 @@ pg.inspector = {
 		pg.inspector.hoveredElement_list = null;
 		_.each(pg.inspector.selectionBox_list, function(sb) {
 			sb.hide();
+			sb.destroy();
 		});
 		pg.inspector.selectionBox_list = [];
 	},

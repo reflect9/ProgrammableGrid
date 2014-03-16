@@ -1,3 +1,9 @@
+@purple: rgb(155, 70, 129);
+@skyblue: #02aff0;
+@yellow: #ffdc48;
+@grassgreen: #889a0f;
+@orange: #ea7e00;
+
 #pg{
 
 	/* DEFAULT STYLE */
@@ -5,12 +11,13 @@
     padding:0;
     border:0;
     outline:0;
-    font-size:100%;
     vertical-align:baseline;
     background:transparent;
 	position:fixed;
 	top:0px; left:0px;
 	z-index:9999;
+	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	font-size:13px;	
 
 	nav ul {
 	    list-style:none;
@@ -34,6 +41,18 @@
 		background-color:white;
 		background-image:none;
 		border:1px solid #444;
+
+        -moz-user-select: none; 
+        -khtml-user-select: none; 
+        -webkit-user-select: none; 
+        -o-user-select: none;  
+	}
+	.floating_buttons_at_the_bottom {
+		position:absolute;
+		bottom:0px;
+		width:100%;
+		background:rgba(255,255,255,0.8);
+
 	}
 
 
@@ -260,10 +279,6 @@
 
 
 
-       
-
-
-
 }	/* #pg_panel */
 
 
@@ -280,27 +295,198 @@
 
 }
 
+div.pg_ul_container {
+	height:inherit;
+	overflow:scroll;
+	ul{
+		list-style: none outside none;
+    	margin:0;  
+    	padding:0;
+    }
+    li {
+    	position:relative;
+    	margin:0px;
+		list-style: none outside none;
+		border-bottom:1px solid #aaa;
+    	padding:0;
+
+    	.data_edit_buttons {
+    		display:none;
+    		position:absolute;
+    		right:2px;
+    		top:2px;
+    		button {
+    			font-size:12px;
+    			padding:1px 3px 1px 3px;
+
+    		}
+    	}
+    }
+	div.attr{ 
+		font-size:13px;
+		padding-left:15px;
+		text-indent:-15px;
+		max-height:80px;
+		overflow:hidden;
+		span.attr_key {
+			color:red;
+		}
+		span.attr_value {
+			color:#555;
+			padding-left:5px;
+		}
+	}
+	div.dt_inst{
+		margin:10px;
+		padding:5px;
+		font-size:14px;
+		background: rgb(221, 221, 221);
+		border: 1px solid rgb(34, 34, 34);
+		border-radius:3px;
+		button, input { 
+			width:80%;
+			margin-left: 10px; 
+			margin-top:5px;
+		}
+	}
+}
+
+       
+
 
 #pg_command_ui {
 	position:fixed;
-	bottom:299px;
-	left:30px;
-	min-width:60px;
-	max-width:1024px;
-	background: rgba(255,255,255,0.9);
+	visibility:hidden;
+	width:1024px;
+	max-height:500px;
+	overflow:hidden;
+	background: rgba(255,255,255,1);
 	border:1px solid #888;
-	padding:5px;
+	box-shadow: 3px 3px 3px 1px rgba(0,0,0,0.2);
 	z-index:10005;
-
-	#command_container {
-		position:relative;
+	label {
+		text-transform:capitalize;
+		font-size:12px;
+		font-weight:700;
+		font-family:verdana,helvetica,arial,sans-serif;
+		color:#444;
+	}
+	.header_panel{
+		height:25px;
 		width:100%;
+		background:@purple;
+		.node_info, label { padding:3px; color:white; }
+
+	}
+	.upper_panel{
+		height:275px;
+		width:100%;
+		padding:5px;
+	}
+	.lower_panel{
+		clear:both;
+		background:white;
+		padding:5px;
+		height:22px;
+		border-top:1px solid #aaa;
+		width:100%;
+	}
+
+	.input_data{
+		vertical-align:top;
+		display:inline-block;
+		width:250px;
+		height:100%;
+		overflow:hidden;
+		border-right:1px solid #aaa;
+		.input_nodes_container {
+			overflow:scroll;
+			height:100%;
+		}
+		input{
+			width:100px;
+		}
+		div.ul_container {
+			height:inherit;
+	    	overflow:scroll;
+		}
+		ul{
+			margin: 0px 5px 10px 10px;
+			padding:0;
+		}
+		li {
+			margin:0px;
+			position:relative;
+			list-style: none outside none;
+			border-bottom:1px solid #aaa;
+	    	padding:0;
+
+	    	.data_edit_buttons {
+	    		display:none;
+	    		position:absolute;
+	    		right:2px;
+	    		top:2px;
+	    		button {
+	    			font-size:12px;
+	    			padding:1px 3px 1px 3px;
+
+	    		}
+	    	}
+	    }
+		div.attr{ 
+			font-size:13px;
+			padding-left:15px;
+			text-indent:-15px;
+			max-height:80px;
+			overflow:hidden;
+			span.attr_key {
+				color:red;
+			}
+			span.attr_value {
+				color:#555;
+				padding-left:5px;
+			}
+
+		}
+	}
+
+	.operation_menu{
+		vertical-align:top;
+		display:inline-block;
+		width: 550px;
+		height:100%;
+		border-right:1px solid #aaa;
+
+		.operation_info {
+			position:relative;
+			margin:10px;
+			padding:5px;
+			background: #ddd;
+			border:1px solid #222;
+			border-radius: 3px;
+			.op_param{
+				display:inline-block;
+				margin-left:10px; 
+			}
+			.op_execute_button {
+				position:absolute;
+				right:5px;
+				bottom:5px;
+				font-size:12px;
+			}
+		}
+
+		#command_container {
+			position:relative;
+			width:100%;
+		}
 		.command{
 			display:inline-block;
 			margin:5px;
-			height:70px; width:70px;
+			/*height:70px; width:70px;*/
+			padding:2px 4px 2px 4px;
 			overflow:hidden;
-			background: #aaa;
+			background: #ddd;
 			border:1px solid #222;
 			border-radius: 3px;
 			.com_title{
@@ -313,12 +499,36 @@
 		.command[selected=selected] {
 			background: rgb(155, 70, 129);
 		}
-	}
-	#command_parameters {
-		width:100%;
-		margin:10px;
-		.parameters {
+		.nodes {
+			display:inline-block;
+			margin:5px;
+			height:70px; max-width:200px;
+			overflow:hidden;
+			background: #aaa;
+			border:2px solid #222;
+			border-radius: 3px;
+			.node_title{
+				font-size:13px;
+				font-weight:600;
+				word-wrap: break-word;
+				font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+			}
 		}
+		#command_parameters {
+			width:100%;
+			margin:10px;
+			.parameters {
+			}
+		}
+	}
+
+	.output_data{
+		vertical-align:top;
+		display:inline-block;
+		position:relative;
+		width: 200px;
+		height:100%;
+		overflow:hidden;
 	}
 
 }

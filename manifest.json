@@ -31,7 +31,7 @@
             "contentscript.js"
       		],
       "css": [  
-            "js/lib/ui-lightness/jquery-ui-1.10.3.custom.css",
+           // "js/lib/ui-lightness/jquery-ui-1.10.3.custom.css",
             "js/style.css"
               ],
       "run_at" : "document_idle",
@@ -53,6 +53,7 @@
   ],
   "web_accessible_resources": [
     "js/lib/jquery-2.0.3.min.js",
+    "js/lib/jquery-ui-1.10.3.custom.min.js",
     "js/lib/jquery-2.0.3.min.map",
     "js/lib/glyphicons/glyphicons_153_unchecked.png",
     "js/lib/glyphicons/glyphicons_055_stopwatch.png",

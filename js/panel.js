@@ -1,24 +1,34 @@
-
-
-
-
-
 pg.panel = {
-	init: function(target_el){
-		this.el = target_el;
-		this.title = "untitled";
-		$('#pg').append(this.editUI.create());
-		this.commandUI.create();
-		$('#pg_edit_ui').draggable();
-		$(this.el).append("<div id='resize_handle_panel'></div>");
-		this.el_container = $("<div id='plate_container'></div>").appendTo(this.el);
-		this.el_tiles = $("<div id='tiles'></div>").appendTo(this.el_container);
-		this.el_plate = $("<div id='plate'></div>").appendTo(this.el_container); 
-		$(this.el).append(this.toolbar.create());
-		this.nodes = [];
+	init: function(title, nodes){
+		this.title = (title)? title:"untitled";
+		this.nodes = (nodes)? nodes:[];
 		this.commands = [];
 		this.selected_elements = [];
 		this.node_dimension = DEFAULT_NODE_DIMENSION;
+		this.el = $("<div id='pg_panel' class='panel'>\
+								<div id='resize_handle_panel'></div>\
+								<div id='plate_container'>\
+									<div id='tiles'></div>\
+									<div id='plate'></div>\
+								</div>\
+					</div>").appendTo($("#pg"));
+		// add dummy space at the end
+		$("<div id='pg_spacer'></div>").css({
+			'display':'block',
+			'position':'relative',
+			'clear':'both',
+			'width':'100%'
+		}).appendTo($("#pg"));
+		$("#pg_spacer").height($(this.el).height());
+		// attach editUI and commandUI
+		this.editUI.create();
+		this.commandUI.create();  this.commandUI.remove();
+		this.toolbar.create();
+		//
+		pg.panel.redraw();
+	},
+	close: function() {
+		$("#pg").empty();
 	},
 	load_json: function(json){
 		this.nodes = _.map(json.nodes, function(n_data,ni){
@@ -62,7 +72,7 @@ pg.panel = {
 		}
 	},
 	pan: function(loc) {
-		$(this.el_container).animate({scrollTop: loc[0], scrollLeft: loc[1]}, 600);
+		$("#pg_panel > #plate_container").animate({scrollTop: loc[0], scrollLeft: loc[1]}, 600);
 	},
 	p2c: function(position) {
 		// convert position to coordinate on plate element
@@ -73,13 +83,15 @@ pg.panel = {
 	},
 	deselect: function() {
 		$("#tiles .node").removeAttr("selected");
-		pg.panel.commandUI.close();
+		pg.panel.commandUI.remove();
 	},
 	select: function(node) {
 		// if(!_.isArray(node)) node = [node];
 		if (node && !_.isElement(node)) {
 			node = $("#"+node.ID).get(0);
 		}
+		pg.inspector.unhighlight_list();
+		pg.inspector.off();
 		var nodeObj = this.get_node_by_id($(node).attr("id"));
 		var prev_selected = $(node).attr("selected")!==undefined; 
 		$("#tiles .node").removeAttr("selected");
@@ -87,17 +99,25 @@ pg.panel = {
 		if(!prev_selected) {
 			$(node).attr("selected",true);
 			nodeObj.selected = true;
-			pg.panel.commandUI.find_command(nodeObj); 
+			if(!nodeObj.V || nodeObj.V.length==0) {
+				var applicable_operations = pg.panel.infer(nodeObj);
+				pg.panel.commandUI.update([], applicable_operations, nodeObj);	
+			} else {
+				var applicable_nodes = pg.panel.infer(nodeObj);
+				pg.panel.commandUI.update(applicable_nodes, [], nodeObj);	
+			}
 		} else{
-			pg.panel.commandUI.close();
+			pg.panel.redraw();
+			pg.panel.commandUI.remove();
 		}
 		
 	},
 	delete: function(target_nodeObj) {
 		pg.inspector.unhighlight_list();
 		if(!target_nodeObj) target_nodeObj = pg.panel.get_selected_nodes()[0];
-		pg.panel.nodes = _.without(pg.panel.nodes, target_nodeObj);
-		pg.panel.commandUI.close();
+		this.nodes = _.without(pg.panel.nodes, target_nodeObj);
+		this.commandUI.remove();
+		this.redraw();
 	},
 	clear: function(target_nodeObj) {
 		if(!target_nodeObj) target_nodeObj = pg.panel.get_selected_nodes()[0];
@@ -122,18 +142,26 @@ pg.panel = {
 	insert: function(new_nodes, target_node) {
 		// replace target_node with nodes and push nodes on the right side to right
 		var target_position = target_node.position;
+		var ID_deleted_O = target_node.ID;
 		this.delete(target_node);
-		for(var ni=0; ni<this.nodes.length;ni++) {
-			var n = this.nodes[ni];
-			if(n.position[0] == target_position[0] && n.position[1]>target_position[1]) {
-				// if the node is on the right side of the target node, then push it as the legnth of new nodes
-				n.position[1]+= new_nodes.length-1;
-			}
-		}
+		// for(var ni=0; ni<this.nodes.length;ni++) {
+		// 	var n = this.nodes[ni];
+		// 	if(n.position[0] == target_position[0] && n.position[1]>target_position[1]) {
+		// 		// if the node is on the right side of the target node, then push it as the legnth of new nodes
+		// 		n.position[1]+= new_nodes.length-1;
+		// 	}
+		// }
 		// place new_nodes
 		for(var ni=0; ni<new_nodes.length;ni++) {
 			var nd = new_nodes[ni]; 	
-			nd.position=[target_position[0], target_position[1]+ni];
+			nd.position=[target_position[0], target_position[1]+ni]; 
+			nd.ID = _.map(nd.ID, function(input_id) {	// replace nd.I with <left> if the left node is the input node.
+				if(input_id == pg.panel.get.node_by_id("_left",nd)) return "_left";
+				else if(input_id == pg.panel.get.node_by_id("_above",nd)) return "_above";
+				else if(input_id == pg.panel.get.node_by_id("_right",nd)) return "_right";
+				else if(input_id == pg.panel.get.node_by_id("_below",nd)) return "_below";
+				else return input_id;
+			});
 			pg.panel.nodes.push(nd);
 		}
 		
@@ -155,7 +183,11 @@ pg.panel = {
 			return pg.panel.get_node_by_id($(nodeEl).prop('id'));
 		});
 	},
-	get_node_by_id: function(node_id) {
+	get_node_by_id: function(node_id, reference_output_node) {
+		if(node_id == '_left' && reference_output_node) return this.get_left_node(reference_output_node);
+		if(node_id == '_above' && reference_output_node) return this.get_above_node(reference_output_node);
+		if(node_id == '_right' && reference_output_node) return this.get_right_node(reference_output_node);
+		if(node_id == '_below' && reference_output_node) return this.get_below_node(reference_output_node);
 		for(var i in this.nodes) {
 			if (this.nodes[i].ID == node_id) return this.nodes[i];
 		}	return false;
@@ -165,42 +197,85 @@ pg.panel = {
 			if (this.nodes[i].position[0] == position[0] && this.nodes[i].position[1] == position[1]) return this.nodes[i];
 		}	return false;
 	},	
+	get_next_nodes:function(node, _allNodes) {
+		// find all nodes that have the parameter node as Input. 
+		var allNodes = (_allNodes)? _allNodes:pg.panel.nodes; 
+		return _.filter(allNodes, function(n) {
+			return _.indexOf(n.I, node.ID) != -1;
+		});
+	},
+	get_prev_nodes:function(node, _allNodes) {	// find all prerequisite nodes
+		var allNodes = (_allNodes)? _allNodes:pg.panel.nodes; 
+		return _.filter(allNodes, function(n) {
+			return _.indexOf(node.ID, n.ID) != -1;
+		});	
+	},
 	el_to_obj:function(el) {
 		return pg.panel.get_node_by_id($(el).prop('id'));
 	},
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//  executions methods
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-	run: function(nodeObj, triggerNext) {
+	run_single_node: function(nodeObj) {
 		if(!nodeObj) return false;
 		if(!nodeObj.P) return false;
-		if(pg.planner.operations )
-
-		if(triggerNext) {
-			// run following (right/bottom) nodes
+		nodeObj.executed = true;
+		pg.planner.execute(nodeObj);
+		pg.panel.redraw();
+	},
+	run_connected_nodes: function(starting_nodes, nodes) {
+		// reset 'executed' property of every node
+		_.each(nodes, function(n) { n.executed = False; });	
+		// find connected graph of nodes
+		var connected_nodes = starting_nodes;
+		while(true){
+			var prev_length = connected_nodes.length;
+			collected_nodes = _.uniq(_.flatten(_.union(connected_nodes, _.map(connected_nodes, function(n){
+				return pg.panel.get_next_nodes(n);
+			}))));
+			if (prev_length == collected_nodes.length) break;
 		}
-		// node_queue <- all the descendant nodes connected to start_node 
-		// choose a node in node_queue whose inputs are not in node_queue
-		// 		evaluate the operation of the node, and update value
-		// 		repeat until there's no node in node_queue 
+		// let's run nodes whose prerequisite nodes are 'executed'.
+		var count =0; count_max = 500;
+		while(true) {
+			count++;
+			if(count>count_max) {
+				break;
+			}
+			// try to find a node which is ready to run <- all the prerequisite nodes are already executed
+			var node_ready = _.filter(connected_nodes, function(n) {
+				var prerequisite_nodes = pg.panel.get_prev_nodes(n, nodes);
+				var ready_prerequisite_nodes = _.filter(prerequisite_nodes, function(n) { return n.executed == True; });
+				return prerequisite_nodes.length == ready_prerequisite_nodes.length; 
+			});
+			// add following nodes in the queue
+			if(node_ready.length==0) break;
+			else {	// execute a randomly chosen node
+				pg.panel.run_single_node(node_ready[Math.floor(Math.random()*node_ready.length)]);
+			}
+		}
 	},
 	infer: function(output_node) {
-		if(_.isElement(output_node)) {
-			output_node = pg.panel.get_node_by_id($(output_node).attr("id"));
-		}
-		var I = pg.panel.get_left_node(output_node);
+		var Is = _.without(_.map(output_node.I, function(input_id) {
+			return pg.panel.get_node_by_id(input_id, output_node);
+		}), false);
 		var O = output_node;
-		var solutions = pg.planner.plan(I,O);
-		this.commandUI.update(solutions);
-		console.log(solutions);
-		if(!solutions || solutions==[]) alert("no solution found");
-		return solutions;
+		if(O.V.length==0) {
+			return pg.planner.find_applicable_operations(Is); // return a list of operations
+		} else {
+			return pg.planner.plan(Is, O);
+		}
+		// var solution_nodes = pg.planner.plan(Is,output_node);
+		// this.commandUI.update(solution_nodes);
+		// console.log(solution_nodes);
+		// if(!solution_nodes || solution_nodes==[]) alert("no solution found");
+		// return solution_nodes;
 	},
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//  view methods
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 	redraw: function() {
-		$(this.el_tiles).empty();
+		$("#pg_panel > #plate_container > #tiles").empty();
 		$("#control_ui").find(".pg_title").text(pg.panel.title);
 		this.drawPlate();
 		// draw nodes based on current module
@@ -219,9 +294,10 @@ pg.panel = {
 		}
 	},
 	drawPlate: function() {
-		$(this.el_plate).children().remove();
+		var el_plate = $("#pg_panel > #plate_container > #plate");
+		$(el_plate).children().remove();
 		var canvas = $("<canvas id='plate_canvas' width='3000' height='3000'></canvas>");
-		$(this.el_plate).append(canvas);
+		$(el_plate).append(canvas);
 		var ctx = canvas.get(0).getContext("2d");
 		ctx.fillStyle = "#eeeeee";
 		var num_row = Math.round(DEFAULT_PLATE_DIMENSION / this.node_dimension);
@@ -274,18 +350,20 @@ pg.panel = {
 	},
 	editUI: {
 		create: function() {
-			
 			var ui_el = $("<div id='pg_edit_ui'>  \
 				<div>\
 					<button class='edit_button'>Edit</button>\
-					<button class='select_button'>Select</button>\
 					<button class='load_page_button'>Current Page</button>\
-					<button class='snapshot_button'>Page Snapshot</button>\
+					<button class='select_button'>Select</button>\
 				</div>\
 				<div id='inspector_all_sel'>\
 					<div class='label_selected_elements'>no selection</div>\
 					<div class='table_inspector'>\
 						<ul></ul>\
+					</div>\
+					<div class='buttons_inspector'>\
+						<button class='release_button'>Release</button>\
+						<button class='extract_button'>Extract</button>\
 					</div>\
 				</div>\
 			</div>");
@@ -299,16 +377,7 @@ pg.panel = {
 				}
 			});
 			$(ui_el).find(".select_button").click(function(event) {
-				if(pg.inspector.flag_inspect) {
-					pg.inspector.off();
-					pg.panel.selected_elements=[];
-					$(event.target).removeClass("selected");
-					var attr_table_el = $("#pg_edit_ui").find(".table_inspector").find("ul");
-					pg.panel.editUI.updateInspector(pg.panel.selected_elements, $(attr_table_el).get(0));
-				} else {
-					$(event.target).addClass("selected");
-					pg.inspector.on(pg.panel.editUI.select_element);	
-				}
+				pg.panel.editUI.toggle_select();
 			});
 			$(ui_el).find(".load_page_button").click(function() {
 				var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
@@ -321,33 +390,66 @@ pg.panel = {
 				}
 				pg.panel.redraw();
 			});
-			$(ui_el).find(".snapshot_button").click(function() {
-				var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
-				if(currently_selected_nodes.length>0) {
-					var n = currently_selected_nodes[0];
-					var body = $("body").clone();
-					$(body).find("#pg_panel").remove();
-					$(body).find("#pg_edit_ui").remove();
-					$(body).find("#pg_command_ui").remove();
-					n.V = $(body).toArray();
-				} else {
-					console.log("no node is selected now.");
-				}
-				pg.panel.redraw();
+			// $(ui_el).find(".snapshot_button").click(function() {
+			// 	var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
+			// 	if(currently_selected_nodes.length>0) {
+			// 		var n = currently_selected_nodes[0];
+			// 		var body = $("body").clone();
+			// 		$(body).find("#pg_panel").remove();
+			// 		$(body).find("#pg_edit_ui").remove();
+			// 		$(body).find("#pg_command_ui").remove();
+			// 		n.V = $(body).toArray();
+			// 	} else {
+			// 		console.log("no node is selected now.");
+			// 	}
+			// 	pg.panel.redraw();
+			// });
+			$(ui_el).find(".release_button").click(function() {
+				pg.panel.editUI.deselect_elements();
+				pg.panel.editUI.toggle_select("off");
 			});
-
-
-			return ui_el;
+			$(ui_el).find(".extract_button").click(function() {
+				pg.panel.editUI.extract_selected_elements(pg.panel.selected_elements);
+				pg.panel.editUI.deselect_elements();
+				pg.panel.editUI.toggle_select("off");
+			});
+			
+			$("#pg").append(ui_el);
+			$(ui_el).draggable();
 		},
-		select_element: function(el) {
+		toggle_select: function(mode) {
+			var select_button = $("#pg_edit_ui").find(".select_button");
+			if(mode && mode=='on') {
+				$(select_button).addClass("selected");
+				pg.inspector.on(pg.panel.editUI.callback_select_element);	
+			} else if(mode && mode=='off') {
+				pg.inspector.off();
+				$(select_button).removeClass("selected");
+			} else {
+				// when mode is not defined 
+				if($(select_button).hasClass("selected")) {
+					$(select_button).removeClass("selected");
+					pg.inspector.off();
+				} else {
+					$(select_button).addClass("selected");
+					pg.inspector.on(pg.panel.editUI.callback_select_element);	
+				}
+			}
+		},
+		callback_select_element: function(el) {	// called by Inpector when a page element is selected
 			if(!(el in pg.panel.selected_elements)) 
 				pg.panel.selected_elements.push(el);
 			var attr_table_el = $("#pg_edit_ui").find(".table_inspector").find("ul");
+			pg.inspector.unhighlight_list();
+			pg.inspector.highlight_list(pg.panel.selected_elements);
 			pg.panel.editUI.updateInspector(pg.panel.selected_elements, $(attr_table_el).get(0));
 		},
 		deselect_elements: function() {
 			pg.panel.selected_elements = [];
+			pg.inspector.unhighlight_list();		
 			$("#pg_edit_ui").find(".table_inspector").find("ul").empty();
+			var num_label = $("#inspector_all_sel > .label_selected_elements");
+			$(num_label).text("Nothing selected.");
 		},
 		extract_selected_elements: function(els) {
 			// add selected elements to the V of the current node
@@ -372,9 +474,6 @@ pg.panel = {
 											<span class='attr_value'>"+value+"</span></li>	\
 						");
 				});	
-				$(target_ul).append("<button>Extract above elements</button>").click(function() {
-					pg.panel.editUI.extract_selected_elements(pg.panel.selected_elements);
-				});
 			} else { // when nothing is selected
 				$(num_label).text("Nothing selected.");
 			}
@@ -385,99 +484,216 @@ pg.panel = {
 		}
 	},
 	commandUI: {
+		top:100,
+		left:100,
 		create: function() {
-			var c_container = $("#pg_command_ui");
-			if(c_container.length==0) {
-				var ui_el = $("<div id='pg_command_ui' title='commands'>\
-					<div>Available Operations</div>\
-					<div id='command_container'>\
+			$("#pg_command_ui").remove();
+			
+			var ui_el = $("<div id='pg_command_ui' title='commands'>\
+				<div class='header_panel'>\
+					<div class='node_info'>\
+						<label>Node ID: </label><span class='node_info_id'></span>\
 					</div>\
-					<div id='node_info'>\
+				</div>\
+				<div class='upper_panel'>\
+					<div class='input_data'>\
+						<label>Input nodes</label>\
+						<div class='input_nodes_container'></div>\
 					</div>\
-					<div id='command_info'>\
+					<div class='operation_menu'>\
+						<label>Current Operation</label>\
+						<div class='operation_info'>\
+						</div>\
+						<label>Available operations</label>\
+						<div id='tasks_container'>\
+						</div>\
+						<div id='operation_container'>\
+						</div>\
 					</div>\
-					<div id='node_tools'><hr>\
+					<div class='output_data'>\
+						<label>Data of the node</label>\
+						<div class='pg_ul_container'><ul class='data_ul'>\
+						</ul></div>\
+						<div class='output_data_buttons floating_buttons_at_the_bottom'>\
+							<input type='text' class='new_data_input' placeholder='Add new data'></input><br>\
+							<button class='extract_button'>Extract</button>\
+							<button class='clear_button'>Clear</button>\
+						</div>\
 					</div>\
-					</div>");
-				$("<button>Execute operation</button>").click(function(e){pg.panel.run(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
-				$("<button>Delete node</button>").click(function(e){pg.panel.delete(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
-				$("<button>Clear operation</button>").click(function(e){pg.panel.clear(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
-				$("<button>Empty data</button>").click(function(e){pg.panel.empty(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
-				$("<button>Edit data</button>").click(function(e){pg.panel.edit_data();}).appendTo($(ui_el).find("#node_tools"));				
-				$('#pg').append(ui_el);	
-			}
-		},
-		open: function() {
-			this.create();
-			if(!$("#pg_command_ui").is(":visible")) {
-				$("#pg_command_ui").show();	
-			}
-		},
-		close: function() {
-			$("#pg_command_ui").hide();
-			pg.panel.commands=[];
-		},
-		update: function(commands, focused_node) {
-			this.open();
+				</div>\
+				<div class='lower_panel'>\
+					<div id='node_tools'></div>\
+				</div>\
+				</div>");
+			
+			// add node tools
+			$("<button>Execute operation</button>").click(function(e){
+				pg.panel.run_single_node(pg.panel.get_selected_nodes()[0]);
+			}).appendTo($(ui_el).find("#node_tools"));
+			$("<button>Delete node</button>").click(function(e){pg.panel.delete(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
+			$("<button>Clear data</button>").click(function(e){pg.panel.empty(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
+			
+			// add data tools
+			$(ui_el).find("input.new_data_input").change(function(){
+				var node = pg.panel.get_selected_nodes()[0];
+				node.V.push($(this).val());
+				$(this).val("");
+				pg.panel.commandUI.makeDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
+			});
+			$(ui_el).find("button.extract_button").click(this.extract_handler);
+			$(ui_el).find("button.clear_button").click(function(e){pg.panel.empty(pg.panel.el_to_obj(e.target));});
 
-			// update node info (id, input) 
-			var node_info_el = $("#pg_command_ui > #node_info").empty();
-			$("<label>id:</label><input type='text' name='node_id' value='"+focused_node.ID+"'>").appendTo(node_info_el);
-			$("<label>input:</label><input type='text' name='node_input' value='"+focused_node.I+"'>").appendTo(node_info_el);			
-
-			// update command info
-			pg.panel.commands = commands;
-			$("#command_container").empty();
-			var command_info = $("#pg_command_ui > #command_info").empty();
-			_.each(commands, function(c,ci) {
-				var commandButton = this.makeCommandEl(c);
-				if(focused_node && focused_node.P && focused_node.P.type==c.type) {
-					// if the command is curreltly selected
-					$(commandButton).attr('selected',true);
+			/////
+			$('#pg').append(ui_el);	
+			$(ui_el).css({
+				'visibility':"visible",
+				"top":pg.panel.commandUI.top + "px",
+				"left":pg.panel.commandUI.left + "px"
+			});
+			$(ui_el).draggable({handle: ".header_panel",
+				stop: function(event, ui) {
+					pg.panel.commandUI.top = ui.offset.top - $(window).scrollTop();;
+					pg.panel.commandUI.left = ui.offset.left - $(window).scrollLeft();;
+					console.log(ui.offset);
 				}
-				$("#command_container").append(commandButton);
-			},this);
+			});
+		},
 
-			// SHOW COMMAND DETAIL HERE
-			if(focused_node) {
-				if(focused_node.P) {
-					$(command_info).append("<div>"+focused_node.P.type+":  "+focused_node.P.description+"</div>");
-					var param_ul = $("<ul></ul>").appendTo(command_info);
-					_.each(focused_node.P.param, function(value, key) {
-						var li = $("<li><span>"+key+"</span>:</li>");
-						var param_input = $("<input type='text' name='"+key+"' value='"+value+"'>").
-							change(function() {  // when user updates the parameter value
-								var paramKey = $(this).attr('name');
-								var newParamValue = $(this).val();
-								(pg.panel.get_selected_nodes()[0]).P.param[paramKey]=newParamValue;
-								// (TBD) update the commandUI automatically here.
-							}).appendTo(li);
-						$(li).appendTo(param_ul);
-					});	
+		update: function(solutionNodes, operations, node) {
+			if($("#pg_command_ui").length==0) pg.panel.commandUI.create();	// open if it's closed
+			var operation_container = $("#pg_command_ui").find("#operation_container");  	// main command UI
+			var operation_info = $("#pg_command_ui").find(".operation_info");	 
+			var input_container = $("#pg_command_ui").find(".input_nodes_container");	 
+			var node_info = $("#pg_command_ui").find(".node_info");	 
+			var output_data_ul = $("#pg_command_ui").find(".output_data").find("ul.data_ul");	 
+			$(operation_container).empty();	$(operation_info).empty(); $(input_container).empty(); 
+
+			// 0. show current node information and operation detail
+			$(node_info).find(".node_info_id").text(node.ID);
+			// show operation detail
+			if(node) {
+				if(node.P) {
+					$(operation_info).append("<div><b>"+node.P.type+"</b>. "+node.P.description+"</div>");
+					var parameters = pg.planner.operations[node.P.type].parameters;
+					if(parameters) {
+						var paramEl = $("<div class='op_parameters'></div>").appendTo(operation_info);
+						_.each(parameters, function(p, p_key) {
+							var current_value = (node.P.param.p_key)? node.P.param.p_key: p.default; 
+							var param_div = $("<div class='op_param'><span>"+p.label+":</span></div>");
+							var param_input = $("<input type='text' name='"+p_key+"' value='"+current_value+"'>, ").
+								change(function() {  // when user updates the parameter value
+									var paramKey = $(this).attr('name');
+									var newParamValue = $(this).val();
+									(pg.panel.get_selected_nodes()[0]).P.param[paramKey]=newParamValue;
+								}).appendTo(param_div);
+							$(param_div).appendTo(paramEl);
+						});	
+					}
+
+					// add execute button for current operation
+					$("<div class='op_execute_button'>RUN</div>").click(function() {
+						pg.panel.run_single_node(pg.panel.get_selected_nodes()[0]);
+					}).appendTo(operation_info);
 				} else {
-					$(command_info).append("<div>No command selected.</div>");
+					$(operation_info).append("<span>No operation yet.</span>");
 				}
 			} 
 
-			// var selected_node_offset = $(pg.panel.get_selected_nodes()[0]).position();
-			// var command_bottom = 0;
-			// var command_left = selected_node_offset.left - 20;
-			// $("#pg_command_ui").css({
-			// 	bottom: command_bottom+"px",
-			// 	left: command_left+"px"
-			// });
-		},
-		find_command: function(focused_node) {
-			if(!focused_node) return;
-			var Is = [];
-			if(pg.panel.get_left_node(focused_node)) Is.push(pg.panel.get_left_node(focused_node));
-			if(pg.panel.get_above_node(focused_node)) Is.push(pg.panel.get_above_node(focused_node));
-			var commands = pg.planner.find_applicable_operations(Is);
-			if(_.isArray(commands) && commands.length>0) {
-				pg.panel.commandUI.update(commands, focused_node);
+			// 1. show input nodes
+			for(var i=0; i<node.I.length; i++) {
+				try{
+					var inputNode = pg.panel.get_node_by_id(node.I[i], node);
+					var inputNode_el = $("<div>\
+							<span>"+(i+1)+" </span><input type='text' inputNodeIdx='"+i+"' value='"+node.I[i]+"'>\
+							<div class='pg_ul_container'><ul class='data_ul'></ul></div>\
+						</div>")
+					$(inputNode_el).find("input").change(function() {  // UPDATE INPUT NODE ID
+						var i = $(this).attr('inputNodeIdx');
+						var newInputID = $(this).val();
+						(pg.panel.get_selected_nodes()[0]).I[i]=newInputID;
+					});
+					pg.panel.commandUI.makeDataTable(inputNode.V, $(inputNode_el).find("ul.data_ul"), true);
+					$(input_container).append(inputNode_el);
+				} catch(e) {	console.error(e.stack); 	continue;	}
 			}
 
+			// 1. show solutionNodes 
+			_.each(solutionNodes, function(sn, sni) {
+				var nodeSet = pg.panel.commandUI.makeNodesEl(sn);
+				$(operation_container).append(nodeSet);
+			});
 
+			// show applicable operations
+			_.each(operations, function(op, opi)  {
+				var commandButton = pg.panel.commandUI.makeCommandEl(op);
+				if(node && node.P && node.P.type==c.type) {
+					// if the command is curreltly selected
+					$(commandButton).attr('selected',true);
+				}
+				$(operation_container).append(commandButton);
+			});
+
+			// DATATABLE
+			this.makeDataTable(node.V, output_data_ul);
+		},
+		makeDataTable: function(V, target_ul, isReadOnly) {
+			$(target_ul).empty();
+			if(!isReadOnly && V.length==0) {
+				var html = "<div class='data_table_instruction_container'>\
+								<div class='dt_inst'>\
+									The node data is empty.<br> You can either<br>\
+									<button role='extract'>Extract from page</button><br>\
+									<button>Run an operation</button><br>\
+									<input role='type_data' placeholder='Type data here'></input><br>\
+								</div>\
+							</div>";
+				$(html).appendTo(target_ul);
+				$("#pg_command_ui").find(".output_data_buttons").hide();
+			} else {	// node has some data to display
+				for(i in V) {
+					var v = V[i]; 
+					var entryEl = $("<li data_index='"+i+"'></li>"); 
+					if(isDom(v)) {
+						var attr_dict = get_attr_dict(v);  // get_attr_dict returns simplified attr->value object
+						_.each(attr_dict, function(value,key) {
+							$(entryEl).append("	<div class='attr'><span class='attr_key'>"+ key +":</span>\
+												<span class='attr_value'>"+value+"</span></div>");
+						});	
+					} else {	// WHEN THE DATA is NOT DOM
+						$(entryEl).append("	<div class='attr'><span class='attr_value'>"+v+"</span></div>");
+					}
+					if(isReadOnly) { }
+					else {	// edit buttons for individual data
+						var data_edit_buttons = $("<div class='data_edit_buttons'></div>")
+							.appendTo(entryEl);
+						$(entryEl).hover(function(){$(this).find(".data_edit_buttons").show();}, function(){$(this).find(".data_edit_buttons").hide();});
+						$("<button class='edit_button'>E</button>").click(function() {
+							// TBD
+						}).appendTo(data_edit_buttons);
+						$("<button class='delete_button'>D</button>").click(function() {
+							var data_index = $(this).parents("li").attr("data_index");
+							var node = pg.panel.get_selected_nodes()[0];
+							node.V.splice(data_index,1);
+							pg.panel.commandUI.makeDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
+						}).appendTo(data_edit_buttons);
+					}	// end of edit buttons
+					$(target_ul).append(entryEl);
+				}
+				$("#pg_command_ui").find(".output_data_buttons").show();
+				return;
+			}
+			
+		},
+		makeNodesEl: function(nodes) {
+			var el = $("<div class='nodes'></div>"); 
+			_.each(nodes, function(n) {
+				$("<div class='node_title'>"+ n.P.type +"</div>").appendTo(el);
+			});
+			$(el).click($.proxy(function() {
+				pg.panel.insert(this, pg.panel.get_selected_nodes()[0]);
+				pg.panel.redraw();
+			},nodes));
+			return el;
 		},
 		makeCommandEl: function(command) {
 			var el = $("<div class='command'>\
@@ -490,30 +706,48 @@ pg.panel = {
 				pg.panel.redraw();
 			},command));
 			return el;
+		},
+		remove: function() {
+			$("#pg_command_ui").remove();
+			pg.panel.solutionNodes=[];
+		},
+		extract_handler: function(){
+			if($(this).text()=="Extract") {
+				pg.inspector.on(function(el){
+					var node = pg.panel.get_selected_nodes()[0];
+					if(!(el in node.V)) 
+						node.V.push(el);
+					// var attr_table_el = $("#pg_edit_ui").find(".table_inspector").find("ul");
+					pg.inspector.unhighlight_list();
+					pg.inspector.highlight_list(node.V);
+					pg.panel.commandUI.makeDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
+				});	
+				$(this).text("Done");
+			} else {
+				pg.inspector.unhighlight_list();
+				pg.inspector.off();
+				pg.panel.redraw();
+				$(this).text("Extract");
+			}
 		}
-
 
 	},
 	toolbar: {
 		create: function() {
 			var ui_el = $("<div id='control_ui'>		\
-				<span class='pg_title'></span>\
-				<select id='script_selector'>	<option selected disabled>Load script</option>\
-				</select>	\
-				<button id='button_remove'>remove</button>\
-				<button id='button_clear'>clear</button>\
-				<button id='button_new'>new</button>\
-				<button id='button_save'>save</button>\
-				<button id='button_execute'>execute</button>\
-				<label>ZOOM:</label>\
-				<button class='zoom_button' id='zoom_to_low'  node_size=50>small</button>\
-				<button class='zoom_button' id='zoom_to_mid'  node_size=150>medium</button>\
-				<button class='zoom_button' id='zoom_to_high' node_size=300>large</button>\
-				<button class='zoom_button' id='zoom_to_high' node_size='showAll'>show all</button>\
-				&nbsp;&nbsp;&nbsp;Edit node: \
-				<span id='edit_button_group'> \
-					<button class='delete_button' id='delete_node'>delete</button>\
-				</span>\
+					<span class='pg_title'></span>\
+					<select id='script_selector'>	<option selected disabled>Load script</option>\
+					</select>	\
+					<button id='button_remove'>remove</button>\
+					<button id='button_clear'>clear</button>\
+					<button id='button_new'>new</button>\
+					<button id='button_save'>save</button>\
+					<button id='button_execute'>execute</button>\
+					<label>ZOOM:</label>\
+					<button class='zoom_button' id='zoom_to_low'  node_size=50>small</button>\
+					<button class='zoom_button' id='zoom_to_mid'  node_size=150>medium</button>\
+					<button class='zoom_button' id='zoom_to_high' node_size=300>large</button>\
+					<button class='zoom_button' id='zoom_to_high' node_size='showAll'>show all</button>\
 				</div>\
 			");
 			$(ui_el).find(".pg_title").text(pg.panel.title);
@@ -525,14 +759,14 @@ pg.panel = {
 			$(ui_el).find("#script_selector").change(function() {
 				$("#script_selector option:selected").each(function() {
 					var title = $(this).attr('value');
-					pg.open_panel(title, pg.load_script(title));
+					pg.load_script(title);
 				});
 			});
 			$(ui_el.find("#button_remove")).click(function() {
 				pg.remove_script(pg.panel.title);
 				var programs = pg.load_all_scripts();
 				for(var k in programs) {
-					pg.open_panel(k, programs[k]);
+					pg.load_script(k);
 					break;
 				}
 			});
@@ -569,7 +803,7 @@ pg.panel = {
 				pg.panel.delete("selected_node");
 				pg.panel.redraw();
 			});
-			return ui_el;
+			$("#pg > #pg_panel").append(ui_el);
 		}
 	},
 
@@ -610,21 +844,22 @@ pg.panel = {
 			});
 		// now attach event handlers
 		// 1. create a new tile when empty plate is clicked
-		$(this.el_tiles).off('dblclick').dblclick(function(e) {
+		var el_tiles = $("#pg").find("#tiles");
+		$(el_tiles).off('dblclick').dblclick(function(e) {
 			var mouse_coord = {left: e.pageX - $(this).offset().left,
 								top: e.pageY - $(this).offset().top};
 			var mouse_pos = {left: Math.floor(mouse_coord.left/pg.panel.node_dimension), 
 							top: Math.floor(mouse_coord.top/pg.panel.node_dimension)};
 			e.stopPropagation();
 			console.log("plate clicked "+ mouse_pos.left + "," +mouse_pos.top);
-			var new_node = pg.Node.emptyNode();
+			var new_node = pg.Node.create();
 			new_node.position = [mouse_pos.top, mouse_pos.left];
 			pg.panel.nodes.push(new_node);
 			pg.panel.redraw();
 			pg.panel.select(new_node);
 
 		});
-		$(this.el_tiles).off('click').click(function(e) {
+		$(el_tiles).off('click').click(function(e) {
 			pg.panel.deselect();
 		});
 		$(this.el).find("#resize_handle_panel").draggable({
@@ -637,6 +872,11 @@ pg.panel = {
 				$("#pg_spacer").height($(pg.panel.el).height());
 			}
 		});
+		// $('body').unbind('click').on('click',':not(#pg)',function(e) {
+		// 	e.stopPropagation();
+		// 	pg.panel.commandUI.remove();
+		// });
+
 		// 2. drag plate to pan
 	},
 

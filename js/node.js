@@ -1,8 +1,8 @@
 
 pg.Node = {
-	emptyNode: function() {
-		return {
-				I:undefined, 
+	create: function(p) {
+		var n = {
+				I:['_left','_above'], 
 				ID: makeid(),
 				I_ID: undefined,
 				P: undefined,
@@ -10,55 +10,45 @@ pg.Node = {
 				position: undefined,
 				type: undefined
 			};
+		if(p) {
+			n.I = typeof p.I !== 'undefined' ? p.I : [];
+			n.ID = typeof p.ID !== 'undefined' ? p.ID : makeid();
+			n.I_ID = typeof p.I_ID !== 'undefined' ? p.I_ID : undefined;
+			n.P = typeof p.P !== 'undefined' ? p.P : undefined;
+			n.V = typeof p.V !== 'undefined' ? p.V : [];
+			n.position = typeof p.position !== 'undefined' ? p.position : undefined;
+			n.type = typeof p.type !== 'undefined' ? p.type : undefined;
+		}
+		return n;
 	},
 	draw: function(node,node_size) {
-		// draw a node on plate
+		// NODE BASE
 		var n = $("<div class='node'></div>")
 			.attr('id',node.ID)
 			.attr("selected",node.selected)
 			.addClass("node-"+node.type);
 		if (node.selected) $(n).addClass("node-selected");
-		if (node.P!==undefined) {
-			var arrow_svg;
-			arrow_svg = this.getInputTriangle('right',[7,22]);
-			arrow_svg.css({position:'absolute', top:node_size/2-11, left:0});
-			// if(node.P.I1=='left') {
-			// 	arrow_svg = this.getInputTriangle('right',[7,22]);
-			// 	arrow_svg.css({position:'absolute', top:node_size/2-11, left:0});
-			// } else if(node.P.I1=='top') {
-			// 	arrow_svg = this.getInputTriangle('down',[22,7]);
-			// 	arrow_svg.css({position:'absolute', top:0, left:node_size/2-11});
-			// } 
-			// if(node.P.I2=='left') {
-			// 	arrow_svg = this.getInputTriangle('right',[7,22]);
-			// 	arrow_svg.css({position:'absolute', top:node_size/2-11, left:0});
-			// } else if(node.P.I2=='top') {
-			// 	arrow_svg = this.getInputTriangle('down',[22,7]);
-			// 	arrow_svg.css({position:'absolute', top:0, left:node_size/2-11});
-			// }
-			$(arrow_svg).appendTo(n);
-		}
-		var n_head;
+
+		// DRAW INPUT ARROW
+		if (node.I.indexOf('_left') !== -1) 
+			$(this.getInputTriangle('right',[7,22]))
+				.css({position:'absolute', top:node_size/2-11, left:0}).appendTo(n);
+		if (node.I.indexOf('_above') !== -1) 
+			$(this.getInputTriangle('down',[22,7]))
+				.css({position:'absolute', left:node_size/2-11, top:0}).appendTo(n);
+
+		// NODE HEAD: OPERATION
+		var n_head; var n_data;
 		if(node_size<NODE_SIZE_MID) {
-			// show nothing more than icon if the tile size is very small
 			n_head = $(this.getNodeIcon(node,node_size)).appendTo(n); // show icon of tile type only
 		} else if (node_size<NODE_SIZE_HIGH) {
 			n_head = $("<div class='node-head'></div>").appendTo(n);
 			$(n_head).append(this.getNodeIcon(node,node_size));
-			// if (Object.prototype.toString.call(node.value)=== '[object Array]' && node.value.length>0) {
-			// 	$(n).append("<div class='node-number-of-values'>"+node.value.length+"</div>");
-			// }  // append size of values (only if value contains some) 
-			// brief description (if the node contains value, it shows summary of the value. o/t it shows P detail)
-			// show P description
 			if(node.P!==undefined)
 				$(n_head).append("<div class='node-type'>"+node.P.type.toUpperCase()+"</div>");
-			// if (Object.prototype.toString.call(node.value)=== '[object Array]' && node.value.length>0) {
-			$("<div class='node-values-mid'></div>")
+			n_data = $("<div class='node-values-mid'></div>")
 				.append(this.getNodeValueTable(node,node_size))
 				.appendTo(n);
-			// } else {
-				
-			// }			
 		} else {
 			n_head = $("<div class='node-head'></div>").appendTo(n);
 			$(n_head).append(this.getNodeIcon(node,node_size));
@@ -67,13 +57,13 @@ pg.Node = {
 				// $(n_head).append("<div class='node-description-high'>"+node.P.description+"</div>");  
 			}
 			// full description
-			$("<div class='node-values-high'></div>")
+			n_data = $("<div class='node-values-high'></div>")
 					.append(this.getNodeValueTable(node,node_size))
 					.appendTo(n);
 		}
 		// when mouse is over the node, it highlights all the elements in the page 
 		if(node.V && _.isArray(node.V) && _.isElement(node.V[0])) {
-			$(n_head).hover(function() {
+			$(n_data).hover(function() {
 				var id = $(this).parent().attr("id");
 				var node = pg.panel.get_node_by_id(id);
 				pg.inspector.highlight_list(node.V);
@@ -86,7 +76,7 @@ pg.Node = {
 			'left':pg.panel.p2c(node.position)[1],
 			'width':node_size,
 			'height':node_size
-		}).appendTo(pg.panel.el_tiles);
+		}).appendTo($("#pg").find("#tiles"));
 	},
 	getNodeValueTable: function(node, node_size) {
 		// returns a Jquery DIV object of table represents node values.  
@@ -139,15 +129,15 @@ pg.Node = {
 		var url = chrome.extension.getURL("js/lib/glyphicons/"+ png_name + ".png");
 		$(icon).css('background-image', 'url('+ url + ')');
 		
-		var clickEventHandler = $.proxy(function() {
-			var nodes = pg.panel.infer(this);
-			if(nodes && nodes.length>0) {
-				pg.panel.insert(nodes[0],node);
-				pg.panel.redraw();
-			}
-			event.stopPropagation();
-		},node);
-		$(icon).click(clickEventHandler);
+		// var clickEventHandler = $.proxy(function() {
+			// var nodes = pg.panel.infer(this);
+			// if(nodes && nodes.length>0) {
+			// 	pg.panel.insert(nodes[0],node);
+			// 	pg.panel.redraw();
+			// }
+			// event.stopPropagation();
+		// },node);
+		// $(icon).click(clickEventHandler);
 		return icon;		
 
 		// if(node.type=='trigger') {

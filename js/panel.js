@@ -82,32 +82,26 @@ pg.panel = {
 		// 		position[1]*this.node_dimension - this.offset[1]];
 	},
 	deselect: function() {
+		pg.inspector.unhighlight_list();
+		pg.inspector.off();
 		$("#tiles .node").removeAttr("selected");
+		_.each(pg.panel.nodes, function(n) { n.selected=false; });
 		pg.panel.commandUI.remove();
 	},
 	select: function(node) {
-		// if(!_.isArray(node)) node = [node];
-		if (node && !_.isElement(node)) {
-			node = $("#"+node.ID).get(0);
-		}
-		pg.inspector.unhighlight_list();
-		pg.inspector.off();
-		var nodeObj = this.get_node_by_id($(node).attr("id"));
-		var prev_selected = $(node).attr("selected")!==undefined; 
+		var node_el = $("#"+node.ID).get(0);
+		// deselect all others
 		$("#tiles .node").removeAttr("selected");
-		_.each(pg.panel.nodes, function(n){n.selected=false;});
-		if(!prev_selected) {
-			$(node).attr("selected",true);
-			nodeObj.selected = true;
-			if(!nodeObj.V || nodeObj.V.length==0) {
-				var applicable_operations = pg.panel.infer(nodeObj);
-				pg.panel.commandUI.update([], applicable_operations, nodeObj);	
-			} else {
-				var applicable_nodes = pg.panel.infer(nodeObj);
-				pg.panel.commandUI.update(applicable_nodes, [], nodeObj);	
-			}
-		} else{
-			pg.panel.redraw();
+		// select ON
+		if(node.selected==false || node.selected==undefined) {
+			$(node_el).attr("selected",true);
+			_.each(pg.panel.nodes, function(n) { n.selected=false; });
+			node.selected = true;
+			pg.panel.commandUI.redraw();
+		} else{	// select OFF
+			// pg.panel.redraw();
+			_.each(pg.panel.nodes, function(n) { n.selected=false; });
+			$(node_el).attr("selected",false);
 			pg.panel.commandUI.remove();
 		}
 		
@@ -155,15 +149,18 @@ pg.panel = {
 		for(var ni=0; ni<new_nodes.length;ni++) {
 			var nd = new_nodes[ni]; 	
 			nd.position=[target_position[0], target_position[1]+ni]; 
-			nd.ID = _.map(nd.ID, function(input_id) {	// replace nd.I with <left> if the left node is the input node.
-				if(input_id == pg.panel.get.node_by_id("_left",nd)) return "_left";
-				else if(input_id == pg.panel.get.node_by_id("_above",nd)) return "_above";
-				else if(input_id == pg.panel.get.node_by_id("_right",nd)) return "_right";
-				else if(input_id == pg.panel.get.node_by_id("_below",nd)) return "_below";
-				else return input_id;
-			});
 			pg.panel.nodes.push(nd);
 		}
+		_.each(new_nodes, function(nd) {
+			nd.I = _.map(nd.I, function(input_id) {	// replace nd.I with <left> if the left node is the input node.
+				if(input_id == pg.panel.get_node_by_id("_left",nd)) return "_left";
+				else if(input_id == pg.panel.get_node_by_id("_above",nd)) return "_above";
+				else if(input_id == pg.panel.get_node_by_id("_right",nd)) return "_right";
+				else if(input_id == pg.panel.get_node_by_id("_below",nd)) return "_below";
+				else return input_id;
+			});
+		});
+		pg.panel.redraw();
 		
 	},
 	get_left_node:function(node) {
@@ -263,7 +260,11 @@ pg.panel = {
 		if(O.V.length==0) {
 			return pg.planner.find_applicable_operations(Is); // return a list of operations
 		} else {
-			return pg.planner.plan(Is, O);
+			if(Is.length>0) {
+				return pg.planner.plan(Is, O);	
+			} else {
+				return [];
+			}
 		}
 		// var solution_nodes = pg.planner.plan(Is,output_node);
 		// this.commandUI.update(solution_nodes);
@@ -492,7 +493,7 @@ pg.panel = {
 			var ui_el = $("<div id='pg_command_ui' title='commands'>\
 				<div class='header_panel'>\
 					<div class='node_info'>\
-						<label>Node ID: </label><span class='node_info_id'></span>\
+						<label>Node ID: </label><span class='node_info_id'></span><span class='node_info_position'></span>\
 					</div>\
 				</div>\
 				<div class='upper_panel'>\
@@ -504,9 +505,10 @@ pg.panel = {
 						<label>Current Operation</label>\
 						<div class='operation_info'>\
 						</div>\
-						<label>Available operations</label>\
-						<div id='tasks_container'>\
+						<label>Operations satisfying Input and Data </label>\
+						<div id='task_container'>\
 						</div>\
+						<label>Operations suitable for Input</label>\
 						<div id='operation_container'>\
 						</div>\
 					</div>\
@@ -526,21 +528,23 @@ pg.panel = {
 				</div>\
 				</div>");
 			
+			// $(ui_el).find("button.infer_op_button").click(function() { pg.panel.commandUI.inferOperations(); });
+			// $(ui_el).find("button.infer_task_button").click(function() {  pg.panel.commandUI.inferTasks(); });
+
 			// add node tools
-			$("<button>Execute operation</button>").click(function(e){
-				pg.panel.run_single_node(pg.panel.get_selected_nodes()[0]);
-			}).appendTo($(ui_el).find("#node_tools"));
-			$("<button>Delete node</button>").click(function(e){pg.panel.delete(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
-			$("<button>Clear data</button>").click(function(e){pg.panel.empty(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
+			// $("<button>Execute operation</button>").click(function(e){
+			// 	pg.panel.run_single_node(pg.panel.get_selected_nodes()[0]);
+			// }).appendTo($(ui_el).find("#node_tools"));
+			// $("<button>Delete node</button>").click(function(e){pg.panel.delete(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
+			// $("<button>Clear data</button>").click(function(e){pg.panel.empty(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
 			
 			// add data tools
 			$(ui_el).find("input.new_data_input").change(function(){
-				var node = pg.panel.get_selected_nodes()[0];
-				node.V.push($(this).val());
+				pg.panel.commandUI.addData($(this).val());
 				$(this).val("");
-				pg.panel.commandUI.makeDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
+				$("#pg_command_ui").find("input.new_data_input").focus();
 			});
-			$(ui_el).find("button.extract_button").click(this.extract_handler);
+			$(ui_el).find("button.extract_button").click(function() { pg.panel.commandUI.toggleExtract(); });
 			$(ui_el).find("button.clear_button").click(function(e){pg.panel.empty(pg.panel.el_to_obj(e.target));});
 
 			/////
@@ -558,18 +562,32 @@ pg.panel = {
 				}
 			});
 		},
-
+		redraw: function() {
+			var node = pg.panel.get_selected_nodes()[0];
+			var Is = _.without(_.map(node.I, function(input_id) {
+				return pg.panel.get_node_by_id(input_id, node);
+			}), false, undefined);
+			var applicable_tasks = []; var applicable_operations=[];
+			if(node.V && node.V.length>0) {
+				applicable_tasks = (node.V && node.V.length>0)? pg.planner.plan(Is, node) : [];	
+			} 
+			applicable_operations = (Is.length>0)? pg.planner.find_applicable_operations(Is) : [];
+			pg.panel.commandUI.update(applicable_tasks, applicable_operations, node);	
+		},
 		update: function(solutionNodes, operations, node) {
 			if($("#pg_command_ui").length==0) pg.panel.commandUI.create();	// open if it's closed
 			var operation_container = $("#pg_command_ui").find("#operation_container");  	// main command UI
+			var task_container = $("#pg_command_ui").find("#task_container");  	// main command UI
 			var operation_info = $("#pg_command_ui").find(".operation_info");	 
 			var input_container = $("#pg_command_ui").find(".input_nodes_container");	 
 			var node_info = $("#pg_command_ui").find(".node_info");	 
 			var output_data_ul = $("#pg_command_ui").find(".output_data").find("ul.data_ul");	 
 			$(operation_container).empty();	$(operation_info).empty(); $(input_container).empty(); 
+			$(task_container).empty();
 
 			// 0. show current node information and operation detail
 			$(node_info).find(".node_info_id").text(node.ID);
+			$(node_info).find(".node_info_position").text(JSON.stringify(node.position));
 			// show operation detail
 			if(node) {
 				if(node.P) {
@@ -578,12 +596,13 @@ pg.panel = {
 					if(parameters) {
 						var paramEl = $("<div class='op_parameters'></div>").appendTo(operation_info);
 						_.each(parameters, function(p, p_key) {
-							var current_value = (node.P.param.p_key)? node.P.param.p_key: p.default; 
+							// var current_value = (node.P.param[p_key])? node.P.param[p_key]: p.default; 
+							var current_value = node.P.param[p_key]; 
 							var param_div = $("<div class='op_param'><span>"+p.label+":</span></div>");
 							var param_input = $("<input type='text' name='"+p_key+"' value='"+current_value+"'>, ").
 								change(function() {  // when user updates the parameter value
 									var paramKey = $(this).attr('name');
-									var newParamValue = $(this).val();
+									var newParamValue = txt2var($(this).val());
 									(pg.panel.get_selected_nodes()[0]).P.param[paramKey]=newParamValue;
 								}).appendTo(param_div);
 							$(param_div).appendTo(paramEl);
@@ -618,23 +637,47 @@ pg.panel = {
 			}
 
 			// 1. show solutionNodes 
-			_.each(solutionNodes, function(sn, sni) {
-				var nodeSet = pg.panel.commandUI.makeNodesEl(sn);
-				$(operation_container).append(nodeSet);
-			});
-
+			if(solutionNodes.length>0) {
+				_.each(solutionNodes, function(sn, sni) {
+					var nodeSet = pg.panel.commandUI.makeNodesEl(sn);
+					$(task_container).append(nodeSet);
+				});
+			} else {
+				$(task_container).append("<span style='margin-left:20px;'>No task is applicable.</span>");
+			}
+			
 			// show applicable operations
-			_.each(operations, function(op, opi)  {
-				var commandButton = pg.panel.commandUI.makeCommandEl(op);
-				if(node && node.P && node.P.type==c.type) {
-					// if the command is curreltly selected
-					$(commandButton).attr('selected',true);
-				}
-				$(operation_container).append(commandButton);
-			});
-
+			if(operations.length>0) {
+				_.each(operations, function(op, opi)  {
+					var commandButton = pg.panel.commandUI.makeCommandEl(op);
+					if(node && node.P && node.P.type==c.type) {
+						// if the command is curreltly selected
+						$(commandButton).attr('selected',true);
+					}
+					$(operation_container).append(commandButton);
+				});
+			} else {
+				$(operation_container).append("<span style='margin-left:20px;'>No operation is applicable.</span>");
+			}
+			
 			// DATATABLE
 			this.makeDataTable(node.V, output_data_ul);
+		},
+		inferOperations: function() {
+			var node = pg.panel.get_selected_nodes()[0]; 
+			var Is = _.without(_.map(node.I, function(input_id) {
+				return pg.panel.get_node_by_id(input_id, node);
+			}), false, undefined);
+			var inferredOperations = pg.planner.find_applicable_operations(Is);
+			pg.panel.commandUI.update([], inferredOperations, node);	
+		},
+		inferTasks: function() {
+			var node = pg.panel.get_selected_nodes()[0]; 
+			var Is = _.without(_.map(node.I, function(input_id) {
+				return pg.panel.get_node_by_id(input_id, node);
+			}), false, undefined);
+			var inferredTasks = pg.planner.plan(Is, O);	
+			pg.panel.commandUI.update(inferredTasks, [], node);	
 		},
 		makeDataTable: function(V, target_ul, isReadOnly) {
 			$(target_ul).empty();
@@ -642,12 +685,18 @@ pg.panel = {
 				var html = "<div class='data_table_instruction_container'>\
 								<div class='dt_inst'>\
 									The node data is empty.<br> You can either<br>\
-									<button role='extract'>Extract from page</button><br>\
-									<button>Run an operation</button><br>\
-									<input role='type_data' placeholder='Type data here'></input><br>\
+									<button class='extract_button'>Extract from page</button>\
+									<div style='width:100%; text-align:center'>or</div>\
+									<input class='input_type_data' placeholder='Type data here'></input>\
 								</div>\
 							</div>";
-				$(html).appendTo(target_ul);
+				var datable_el = $(html).appendTo(target_ul);
+				$(datable_el).find("input.input_type_data").change(function() {
+					pg.panel.commandUI.addData($(this).val());
+					$(this).val("");
+					$("#pg_command_ui").find(".new_data_input").focus();
+				});
+				$(datable_el).find("button.extract_button").click(function(){ pg.panel.commandUI.toggleExtract(); });
 				$("#pg_command_ui").find(".output_data_buttons").hide();
 			} else {	// node has some data to display
 				for(i in V) {
@@ -674,24 +723,29 @@ pg.panel = {
 							var data_index = $(this).parents("li").attr("data_index");
 							var node = pg.panel.get_selected_nodes()[0];
 							node.V.splice(data_index,1);
-							pg.panel.commandUI.makeDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
+							pg.panel.redraw();
 						}).appendTo(data_edit_buttons);
 					}	// end of edit buttons
 					$(target_ul).append(entryEl);
 				}
 				$("#pg_command_ui").find(".output_data_buttons").show();
-				return;
 			}
-			
 		},
-		makeNodesEl: function(nodes) {
+		addData: function(val, targetNode) {
+			var node = pg.panel.get_selected_nodes()[0];
+			if(targetNode) node = targetNode;
+			node.V.push(txt2var(val));
+			pg.panel.commandUI.makeDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
+			pg.panel.redraw();
+		},
+		makeNodesEl: function(_nodes) {
 			var el = $("<div class='nodes'></div>"); 
+			var nodes = $.makeArray(_nodes);
 			_.each(nodes, function(n) {
-				$("<div class='node_title'>"+ n.P.type +"</div>").appendTo(el);
+				$("<div class='command'>"+ n.P.type +"</div>").appendTo(el);
 			});
 			$(el).click($.proxy(function() {
 				pg.panel.insert(this, pg.panel.get_selected_nodes()[0]);
-				pg.panel.redraw();
 			},nodes));
 			return el;
 		},
@@ -711,24 +765,10 @@ pg.panel = {
 			$("#pg_command_ui").remove();
 			pg.panel.solutionNodes=[];
 		},
-		extract_handler: function(){
-			if($(this).text()=="Extract") {
-				pg.inspector.on(function(el){
-					var node = pg.panel.get_selected_nodes()[0];
-					if(!(el in node.V)) 
-						node.V.push(el);
-					// var attr_table_el = $("#pg_edit_ui").find(".table_inspector").find("ul");
-					pg.inspector.unhighlight_list();
-					pg.inspector.highlight_list(node.V);
-					pg.panel.commandUI.makeDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
-				});	
-				$(this).text("Done");
-			} else {
-				pg.inspector.unhighlight_list();
-				pg.inspector.off();
-				pg.panel.redraw();
-				$(this).text("Extract");
-			}
+		toggleExtract : function(){
+			pg.inspector.toggle(function(el){
+				pg.panel.commandUI.addData(el);
+			});
 		}
 
 	},
@@ -835,9 +875,9 @@ pg.panel = {
 				if($(this).is('.ui-draggable-dragging')){
 					return;
 				}
-				console.log($(this).attr('id') + " is clicked");
-				console.log(pg.panel.get_node_by_id($(this).attr('id')));
-				pg.panel.select(this);
+				var node = pg.panel.get_node_by_id($(this).attr('id'));
+				console.log(node);
+				pg.panel.select(node);
 				e.stopPropagation();
 				// console.log("Click: "+$(e.target).attr("id"));
 				// plate.toggleNode($(e.target).attr("id"));

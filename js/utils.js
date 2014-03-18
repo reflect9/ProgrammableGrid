@@ -317,10 +317,12 @@ var isDomList = function(list) {
 	return trimmedList.length>0 && _.filter(trimmedList, function(e) {  return !isDom(e); }).length ===0;
 };
 var isDom = function(el) {
-	return (el!==null && el.nodeType!==null && el.nodeType!==undefined);
+	return (el!==undefined && el!==null && el.nodeType!==null && el.nodeType!==undefined);
 };
 var isValueList = function(list) {
-	return (list[0].nodeType===undefined || list[0].nodeType===null);
+	if(!list || list.length==0) return false;
+	for(var i in list) 		if(isDom(list[i]) || list[i]==undefined) return false;
+	return true;
 };
 var isSameArray = function(a1, a2, option) {
 	var aa1=a1; var aa2=a2;
@@ -370,7 +372,8 @@ var getArithmeticFunc = function(oper) {
 // convert ill-structured test to list or single string/integer
 var txt2var = function(txt) {
 	try{
-		return JSON.parse(txt);
+		if(isDom(txt)) return txt;
+		else return JSON.parse(txt);
 	}catch(er) {
 		try {
 			return JSON.parse('"'+txt+'"');
@@ -734,6 +737,9 @@ function testCommand(id) {
     }
 })(jQuery);
 
+function jsonClone(obj) {
+	return JSON.parse(JSON.stringify(obj));
+}
 
 function get_attr_dict(elements) {
 	var dict = {};
@@ -752,7 +758,22 @@ function get_attr_dict(elements) {
 	return dict;
 }
 
+// function matchPairs(array1, array2, mode) {
+// 	var shorterI = Math.min(array1.length, array2.length);
+// 	var longerI = Math.max(array1.length, array2.length);
+// 	var newArr1=[]; var newArr2=[];
+	
+// 	if(array1.length<array2.length)
 
+
+// 	if(mode=='extend') { 	// extend the last element of the shorter list to the end
+// 		while(true) {
+// 			if(array1.length>=i1) newArr
+// 		}
+// 	}
+
+
+// }
 
 
 

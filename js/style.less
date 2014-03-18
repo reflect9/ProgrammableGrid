@@ -128,7 +128,7 @@
 		width:100%;
 		height:800px;
 		border:1px solid #dcc;
-		overflow:scroll;
+		overflow:auto;
 	}
 	#node_size_slider {
 		margin:5px;
@@ -146,7 +146,7 @@
 		overflow:hidden;
 	}
 	.node[selected] {
-		box-shadow: inset 0 0 0 3px #9b4681;
+		background-color:@purple;
 	}
 	.node-trigger {
 		background-color:#635a52;
@@ -297,7 +297,7 @@
 
 div.pg_ul_container {
 	height:inherit;
-	overflow:scroll;
+	overflow:auto;
 	ul{
 		list-style: none outside none;
     	margin:0;  
@@ -343,7 +343,7 @@ div.pg_ul_container {
 		background: rgb(221, 221, 221);
 		border: 1px solid rgb(34, 34, 34);
 		border-radius:3px;
-		button, input { 
+		button, input, label { 
 			width:80%;
 			margin-left: 10px; 
 			margin-top:5px;
@@ -395,12 +395,12 @@ div.pg_ul_container {
 	.input_data{
 		vertical-align:top;
 		display:inline-block;
-		width:250px;
+		width:200px;
 		height:100%;
 		overflow:hidden;
 		border-right:1px solid #aaa;
 		.input_nodes_container {
-			overflow:scroll;
+			overflow:auto;
 			height:100%;
 		}
 		input{
@@ -408,7 +408,7 @@ div.pg_ul_container {
 		}
 		div.ul_container {
 			height:inherit;
-	    	overflow:scroll;
+	    	overflow:auto;
 		}
 		ul{
 			margin: 0px 5px 10px 10px;
@@ -437,7 +437,7 @@ div.pg_ul_container {
 			font-size:13px;
 			padding-left:15px;
 			text-indent:-15px;
-			max-height:80px;
+			max-height:60px;
 			overflow:hidden;
 			span.attr_key {
 				color:red;
@@ -455,6 +455,7 @@ div.pg_ul_container {
 		display:inline-block;
 		width: 550px;
 		height:100%;
+		overflow:auto;
 		border-right:1px solid #aaa;
 
 		.operation_info {
@@ -502,8 +503,6 @@ div.pg_ul_container {
 		.nodes {
 			display:inline-block;
 			margin:5px;
-			height:70px; max-width:200px;
-			overflow:hidden;
 			background: #aaa;
 			border:2px solid #222;
 			border-radius: 3px;
@@ -526,7 +525,7 @@ div.pg_ul_container {
 		vertical-align:top;
 		display:inline-block;
 		position:relative;
-		width: 200px;
+		width: 250px;
 		height:100%;
 		overflow:hidden;
 	}

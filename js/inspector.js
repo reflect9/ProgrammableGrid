@@ -6,11 +6,12 @@ pg.inspector = {
 	hoveredElement: null,
 	callback:null,
 	selectionBox_list:[],
-	toggle: function() {
+	toggle: function(callback) {
 		if(!pg.inspector.flag_inspect) {
-			pg.inspector.on();
+			pg.inspector.on(callback);
+		} else {
+			pg.inspector.off();
 		}
-		else pg.inspector.off();
 	},
 	on : function(callback) {
 		if(!pg.inspector.flag_inspect) {

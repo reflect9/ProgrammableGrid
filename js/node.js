@@ -7,17 +7,19 @@ pg.Node = {
 				I_ID: undefined,
 				P: undefined,
 				V: [],
+				selected: false,
 				position: undefined,
 				type: undefined
 			};
 		if(p) {
-			n.I = typeof p.I !== 'undefined' ? p.I : [];
-			n.ID = typeof p.ID !== 'undefined' ? p.ID : makeid();
-			n.I_ID = typeof p.I_ID !== 'undefined' ? p.I_ID : undefined;
-			n.P = typeof p.P !== 'undefined' ? p.P : undefined;
+			n.I = typeof p.I !== 'undefined' ? clone(p.I) : [];
+			n.ID = typeof p.ID !== 'undefined' ? clone(p.ID) : makeid();
+			n.I_ID = typeof p.I_ID !== 'undefined' ? clone(p.I_ID) : undefined;
+			n.P = typeof p.P !== 'undefined' ? clone(p.P) : undefined;
 			n.V = typeof p.V !== 'undefined' ? p.V : [];
-			n.position = typeof p.position !== 'undefined' ? p.position : undefined;
-			n.type = typeof p.type !== 'undefined' ? p.type : undefined;
+			n.selected = typeof p.selected !== 'undefined' ? p.V : false;
+			n.position = typeof p.position !== 'undefined' ? clone(p.position) : undefined;
+			n.type = typeof p.type !== 'undefined' ? clone(p.type) : undefined;
 		}
 		return n;
 	},

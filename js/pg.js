@@ -26,7 +26,7 @@ pg = {
 	////////////////////////////////////////////////////////////////////////////////////////
 	new_script: function(title) {
 		pg.save_script(title,[
-				pg.Node.create({P:{type:"trigger"}, position:[0,0]})
+				pg.Node.create({P:pg.planner.get_prototype({type:"trigger"}), position:[0,0]})
 			]);
 		pg.load_script(title);
 	},

@@ -184,6 +184,7 @@ pg.panel = {
 		});
 	},
 	get_node_by_id: function(node_id, reference_output_node) {
+		// if (reference_output_node==undefined) reference_output_node = pg.panel.get_selected_nodes()[0];
 		if(node_id == '_left' && reference_output_node) return this.get_left_node(reference_output_node);
 		if(node_id == '_above' && reference_output_node) return this.get_above_node(reference_output_node);
 		if(node_id == '_right' && reference_output_node) return this.get_right_node(reference_output_node);
@@ -197,10 +198,30 @@ pg.panel = {
 			if (this.nodes[i].position[0] == position[0] && this.nodes[i].position[1] == position[1]) return this.nodes[i];
 		}	return false;
 	},	
-	get_next_nodes:function(node) {
+	get_next_nodes:function(node, _allNodes) {
+		var allNodes = (_allNodes)?_allNodes: pg.panel.nodes;
 		return _.filter(allNodes, function(n) {
-			return _.indexOf(n.I, node.ID) != -1;
+			return pg.panel.get_prev_nodes(n).indexOf(node)!=-1;
 		});
+	},
+	get_reachable_nodes: function(_starting_nodes, _allNodes) {
+		var remaining_nodes = (_allNodes)? _.clone(_allNodes): _.clone(pg.panel.nodes);
+		var reachable_nodes = [];
+		var queue = _.clone(_starting_nodes);
+		while(queue.length>0 && remaining_nodes.length>0 ) {
+			var n = queue.pop();
+			reachable_nodes =  _.union(reachable_nodes, n);
+			if (n.P && n.P.type=="trigger") {  }
+			else {
+				var new_reachable_nodes = pg.panel.get_next_nodes(n,remaining_nodes);
+				if(new_reachable_nodes.length>0) {
+					queue = _.union(queue, new_reachable_nodes);
+					remaining_nodes = _.difference(remaining_nodes, new_reachable_nodes);
+				}
+			}
+		}
+		console.log("reachable nodes : "+pg.panel.print(reachable_nodes));
+		return reachable_nodes;
 	},
 	get_prev_nodes:function(node) {	
 		return _.without(_.map(node.I, function(input_id) {
@@ -213,7 +234,7 @@ pg.panel = {
 			if(n.executed) return false;
 			var prev_nodes = pg.panel.get_prev_nodes(n);
 			if (	prev_nodes.length>0 &&
-					_.filter(prev_nodes, function(n) { return n.executed==true; }).length==prev_nodes.length ) 
+					_.filter(prev_nodes, function(n) { return n.executed==false; }).length==0 ) 
 				return true;
 			else return false;	
 		});
@@ -221,39 +242,55 @@ pg.panel = {
 	el_to_obj:function(el) {
 		return pg.panel.get_node_by_id($(el).prop('id'));
 	},
+	print: function(nodes) {
+		var str = "";
+		try{
+			_.each(nodes, function(n) {
+				if(n.P) { str += n.P.type + "["+n.position[0]+","+n.position[1]+"]("+n.executed+"), "; }
+			});
+			return str;	
+		} catch(e) { console.error(e.stack); }
+	},
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//  executions methods
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-	run_node: function(nodeObj) {
-		nodeObj.executed = true;
+	run_node: function(nodeObj, skip_redraw) {
+		if(nodeObj.P && nodeObj.P.type!="trigger") nodeObj.executed = true;
 		if(!nodeObj) return false;
 		if(!nodeObj.P) return false;
 		pg.planner.execute(nodeObj);
-		pg.panel.redraw();
+		if(skip_redraw){  }
+		else pg.panel.redraw();
 	},
-	run_triggered_nodes: function(starting_nodes, nodes) {
+	run_triggered_nodes: function(starting_nodes, _nodes) {
 		// reset 'executed' property of every node
-		if(nodes==undefined) nodes = _.clone(pg.panel.nodes);
-		_.each(nodes, function(n) { n.executed = false; });	
-		if(starting_nodes==undefined) 
-			starting_nodes = _.filter(nodes, function(node) {
-				return 	node.P && node.P.param && node.P.type=='trigger' && 
-						node.P.param.event_source=="page" && node.P.param.event_type=="loaded"; 
-			});
-		var count = 0;
+		console.log("===================================");
+		var nodes = (_nodes)? _.clone(_nodes): _.clone(pg.panel.nodes);
+		var nodesToExecute = pg.panel.get_reachable_nodes(starting_nodes); // including starting nodes
+		_.each(nodesToExecute, function(n) { n.executed = false; });	
+		if(nodesToExecute==undefined || nodesToExecute.length==0 ) return;
 		var queue = starting_nodes;
+		console.log("starting nodes : "+pg.panel.print(starting_nodes));
+		var executed = [];
 		// nodes = _.difference(nodes, queue);
-		while(queue.length>0 && count<500){
-			var node_to_execute = queue.pop();
-			pg.panel.run_node(node_to_execute);
+		var count=0;
+		while(queue.length>0 && count<nodes.length){
+			console.log("---");
+			var n = queue.pop();
+			pg.panel.run_node(n, true);
+			executed = _.union(executed, n);
+			console.log("run : "+pg.panel.print([n]));
 			// nodes = _.difference(nodes, queue);
-			var nodes_ready = pg.panel.get_ready_nodes(nodes);
-			queue = _.union(queue, nodes_ready);
-			// console.log("---");
-			// console.log(queue);	console.log(nodes);
-			// console.log("---");
+			var nodes_ready = pg.panel.get_ready_nodes(nodesToExecute);
+			var nodes_ready_not_yet_run = _.difference(nodes_ready, executed);
+			queue = _.union(queue, nodes_ready_not_yet_run);
+			console.log("queue : "+pg.panel.print(queue));
+			console.log("nodes : "+pg.panel.print(nodes));
+			console.log("---");
 			count++;
 		}
+		pg.panel.redraw();
+
 	},
 	infer: function(output_node) {
 		var Is = _.without(_.map(output_node.I, function(input_id) {
@@ -305,7 +342,7 @@ pg.panel = {
 		var canvas = $("<canvas id='plate_canvas' width='3000' height='3000'></canvas>");
 		$(el_plate).append(canvas);
 		var ctx = canvas.get(0).getContext("2d");
-		ctx.fillStyle = "#eeeeee";
+		ctx.fillStyle = "#dadada";
 		var num_row = Math.round(DEFAULT_PLATE_DIMENSION / this.node_dimension);
 		var num_col = Math.round(DEFAULT_PLATE_DIMENSION / this.node_dimension);
 		for (r=0;r<num_row;r++) {
@@ -389,7 +426,7 @@ pg.panel = {
 				var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
 				if(currently_selected_nodes.length>0) {
 					var n = currently_selected_nodes[0];
-					n.V = $("body").toArray();
+					n.V = $(pg.body).toArray();
 					n.P = pg.planner.get_prototype({type:"loadPage"});
 				} else {
 					console.log("no node is selected now.");
@@ -499,6 +536,11 @@ pg.panel = {
 				<div class='header_panel'>\
 					<div class='node_info'>\
 						<label>Node ID: </label><span class='node_info_id'></span><span class='node_info_position'></span>\
+						&nbsp;&nbsp;&nbsp;<a class='duplicate_button'>duplicate</a> &nbsp;&nbsp;&nbsp;<a class='copy_button'>copy</a>\
+						&nbsp;&nbsp;&nbsp;<a class='insert_left_button'>insert [left</a>,\
+						<a class='insert_above_button'>above]</a> \
+						&nbsp;&nbsp;&nbsp;<a class='delete_row_button'>delete [row</a>,\
+						<a class='delete_column_button'>column]</a> \
 					</div>\
 				</div>\
 				<div class='upper_panel'>\
@@ -542,7 +584,77 @@ pg.panel = {
 			// }).appendTo($(ui_el).find("#node_tools"));
 			// $("<button>Delete node</button>").click(function(e){pg.panel.delete(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
 			// $("<button>Clear data</button>").click(function(e){pg.panel.empty(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
-			
+			$(ui_el).find("a.duplicate_button").click(function() {
+				// find empty spaces nearby
+				var node = pg.panel.get_selected_nodes()[0];
+				var newNode = pg.Node.duplicate(node);
+				var candDiff = [[1,0],[-1,0],[0,1],[0,-1]];
+				for(var i in candDiff) {
+					var newPos = [newNode.position[0]+candDiff[i][0],newNode.position[1]+candDiff[i][1]];
+					if(pg.panel.get_node_by_position(newPos)==false) {
+						newNode.position = newPos;
+						pg.panel.nodes.push(newNode);
+						pg.panel.redraw();
+						return;
+					}
+				}
+				alert("To duplicate a node, the node must have an empty neighbor tile.");
+			});
+			$(ui_el).find("a.copy_button").click(function() {
+				var node = pg.panel.get_selected_nodes()[0];
+				var literal_P = jsonClone(pg.planner.operations.literal.proto);
+				var newNode = pg.Node.create({type:"literal", I:[node.ID], P:literal_P, V:node.V, position:clone(node.position)});
+				var candDiff = [[1,0],[-1,0],[0,1],[0,-1]];
+				for(var i in candDiff) {
+					var newPos = [newNode.position[0]+candDiff[i][0],newNode.position[1]+candDiff[i][1]];
+					if(pg.panel.get_node_by_position(newPos)==false) {
+						newNode.position = newPos;
+						pg.panel.nodes.push(newNode);
+						pg.panel.redraw();
+						return;
+					}
+				}
+				alert("To copy a node, the node must have an empty neighbor tile.");
+			});
+			$(ui_el).find("a.insert_left_button").click(function() {
+				var node = pg.panel.get_selected_nodes()[0];
+				var col = node.position[1];
+				_.each(pg.panel.nodes, function(n){
+					if(n.position[1]>=col) n.position[1]+=1;
+				});
+				pg.panel.redraw();
+			});
+			$(ui_el).find("a.insert_above_button").click(function() {
+				var node = pg.panel.get_selected_nodes()[0];
+				var row = node.position[0];
+				_.each(pg.panel.nodes, function(n){
+					if(n.position[0]>=row) n.position[0]+=1;
+				});
+				pg.panel.redraw();
+			});
+			$(ui_el).find("a.delete_row_button").click(function() {
+				var node = pg.panel.get_selected_nodes()[0];
+				var row = node.position[0];
+				pg.panel.nodes = _.filter(pg.panel.nodes, function(n) {
+					return n.position[0]!= row;
+				});
+				_.each(pg.panel.nodes, function(n){
+					if(n.position[0]>=row) n.position[0]-=1;
+				});
+				pg.panel.redraw();
+			});
+			$(ui_el).find("a.delete_column_button").click(function() {
+				var node = pg.panel.get_selected_nodes()[0];
+				var col = node.position[1];
+				pg.panel.nodes = _.filter(pg.panel.nodes, function(n) {
+					return n.position[1]!= col;
+				});
+				_.each(pg.panel.nodes, function(n){
+					if(n.position[1]>=col) n.position[1]-=1;
+				});
+				pg.panel.redraw();
+			});
+
 			// add data tools
 			$(ui_el).find("input.new_data_input").change(function(){
 				pg.panel.commandUI.addData($(this).val());
@@ -687,6 +799,7 @@ pg.panel = {
 			}), false, undefined);
 			var inferredTasks = pg.planner.plan(Is, O);	
 			pg.panel.commandUI.update(inferredTasks, [], node);	
+			pg.panel.run_single_node(node);
 		},
 		makeDataTable: function(V, target_ul, isReadOnly) {
 			$(target_ul).empty();
@@ -852,7 +965,13 @@ pg.panel = {
 				pg.save_script(pg.panel.title,pg.panel.nodes);
 			});
 			$(ui_el.find("#button_execute")).click(function() {
-				pg.panel.run_triggered_nodes();
+				var page_triggers = _.filter(pg.panel.nodes, function(node) {
+					return 	node.P && node.P.param && node.P.type=='trigger' && 
+							node.P.param.event_source=="page" && node.P.param.event_type=="loaded"; 
+				});
+				var triggered = _.uniq(_.flatten(_.map(page_triggers, function(t){ return pg.panel.get_next_nodes(t); })));
+				_.each(pg.panel.nodes, function(n) { n.executed=false; n.V=[]; });
+				pg.panel.run_triggered_nodes(triggered);
 			});
 			$(ui_el).find('button.zoom_button').click(function() {
 				pg.panel.zoom($(this).attr('node_size'));
@@ -880,6 +999,7 @@ pg.panel = {
 						if(existing_node) pg.panel.delete(existing_node);
 						node.position = position;
 					}
+					if(pg.panel.get_selected_nodes()[0]!=node) pg.panel.select(node);
 					pg.panel.redraw();
 				}
 			})
@@ -920,16 +1040,26 @@ pg.panel = {
 		$(el_tiles).off('click').click(function(e) {
 			pg.panel.deselect();
 		});
+
+
 		$(this.el).find("#resize_handle_panel").draggable({
 			axis: "y",
-			stop: function() {
+			stop: function(event, ui) {
+
+				
+				var top = ui.offset.top - $(window).scrollTop();;
+				var left = ui.offset.left - $(window).scrollLeft();;
+				console.log(left + " , " + top);
+				
 				// console.log($(window).height()-$(this).offset().top);
 				// console.log($(this).offset());
-				$(pg.panel.el).height($(window).height()-$(this).offset().top+$(window).scrollTop());
-				$(this).offset({'top':$(pg.panel.el).offset().top});
+				$(pg.panel.el).height(window.innerHeight-top);
+				$(this).css({'top':0});
 				$("#pg_spacer").height($(pg.panel.el).height());
 			}
 		});
+
+
 		// $('body').unbind('click').on('click',':not(#pg)',function(e) {
 		// 	e.stopPropagation();
 		// 	pg.panel.commandUI.remove();

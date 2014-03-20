@@ -1,12 +1,28 @@
 pg = {
+	body: undefined,
 	init: function() {
+		if($("body").length==0) {
+			var frame= $("frame");
+			if(frame.length>0) {
+				for (var i in frame) {
+					var body_cand = $($(frame)[0].contentDocument).find("body");
+					if(body_cand.length>0) pg.body= body_cand[0];
+				}
+			} else {
+				console.log("cant find body");
+				return;
+			}
+		} else {
+			pg.body = $("body")[0];
+		}
+
 		if($("#pg").length>0) {
 			$("#pg").remove();
 			pg.inspector.off();
 			return;
 		}
 		$("#pg").remove();
-		$("<div id='pg'></div>").appendTo("body");
+		$("<div id='pg'></div>").appendTo(pg.body);
 		// this.new_script("untitled "+makeid());
 		this.load_script("_latest");
 
@@ -29,8 +45,8 @@ pg = {
 		pg.panel.redraw();
 	},
 	new_script: function(title) {
-		var triggerNode = pg.Node.create({type:'trigger', P:pg.planner.get_prototype({type:"trigger"}), position:[0,0]});
-		var currentPageNode = pg.Node.create({type:'loadPage', P:pg.planner.get_prototype({type:"loadPage"}), position:[0,1]});
+		var triggerNode = pg.Node.create({type:'trigger', P:pg.planner.get_prototype({type:"trigger"}), position:[1,0]});
+		var currentPageNode = pg.Node.create({type:'loadPage', P:pg.planner.get_prototype({type:"loadPage"}), position:[1,1]});
 		pg.save_script(title,[triggerNode, currentPageNode]);
 		pg.load_script(title);
 	},
@@ -52,7 +68,10 @@ pg = {
 	},
 	load_script : function(title) {
 		var programs = pg.load_all_scripts();
-		if(!programs) return false;
+		if(!programs) {
+			pg.new_script("first script");
+			return;
+		}
 		if(title=="_latest") {
 			var sortedPrograms = _.without(_.sortBy(_.pairs(programs), function(title_program) {
 				return title_program[1].timestamp;
@@ -94,8 +113,8 @@ pg = {
 		_.each(programs, function(program) {
 			_.each(program.nodes, function(node, index) {
 				node.V = [];
+				node.selected=false;
 			});
-			
 		});
 		return JSON.stringify(programs);
 	},
@@ -142,7 +161,7 @@ pg = {
 
 
 
-pg.backup_page = $("body").clone().get(0);
+// pg.backup_page = $(pg.body).clone().get(0);
 
 
 DEFAULT_PLATE_DIMENSION = 3000

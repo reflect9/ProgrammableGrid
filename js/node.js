@@ -4,7 +4,6 @@ pg.Node = {
 		var n = {
 				I:['_left','_above'], 
 				ID: makeid(),
-				I_ID: undefined,
 				P: undefined,
 				V: [],
 				selected: false,
@@ -13,9 +12,8 @@ pg.Node = {
 				executed: false
 			};
 		if(p) {
-			n.I = typeof p.I !== 'undefined' ? clone(p.I) : [];
+			n.I = typeof p.I !== 'undefined' ? clone(p.I) : ['_left','_above'];
 			n.ID = typeof p.ID !== 'undefined' ? clone(p.ID) : makeid();
-			n.I_ID = typeof p.I_ID !== 'undefined' ? clone(p.I_ID) : undefined;
 			n.P = typeof p.P !== 'undefined' ? clone(p.P) : undefined;
 			n.V = typeof p.V !== 'undefined' ? p.V : [];
 			n.selected = typeof p.selected !== 'undefined' ? p.V : false;
@@ -24,6 +22,12 @@ pg.Node = {
 			n.executed = typeof p.executed !== 'undefined' ? clone(p.executed) : undefined;
 		}
 		return n;
+	},
+	duplicate: function(n) {
+		var dn = pg.Node.create(n);
+		dn.selected = false;
+		dn.ID = makeid();
+		return dn;
 	},
 	execute: function(n) {
 		if(!n.P) return;
@@ -40,12 +44,12 @@ pg.Node = {
 		if (node.selected) $(n).addClass("node-selected");
 
 		// DRAW INPUT ARROW
-		if (node.I.indexOf('_left') !== -1) 
-			$(this.getInputTriangle('right',[7,22]))
-				.css({position:'absolute', top:node_size/2-11, left:0}).appendTo(n);
-		if (node.I.indexOf('_above') !== -1) 
-			$(this.getInputTriangle('down',[22,7]))
-				.css({position:'absolute', left:node_size/2-11, top:0}).appendTo(n);
+		// if (node.I.indexOf('_left') !== -1) 
+		// 	$(this.getInputTriangle('right',[7,22]))
+		// 		.css({position:'absolute', top:node_size/2-11, left:0}).appendTo(n);
+		// if (node.I.indexOf('_above') !== -1) 
+		// 	$(this.getInputTriangle('down',[22,7]))
+		// 		.css({position:'absolute', left:node_size/2-11, top:0}).appendTo(n);
 
 		// NODE HEAD: OPERATION
 		var n_head; var n_data;
@@ -55,7 +59,7 @@ pg.Node = {
 			n_head = $("<div class='node-head'></div>").appendTo(n);
 			$(n_head).append(this.getNodeIcon(node,node_size));
 			if(node.P!==undefined)
-				$(n_head).append("<div class='node-type'>"+node.P.type.toUpperCase()+"</div>");
+				$(n_head).append("<div class='node-type'>"+node.P.type.toUpperCase().replace("_","<br>")+"</div>");
 			n_data = $("<div class='node-values-mid'></div>")
 				.append(this.getNodeValueTable(node,node_size))
 				.appendTo(n);
@@ -63,7 +67,7 @@ pg.Node = {
 			n_head = $("<div class='node-head'></div>").appendTo(n);
 			$(n_head).append(this.getNodeIcon(node,node_size));
 			if(node.P!==undefined) {
-				$(n_head).append("<div class='node-type'>"+node.P.type.toUpperCase()+"</div>");
+				$(n_head).append("<div class='node-type'>"+node.P.type.toUpperCase().replace("_","<br>")+"</div>");
 				// $(n_head).append("<div class='node-description-high'>"+node.P.description+"</div>");  
 			}
 			// full description
@@ -94,7 +98,8 @@ pg.Node = {
 		var table = $("<div class='node-table'></div>");
 		// $(table).addClass('node-table-'+detail_level);
 		var ul = $("<ul></ul>").appendTo(table);
-		_.each(node.V, function(v,vi,list) {
+		var num_v_to_draw = node_size / 13;
+		_.each(node.V.slice(0,num_v_to_draw), function(v,vi,list) {
 			var li = $("<li></li>").text(obj2text(v));
 			// If the value is an element, attach selectionBox to highlight when mouse is over. 
 			if (_.isElement(v)){

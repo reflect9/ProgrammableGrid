@@ -11,6 +11,7 @@
     padding:0;
     border:0;
     outline:0;
+    text-align:left;
     vertical-align:baseline;
     background:transparent;
 	position:fixed;
@@ -32,6 +33,11 @@
 	button, label{
 		margin:1px; padding: 2px 4px 2px 4px;
 		height: 20px;
+	}
+	input {
+		padding: 0;
+		margin:0;
+		border-radius:none;
 	}
 	button{
 		font-size:13px;
@@ -126,7 +132,8 @@
 	#plate_container {
 		position:relative;
 		width:100%;
-		height:800px;
+		height:900px;
+		margin-top:5px;
 		border:1px solid #dcc;
 		overflow:auto;
 	}
@@ -140,7 +147,7 @@
 
 	.node {
 		position:absolute;
-		background:gray; 
+		background:#888; 
 		/*border:1px solid black;*/
 		box-shadow: inset 0 0 0 1px #ffffff;
 		overflow:hidden;
@@ -166,7 +173,7 @@
 
 	.node-head {
 		/*height:30px;*/
-		margin:5px;
+		margin:3px;
 		position:relative;
 	}
 	/***********************/
@@ -210,7 +217,7 @@
 	}
 	.node-values-mid {
 		width:100%;
-		padding:5px;
+		padding:0px;
 		font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 		font-size: 15px;
 		color:white;	
@@ -219,9 +226,10 @@
 	.node-type {
 		/* mid-level detail when there's no value in the node */
 		position:absolute;
-		top:5px; left: 32px;
+		top:2px; left: 32px;
 		font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-		font-size: 15px;
+		font-size: 13px;
+		line-height:13px;
 		white-space:nowrap;
 		color:white;
 	}
@@ -255,9 +263,11 @@
 	.node-table {
 		/* general node table css*/
 		overflow:hidden;
-		padding:3px;
+		padding:0px;
+		color:#222;
 		font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-		font-size: 13px;
+		font-weight:400;
+		font-size: 12px;
 	}
 	.node-table-mid {
 		/* mid detail value table style */
@@ -266,14 +276,14 @@
 		/* high detail value table style */
 	}
 	.node-table li {
-		padding:0px 2px 0px 2px;
+		padding:0px 6px 0px 6px;
 		white-space: nowrap;
 	}
 	.node-table li:nth-child(even) {
 		background-color: none
 	}
 	.node-table li:nth-child(odd) {
-		background-color: rgba(0,0,0,0.2)
+		background-color: rgba(0,0,0,0.1)
 	}
 
 

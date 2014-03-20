@@ -214,8 +214,8 @@ pg.planner = {
 			},
 			execute: function(O) {
 				try{
-					var elements_to_attach = pg.panel.get_node_by_id(O.I[0]).V;
-					var target_elements = pg.panel.get_node_by_id(O.I[1]).V;
+					var elements_to_attach = pg.panel.get_node_by_id(O.I[0],O).V;
+					var target_elements = pg.panel.get_node_by_id(O.I[1],O).V;
 					var el_single,ta_single;
 					if(elements_to_attach.length==1) el_single=elements_to_attach[0];
 					if(target_elements.length==1) ta_single=target_elements[0];
@@ -224,7 +224,7 @@ pg.planner = {
 						if(pair[1]==undefined && ta_single==undefined) return false;
 						var el= (pair[0]!==undefined)? pair[0]:el_single;
 						var ta= (pair[1]!==undefined)? pair[1]:ta_single;
-						$(ta).attach(el);
+						$(ta).append(el);
 					});
 					O.V = elements_to_attach;
 				} catch(e) { console.log(e.stack);} 
@@ -257,7 +257,32 @@ pg.planner = {
 				return O;
 			}
 		},
-
+		show: {
+			proto: {
+				type:'show',
+				param:{},
+				description:"Show elements."
+			},
+			parameters: {
+			},
+			pre:function(Is) {
+				if(Is.length>0 && isDomList(Is[0].V))return true;
+				else false;
+			},
+			generate: function(Is, O) {
+				return false;	
+			},
+			execute: function(O) {
+				try{
+					var I1 = pg.panel.get_node_by_id(O.I[0], O);
+					O.V = _.map(I1.V, function(el_input) {
+						$(el_input).show();
+						return el_input;
+					});
+				} catch(e) { console.log(e.stack); }
+				return O;
+			}
+		},
 		set_attribute: {  // from two Is (left: original elements, above: new values) 
 			proto: {
 				type:'set_attribute', 
@@ -324,6 +349,9 @@ pg.planner = {
 				type:'select_representative',
 				param:{}
 			},
+			parameters: {
+
+			},
 			pre: function(Is) {
 				return false;
 			},
@@ -342,6 +370,107 @@ pg.planner = {
 				return O;
 			}
 		},
+		count: {
+			proto: {
+				type:'count',
+				param:{},
+				description: "Count number of values in _input1."
+			},
+			parameters: {
+				// 'data_type': {type:'text', label:'Type of data (string, number, boolean)', default:'string'},
+				// 'func': {type:'text', label:'What summary information (count, unique)',default:'unique'} 
+			},
+			pre: function(Is) {
+				if(!Is || !Is[0]) return false;
+				return true;
+			},
+			generate: function(Is, O) {
+				if(!Is || !Is[0] || !Is[0].V) return false;
+				if(!O || O.V.length!=1 || !isNumberList(O.V)) return false;
+				if(O.V[0] != Is[0].V.length) return false;
+				var _O = pg.Node.create(O);
+				_O.P = jsonClone(this.proto); 
+				return _O;
+			},
+			execute: function(O) {
+				if(!O || !O.I || !O.I[0]) return false;
+				var I = pg.panel.get_node_by_id(O.I[0],O);
+				if(!I.V) return false;
+				O.V = I.V.length;
+				return O;
+			}
+		},
+		sort:{
+			proto:{
+				type:'sort',
+				param:{direction:'up', source:"_input1"},
+				description: "Sort the source list"
+			},
+			parameters: {
+				'direction': {type:'text', label:'up or down', default:'up'},
+				'source': {type:'text', label:'list to sort', default:'_input1' }
+			},
+			pre:function(Is) {
+				if(!Is || !Is[0] || !Is[0].V || !isValueList(Is[0].V)) return false;
+				return true;
+			},
+			generate: function(Is, O) {
+				if(!Is || !Is[0] || !Is[0].V || !isValueList(Is[0].V)) return false;
+				if(!O || !O.V) return false;
+				var true_sorted_list = _.sortBy(Is[0].V, function(v) { return v; });
+				if (isSameArray(O.V, Is[0].V)) return false; // if it's already sorted
+				if(!isSameArray(O.V, true_sorted_list)) return false;
+				// OKAY. generate sort
+				var _O = pg.Node.create(O);
+				_O.P = jsonClone(this.proto); 
+				return _O;
+			},
+			execute: function(O) {
+				if(!O || !O.I || !O.I[0]) return false;
+				var I = pg.panel.get_node_by_id(O.I[0],O);
+				if(!I.V) return false;
+				var trimmed_v = _.map(I.V, function(v) { return v.trim(); });
+				O.V = _.sortBy(trimmed_v, function(v){return v;});
+				return O;
+			}
+		},
+		unique: {
+			proto: {
+				type:'unique',
+				param:{},
+				description: "Get list of unique elements in _input1."
+			},
+			parameters: {
+				// 'data_type': {type:'text', label:'Type of data (string, number, boolean)', default:'string'},
+				// 'func': {type:'text', label:'What summary information (count, unique)',default:'unique'} 
+			},
+			pre: function(Is) {
+				if(!Is || !Is[0] || !Is[0].V || !isValueList(Is[0].V)) return false;
+				if (_.unique(Is[0].V).length == Is[0].V.length) return false; // if it's already unique
+				return true;
+			},
+			generate: function(Is, O) {
+				if(!Is || !Is[0] || !Is[0].V || !isValueList(Is[0].V)) return false;
+				if(!O || !O.V) return false;
+				var true_unique_list = _.unique(Is[0].V);
+				if (true_unique_list.length == Is[0].V.length) return false; // if it's already unique
+				if(!isSameArray(O.V, true_unique_list)) return false;
+				// OKAY. generate unique.
+				var _O = pg.Node.create(O);
+				_O.P = jsonClone(this.proto); 
+				return _O;
+			},
+			execute: function(O) {
+				if(!O || !O.I || !O.I[0]) return false;
+				var I = pg.panel.get_node_by_id(O.I[0],O);
+				if(!I.V) return false;
+				var trimmed_v = _.map(I.V, function(v) { return v.trim(); });
+				O.V = _.unique(trimmed_v);
+				return O;
+			}
+		},	
+
+
 		substring: {
 			// (list of texts) -> (list of subtexts)  
 			proto: {
@@ -371,9 +500,12 @@ pg.planner = {
 	
 				var org_string_list = _.map(Is[0].V, function(v){ return v.toString(); });
 				var substring_list = _.map(O.V, function(v){ return v.toString(); });
-				for(var i in substring_list) {
+				var isAllSame = true;
+				for(var i=0; i<Math.min(substring_list.length, org_string_list.length);i++) {
 					if(org_string_list[i].indexOf(substring_list[i])==-1) return false;
+					if(org_string_list[i]!=substring_list[i]) isAllSame = false;
 				}
+				if (isAllSame) return false;	// don't need to substring if all the pairs are same.
 				// infer
 				var validCombination = [];
 				var listOfTokenList = _.map(org_string_list.slice(0,substring_list.length), function(v) { return pg.planner.get_tokens(v); });
@@ -383,46 +515,52 @@ pg.planner = {
 						var start_token = sharedTokens[s_tok];	var end_token = sharedTokens[e_tok];
 						// 1. inclusive(S)-exclusive(E) case. 
 						var trial_output = [];
-						for(var i in substring_list) {
+						for(var i=0;i<Math.min(substring_list.length, org_string_list.length);i++) {
 							var start_pos = org_string_list[i].indexOf(start_token);
 							var end_pos = org_string_list[i].indexOf(end_token, start_pos+1);
-							if(start_pos==-1) start_pos = 0;
+							if(start_pos==-1) start_pos = org_string_list[i].length;
 							if(end_pos==-1) end_pos = org_string_list[i].length;
-							trial_output.push(org_string_list[i].substring(start_pos,end_pos));
+							if(start_pos < end_pos) trial_output.push(org_string_list[i].substring(start_pos,end_pos));
+							else trial_output.push("");
 						}
 						if (isSameArray(trial_output, substring_list)) {
 							validCombination.push({'from':start_token, 'to':end_token, 'include_from':true, 'include_to':false});	
 						} 
 						// 2. inclusive(S)-inclusive(E) case. 
 						var trial_output = [];
-						for(var i in substring_list) {
+						for(var i=0;i<Math.min(substring_list.length, org_string_list.length);i++) {
 							var start_pos = org_string_list[i].indexOf(start_token);
 							var end_pos = org_string_list[i].indexOf(end_token, start_pos+1);
-							if(start_pos==-1) start_pos = 0;
+							if(start_pos==-1) start_pos = org_string_list[i].length;
 							if(end_pos==-1) end_pos = org_string_list[i].length;
-							trial_output.push(org_string_list[i].substring(start_pos,end_pos+end_token.length));
+							if(start_pos < end_pos) trial_output.push(org_string_list[i].substring(start_pos,end_pos+end_token.length));
+							else trial_output.push("");
+							
 						}
 						if (isSameArray(trial_output, substring_list)) 
 							validCombination.push({'from':start_token, 'to':end_token, 'include_from':true, 'include_to':true});
 						// 3. exclusive(S)-exclusive(E) case. 
 						var trial_output = [];
-						for(var i in substring_list) {
+						for(var i=0;i<Math.min(substring_list.length, org_string_list.length);i++) {
 							var start_pos = org_string_list[i].indexOf(start_token);
 							var end_pos = org_string_list[i].indexOf(end_token, start_pos+1);
-							if(start_pos==-1) start_pos = 0;
+							if(start_pos==-1) start_pos = org_string_list[i].length;
 							if(end_pos==-1) end_pos = org_string_list[i].length;
-							trial_output.push(org_string_list[i].substring(start_pos+start_token.length,end_pos));
+							if(start_pos < end_pos) trial_output.push(org_string_list[i].substring(start_pos+start_token.length,end_pos));
+							else trial_output.push("");
+							
 						}
 						if (isSameArray(trial_output, substring_list))
 							 validCombination.push({'from':start_token, 'to':end_token, 'include_from':false, 'include_to':false});
 						// 4. exclusive(S)-inclusive(E) case. 
 						var trial_output = [];
-						for(var i in substring_list) {
+						for(var i=0;i<Math.min(substring_list.length, org_string_list.length);i++) {
 							var start_pos = org_string_list[i].indexOf(start_token);
 							var end_pos = org_string_list[i].indexOf(end_token, start_pos+1);
-							if(start_pos==-1) start_pos = 0;
+							if(start_pos==-1) start_pos = org_string_list[i].length;
 							if(end_pos==-1) end_pos = org_string_list[i].length;
-							trial_output.push(org_string_list[i].substring(start_pos+start_token.length,end_pos+end_token.length));
+							if(start_pos < end_pos) trial_output.push(org_string_list[i].substring(start_pos+start_token.length,end_pos+end_token.length));
+							else trial_output.push("");
 						}
 						if (isSameArray(trial_output, substring_list)) 
 							validCombination.push({'from':start_token, 'to':end_token, 'include_from':false, 'include_to':true});
@@ -440,10 +578,14 @@ pg.planner = {
 				var I = pg.panel.get_node_by_id(O.I[0], O);
 				if(!I || !I.V || !isStringList(I.V) || I.V.length==0 ) return O; 
 				O.V = _.map(I.V, function(input) { 
-					var start_pos = (O.P.param.include_from)? input.indexOf(O.P.param.from): input.indexOf(O.P.param.from)+O.P.param.from.length;
-					var end_pos = (O.P.param.include_to)? input.indexOf(O.P.param.to,start_pos+1)+O.P.param.to.length: input.indexOf(O.P.param.to,start_pos+1);
+					var start_pos, end_pos;
+					start_pos = (O.P.param.include_from)? input.indexOf(O.P.param.from): input.indexOf(O.P.param.from)+O.P.param.from.length;
+					if(input.indexOf(O.P.param.to,start_pos+1)==-1) end_pos = input.length;
+					else {
+						end_pos = (O.P.param.include_to)? input.indexOf(O.P.param.to,start_pos+1)+O.P.param.to.length: input.indexOf(O.P.param.to,start_pos+1);
+					}
 					start_pos = Math.max(0,start_pos); end_pos = Math.max(0,end_pos);
-					return input.slice(start_pos,end_pos);
+					return input.substring(start_pos,end_pos);
 				});
 				return O;
 			}
@@ -471,7 +613,7 @@ pg.planner = {
 				try{
 					var url = O.P.param.url;
 					if(url=="_current") {
-						O.V = $("body").toArray();
+						O.V = $(pg.body).toArray();
 					} else if(url=="_input1") {
 						var I = pg.panel.get_node_by_id(O.I[0], O);
 						O.V = _.map(I.V, function(v) {
@@ -761,7 +903,7 @@ pg.planner = {
 			execute: function(O) {
 				var I_id = (_.isArray(O.I))?O.I[0]:O.I;
 				var I = pg.panel.get_node_by_id(I_id, O);
-				_.each(I.V, function(v) {  $(v).click(); });
+				_.each(I.V, function(v) {  $(v).trigger("click"); });
 				return O;
 			}			
 		},
@@ -855,7 +997,19 @@ pg.planner = {
 			},
 			execute: function(O) {
 				// will execute all the following connected nodes
-
+				if(O.P && O.P.param && O.P.param.event_source == "_input1") {
+					if(!O.I || !O.I[0]) return;
+					var I = pg.panel.get_node_by_id(O.I[0], O);
+					if(!isDomList(I.V)) return;
+					_.each(I.V, function(el) {
+						$(el).click($.proxy(function() {
+							console.log(this.O.ID);
+							this.O.V = [this.el];
+							var following_nodes = pg.panel.get_next_nodes(this.O);
+							pg.panel.run_triggered_nodes(following_nodes);
+						},{O:O, el:el}));
+					});
+				}
 			}			
 		},
 		literal: {
@@ -863,11 +1017,13 @@ pg.planner = {
 			// parameter is the value itself. 
 			proto: {
 				type:'literal', 
-				param:{value:"_input1"},
+				param:{value:"_input1", from:'',to:''},
 				description:"Copy data from _input1 or _input2. Or, Data can be the value itself."
 			},
 			parameters: {
-				value: {type:'text', label:"Value", default:"_input1"}
+				value: {type:'text', label:"Value", default:"_input1"},
+				from: {type:'text', label:'from', default:''},
+				to: {type:'text', label:'to', default:''},
 			},
 			pre:function(Is) {
 				// always applicable
@@ -882,10 +1038,14 @@ pg.planner = {
 			},
 			execute: function(O) {
 				try{
-					if(O.P.param.value=="_input1") var sourceV = pg.panel.get_node_by_id(O.I[0],O).V;
-					if(O.P.param.value=="_input2") var sourceV = pg.panel.get_node_by_id(O.I[1],O).V;
-					if(sourceV && sourceV.length>0) O.V = sourceV; 
-					else O.V = str2value(O.P.param.value);
+					if(O.P.param.value=="_input1") var sourceV = _.clone(pg.panel.get_node_by_id(O.I[0],O).V);
+					if(O.P.param.value=="_input2") var sourceV = _.clone(pg.panel.get_node_by_id(O.I[1],O).V);
+					if(sourceV && sourceV.length>0) {
+						var startIndex = (O.P.param.from=='')? 0: parseInt(O.P.param.from);
+						var endIndex = (O.P.param.to=='')? sourceV.length: parseInt(O.P.param.to);
+						O.V = _.clone(sourceV.slice(startIndex,endIndex)); 
+					}
+					else O.V = O.P.param.value;
 				} catch(e) {}
 				return O;
 			}
@@ -1115,11 +1275,11 @@ pg.planner = {
 		string_predicate: {
 			proto: {
 				type:"string_predicate",
-				param: { key:'r/./', isIn:'in' },
+				param: { key:'', isIn:'in' },
 				description: "Distinguish whether the input string contains substring and return true / false."
 			},
 			parameters: {
-				key:{ type:'text', label:"Sub-string to look for", default:'r/./'},
+				key:{ type:'text', label:"Sub-string to look for or input node", default:''},
 				isIn:{ type: 'text', label: "Sub-string must be 'in' or 'not in'", default:'in'}
 			},
 			pre: function(Is) {
@@ -1128,45 +1288,74 @@ pg.planner = {
 				} catch(e) {return false;}
 			},
 			generate: function(Is, O) {
-				try{ 
-					var _O = pg.Node.create(O);
-					if(!isBooleanList(O.V)) return false;
+				try{
+					if(!Is || !Is[0] || !isValueList(Is[0].V)) return false; 
+					if(!O.V || !isBooleanList(O.V)) return false;
 					var item_length = Math.min(Is[0].V.length, O.V.length);
-					// get bag of word containing all the words in the input string list
-					var bagOfWords = _.uniq(_flatten(_.map(_.first(Is[0].V,item_length), function(item) {	return item.split(" ");	})));
-					
-					// find the words that may be filter criteria
-					// p_key_words = [];   n_key_words = [];	// p is words for string_contain case,  n is words for strong_not_contain
-					var valid_words_in = _.filter(bagOfWords, function(word) {
-						var result = _.map(_.first(Is[0].V,item_length), function(item) {	return item.indexOf(word) != -1;	});
-						return JSON.stringify(result)==JSON.stringify(_.first(O.V,item_length));
-					});
-					var valid_words_not_in = _.filter(bagOfWords, function(word) {
-						var result = _.map(_.first(Is[0].V,item_length), function(item) {	return item.indexOf(word) == -1;	});
-						return JSON.stringify(result)==JSON.stringify(_.first(O.V,item_length));
-					});
-					// p_key_words have higher-priority
-					if (valid_words_in.length>0) {
-						_O.P= jsonClone(this.proto);
-						_O.P.param.key = (_.sortBy(valid_words_in, function(w) { return -(w.length); }))[0];
-						_O.P.param.isIn = "in";
-					} else if (valid_words_not_in.length>0) {
-						_O.P= jsonClone(this.proto);
-						_O.P.param.key = (_.sortBy(valid_words_not_in, function(w) { return -(w.length); }))[0];
-						_O.P.param.isIn = "in";
-					} else { return false; }
-					return _O;
+					var _O = pg.Node.create(O);
+
+					if(Is[1] && Is[1].V && isValueList(Is[1].V)) {   // with secondary input as key
+						var result_boolean = _.map(Is[0].V, function(v){ 
+							for(var i=0;i<Is[1].V.length;i++) {
+								if(v.toString().indexOf(Is[1].V[i])!=-1) return true;
+							}
+							return false;
+						});
+						if (isSameArray(result_boolean, O.V, true)) {
+							_O.P = jsonClone(this.proto);
+							_O.P.param.key="_input2";
+							return _O;	
+						} else {
+							return false;
+						}
+					} else {  // when there's no secondary input
+						// get bag of word containing all the words in the input string list
+						var input_list = _.map(Is[0].V, function(v){ return v.toString(); });
+						var bagOfWords = _.uniq(_.flatten(_.map(_.first(input_list,item_length), function(item) {	return item.split(" ");	})));
+						
+						// find the words that may be filter criteria
+						// p_key_words = [];   n_key_words = [];	// p is words for string_contain case,  n is words for strong_not_contain
+						var valid_words_in = _.filter(bagOfWords, function(word) {
+							var result = _.map(_.first(input_list,item_length), function(item) {	return item.indexOf(word) != -1;	});
+							return JSON.stringify(result)==JSON.stringify(_.first(O.V,item_length));
+						});
+						var valid_words_not_in = _.filter(bagOfWords, function(word) {
+							var result = _.map(_.first(input_list,item_length), function(item) {	return item.indexOf(word) == -1;	});
+							return JSON.stringify(result)==JSON.stringify(_.first(O.V,item_length));
+						});
+						// p_key_words have higher-priority
+						if (valid_words_in.length>0) {
+							_O.P= jsonClone(this.proto);
+							_O.P.param.key = (_.sortBy(valid_words_in, function(w) { return -(w.length); }))[0];
+							_O.P.param.isIn = "in";
+						} else if (valid_words_not_in.length>0) {
+							_O.P= jsonClone(this.proto);
+							_O.P.param.key = (_.sortBy(valid_words_not_in, function(w) { return -(w.length); }))[0];
+							_O.P.param.isIn = "in";
+						} else { return false; }
+						return _O;
+					}
 				} catch(e) { 
+					console.log(e.stack);
 					return false;
 				}
 			},
 			execute: function(O) {
 				try {
 					var str_list = pg.panel.get_node_by_id(O.I[0],O).V; 
-					if(!isStringList(str_list)) return O;
+					if(!isValueList(str_list)) return O;
+					var key_list;
+					if(O.P.param.key=="_input2") {
+						key_list = pg.panel.get_node_by_id(O.I[1],O).V;
+					} else {
+						key_list = str2value(O.P.param.key);
+					}
 					O.V = _.map(str_list, function(str) {
-						if(O.P.param.isIn=="in") return str.match(O.P.param.key) !== null;
-						if(O.P.param.isIn=="not in") return str.match(O.P.param.key) === null;
+						for(var i in key_list) {
+							if(O.P.param.isIn=="in" && str.toString().indexOf(key_list[i])!=-1) return true;
+							if(O.P.param.isIn=="not in" && str.toString().indexOf(key_list[i])==-1) return true;
+							return false;	
+						}
 					});
 				} catch(e) {	
 					console.log(e.stack); 
@@ -1747,8 +1936,8 @@ pg.planner = {
 
 	attr_func_list : [
 		{	'attr_key': "text",
-			'getter': function(el) { return $(el).text();},
-			'setter': function(el,val) { return $(el).text(val);}
+			'getter': function(el) { return _.escape($(el).text());},
+			'setter': function(el,val) { return _.escape($(el).text(val));}
 		},
 		{	'attr_key': "download", 
 			'getter': function(el) { return $(el).attr('download');},

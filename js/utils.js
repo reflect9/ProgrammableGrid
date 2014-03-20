@@ -360,7 +360,7 @@ var remove = function(list, removeItem) {
 var obj2text = function(obj) {
 	if(obj && obj.nodeType!==null && obj.nodeType!==undefined) {
 		// DOM
-		return "[D:"+$(obj).prop('tagName')+"]"+$(obj).text();
+		return ""+$(obj).prop('tagName')+": "+$(obj).text();
 	} else {
 		return JSON.stringify(obj);
 	}

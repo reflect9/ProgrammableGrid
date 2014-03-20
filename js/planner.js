@@ -855,7 +855,7 @@ pg.planner = {
 			},
 			execute: function(O) {
 				// will execute all the following connected nodes
-				
+
 			}			
 		},
 		literal: {
@@ -1005,7 +1005,7 @@ pg.planner = {
 					var input_b = pg.panel.get_node_by_id(O.I[1],O).V;
 					var result = []; 
 					for(var i=0; i<Math.min(input_v.length, input_b.length); i++) {
-						if(input_b[i]==true) result.push(input_v);
+						if(input_b[i]==true) result.push(input_v[i]);
 					};
 					O.V= result;
 				} catch(e) {console.log(e.stack); }
@@ -1165,8 +1165,8 @@ pg.planner = {
 					var str_list = pg.panel.get_node_by_id(O.I[0],O).V; 
 					if(!isStringList(str_list)) return O;
 					O.V = _.map(str_list, function(str) {
-						if(isIn=="in") return str.match(O.P.key) !== null;
-						if(isIn=="not in") return str.match(O.P.key) === null;
+						if(O.P.param.isIn=="in") return str.match(O.P.param.key) !== null;
+						if(O.P.param.isIn=="not in") return str.match(O.P.param.key) === null;
 					});
 				} catch(e) {	
 					console.log(e.stack); 

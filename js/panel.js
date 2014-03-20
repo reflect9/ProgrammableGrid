@@ -203,16 +203,18 @@ pg.panel = {
 		});
 	},
 	get_prev_nodes:function(node) {	
-		return _.map(node.I, function(input_id) {
+		return _.without(_.map(node.I, function(input_id) {
 			return pg.panel.get_node_by_id(input_id, node);
-		});	
+		}),false,undefined);	
 	},
 	get_ready_nodes:function(_allNodes) {
 		var allNodes = (_allNodes)?_allNodes: pg.panel.nodes;
 		return _.filter(allNodes, function(n) {
 			if(n.executed) return false;
 			var prev_nodes = pg.panel.get_prev_nodes(n);
-			if (_.filter(prev_nodes, function(n) { return n.executed==true; }).length==prev_nodes.length ) return true;
+			if (	prev_nodes.length>0 &&
+					_.filter(prev_nodes, function(n) { return n.executed==true; }).length==prev_nodes.length ) 
+				return true;
 			else return false;	
 		});
 	},
@@ -222,34 +224,34 @@ pg.panel = {
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//  executions methods
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// run_single_node: function(nodeObj) {
-	// 	if(!nodeObj) return false;
-	// 	if(!nodeObj.P) return false;
-	// 	nodeObj.executed = true;
-	// 	pg.planner.execute(nodeObj);
-	// 	pg.panel.redraw();
-	// },
+	run_node: function(nodeObj) {
+		nodeObj.executed = true;
+		if(!nodeObj) return false;
+		if(!nodeObj.P) return false;
+		pg.planner.execute(nodeObj);
+		pg.panel.redraw();
+	},
 	run_triggered_nodes: function(starting_nodes, nodes) {
 		// reset 'executed' property of every node
 		if(nodes==undefined) nodes = _.clone(pg.panel.nodes);
-		_.each(nodes, function(n) { n.executed = False; });	
+		_.each(nodes, function(n) { n.executed = false; });	
 		if(starting_nodes==undefined) 
 			starting_nodes = _.filter(nodes, function(node) {
-				return 	node.P && node.P.param && node.P.param.type=='trigger' && 
+				return 	node.P && node.P.param && node.P.type=='trigger' && 
 						node.P.param.event_source=="page" && node.P.param.event_type=="loaded"; 
 			});
-		count==0;
+		var count = 0;
 		var queue = starting_nodes;
 		// nodes = _.difference(nodes, queue);
 		while(queue.length>0 && count<500){
 			var node_to_execute = queue.pop();
-			node_to_execute.execute();
+			pg.panel.run_node(node_to_execute);
 			// nodes = _.difference(nodes, queue);
-			var nodes_ready = get_ready_nodes(nodes);
+			var nodes_ready = pg.panel.get_ready_nodes(nodes);
 			queue = _.union(queue, nodes_ready);
-			console.log("---");
-			console.log(queue);	console.log(nodes);
-			console.log("---");
+			// console.log("---");
+			// console.log(queue);	console.log(nodes);
+			// console.log("---");
 			count++;
 		}
 	},
@@ -618,7 +620,7 @@ pg.panel = {
 
 					// add execute button for current operation
 					$("<div class='op_execute_button'>RUN</div>").click(function() {
-						pg.panel.run_single_node(pg.panel.get_selected_nodes()[0]);
+						pg.panel.run_node(pg.panel.get_selected_nodes()[0]);
 					}).appendTo(operation_info);
 				} else {
 					$(operation_info).append("<span>No operation yet.</span>");
@@ -850,7 +852,7 @@ pg.panel = {
 				pg.save_script(pg.panel.title,pg.panel.nodes);
 			});
 			$(ui_el.find("#button_execute")).click(function() {
-				pg.execute();
+				pg.panel.run_triggered_nodes();
 			});
 			$(ui_el).find('button.zoom_button').click(function() {
 				pg.panel.zoom($(this).attr('node_size'));
@@ -944,14 +946,3 @@ pg.panel = {
 
 
 
-
-
-
-
-
-
-// function test() {
-// 	pg.panel.init();
-// 	pg.panel.load(sample);
-// 	pg.panel.redraw();
-// }

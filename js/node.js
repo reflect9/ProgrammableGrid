@@ -25,10 +25,10 @@ pg.Node = {
 		}
 		return n;
 	},
-	execute: function() {
-		if(!this.P) return;
-		this.executed=true;
-		pg.planner.execute(this);
+	execute: function(n) {
+		if(!n.P) return;
+		n.executed=true;
+		pg.planner.execute(n);
 		pg.panel.redraw();
 	},
 	draw: function(node,node_size) {

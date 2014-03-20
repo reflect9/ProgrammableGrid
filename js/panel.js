@@ -1,5 +1,6 @@
 pg.panel = {
 	init: function(title, nodes){
+		$("#pg").empty();
 		this.title = (title)? title:"untitled";
 		this.nodes = (nodes)? nodes:[];
 		this.commands = [];
@@ -22,7 +23,7 @@ pg.panel = {
 		$("#pg_spacer").height($(this.el).height());
 		// attach editUI and commandUI
 		this.editUI.create();
-		this.commandUI.create();  this.commandUI.remove();
+		// this.commandUI.create();  this.commandUI.remove();
 		this.toolbar.create();
 		//
 		pg.panel.redraw();
@@ -98,11 +99,13 @@ pg.panel = {
 			_.each(pg.panel.nodes, function(n) { n.selected=false; });
 			node.selected = true;
 			pg.panel.commandUI.redraw();
+			pg.panel.commandUI.turn_inspector(true);
 		} else{	// select OFF
 			// pg.panel.redraw();
 			_.each(pg.panel.nodes, function(n) { n.selected=false; });
 			$(node_el).attr("selected",false);
 			pg.panel.commandUI.remove();
+			pg.panel.commandUI.turn_inspector(false);
 		}
 		
 	},
@@ -194,18 +197,24 @@ pg.panel = {
 			if (this.nodes[i].position[0] == position[0] && this.nodes[i].position[1] == position[1]) return this.nodes[i];
 		}	return false;
 	},	
-	get_next_nodes:function(node, _allNodes) {
-		// find all nodes that have the parameter node as Input. 
-		var allNodes = (_allNodes)? _allNodes:pg.panel.nodes; 
+	get_next_nodes:function(node) {
 		return _.filter(allNodes, function(n) {
 			return _.indexOf(n.I, node.ID) != -1;
 		});
 	},
-	get_prev_nodes:function(node, _allNodes) {	// find all prerequisite nodes
-		var allNodes = (_allNodes)? _allNodes:pg.panel.nodes; 
-		return _.filter(allNodes, function(n) {
-			return _.indexOf(node.ID, n.ID) != -1;
+	get_prev_nodes:function(node) {	
+		return _.map(node.I, function(input_id) {
+			return pg.panel.get_node_by_id(input_id, node);
 		});	
+	},
+	get_ready_nodes:function(_allNodes) {
+		var allNodes = (_allNodes)?_allNodes: pg.panel.nodes;
+		return _.filter(allNodes, function(n) {
+			if(n.executed) return false;
+			var prev_nodes = pg.panel.get_prev_nodes(n);
+			if (_.filter(prev_nodes, function(n) { return n.executed==true; }).length==prev_nodes.length ) return true;
+			else return false;	
+		});
 	},
 	el_to_obj:function(el) {
 		return pg.panel.get_node_by_id($(el).prop('id'));
@@ -213,43 +222,35 @@ pg.panel = {
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//  executions methods
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-	run_single_node: function(nodeObj) {
-		if(!nodeObj) return false;
-		if(!nodeObj.P) return false;
-		nodeObj.executed = true;
-		pg.planner.execute(nodeObj);
-		pg.panel.redraw();
-	},
-	run_connected_nodes: function(starting_nodes, nodes) {
+	// run_single_node: function(nodeObj) {
+	// 	if(!nodeObj) return false;
+	// 	if(!nodeObj.P) return false;
+	// 	nodeObj.executed = true;
+	// 	pg.planner.execute(nodeObj);
+	// 	pg.panel.redraw();
+	// },
+	run_triggered_nodes: function(starting_nodes, nodes) {
 		// reset 'executed' property of every node
+		if(nodes==undefined) nodes = _.clone(pg.panel.nodes);
 		_.each(nodes, function(n) { n.executed = False; });	
-		// find connected graph of nodes
-		var connected_nodes = starting_nodes;
-		while(true){
-			var prev_length = connected_nodes.length;
-			collected_nodes = _.uniq(_.flatten(_.union(connected_nodes, _.map(connected_nodes, function(n){
-				return pg.panel.get_next_nodes(n);
-			}))));
-			if (prev_length == collected_nodes.length) break;
-		}
-		// let's run nodes whose prerequisite nodes are 'executed'.
-		var count =0; count_max = 500;
-		while(true) {
-			count++;
-			if(count>count_max) {
-				break;
-			}
-			// try to find a node which is ready to run <- all the prerequisite nodes are already executed
-			var node_ready = _.filter(connected_nodes, function(n) {
-				var prerequisite_nodes = pg.panel.get_prev_nodes(n, nodes);
-				var ready_prerequisite_nodes = _.filter(prerequisite_nodes, function(n) { return n.executed == True; });
-				return prerequisite_nodes.length == ready_prerequisite_nodes.length; 
+		if(starting_nodes==undefined) 
+			starting_nodes = _.filter(nodes, function(node) {
+				return 	node.P && node.P.param && node.P.param.type=='trigger' && 
+						node.P.param.event_source=="page" && node.P.param.event_type=="loaded"; 
 			});
-			// add following nodes in the queue
-			if(node_ready.length==0) break;
-			else {	// execute a randomly chosen node
-				pg.panel.run_single_node(node_ready[Math.floor(Math.random()*node_ready.length)]);
-			}
+		count==0;
+		var queue = starting_nodes;
+		// nodes = _.difference(nodes, queue);
+		while(queue.length>0 && count<500){
+			var node_to_execute = queue.pop();
+			node_to_execute.execute();
+			// nodes = _.difference(nodes, queue);
+			var nodes_ready = get_ready_nodes(nodes);
+			queue = _.union(queue, nodes_ready);
+			console.log("---");
+			console.log(queue);	console.log(nodes);
+			console.log("---");
+			count++;
 		}
 	},
 	infer: function(output_node) {
@@ -276,6 +277,8 @@ pg.panel = {
 	//  view methods
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 	redraw: function() {
+		// pg.save_script(pg.panel.title,pg.panel.nodes);
+
 		$("#pg_panel > #plate_container > #tiles").empty();
 		$("#control_ui").find(".pg_title").text(pg.panel.title);
 		this.drawPlate();
@@ -385,7 +388,7 @@ pg.panel = {
 				if(currently_selected_nodes.length>0) {
 					var n = currently_selected_nodes[0];
 					n.V = $("body").toArray();
-					n.P = {"type":"loadPage","param":""};
+					n.P = pg.planner.get_prototype({type:"loadPage"});
 				} else {
 					console.log("no node is selected now.");
 				}
@@ -555,9 +558,13 @@ pg.panel = {
 				"left":pg.panel.commandUI.left + "px"
 			});
 			$(ui_el).draggable({handle: ".header_panel",
+				start: function() {
+					pg.panel.commandUI.turn_inspector(false);
+				},
 				stop: function(event, ui) {
 					pg.panel.commandUI.top = ui.offset.top - $(window).scrollTop();;
 					pg.panel.commandUI.left = ui.offset.left - $(window).scrollLeft();;
+					pg.panel.commandUI.turn_inspector(true);
 					console.log(ui.offset);
 				}
 			});
@@ -765,10 +772,19 @@ pg.panel = {
 			$("#pg_command_ui").remove();
 			pg.panel.solutionNodes=[];
 		},
-		toggleExtract : function(){
-			pg.inspector.toggle(function(el){
-				pg.panel.commandUI.addData(el);
-			});
+		turn_inspector : function(mode){
+			if(mode==undefined) {
+				pg.inspector.toggle(function(el){
+					pg.panel.commandUI.addData(el);
+				});	
+			} else if(mode==true) {
+				pg.inspector.toggle(function(el){
+					pg.panel.commandUI.addData(el);
+				});
+			} else if(mode==false) {
+				pg.inspector.unhighlight_list();
+				pg.inspector.off();
+			}
 		}
 
 	},

@@ -12,7 +12,9 @@ pg.planner = {
 			return listofnodes && (listofnodes.indexOf(false)==-1);
 		});
 		var single_node_solutions = _.without(_.map(pg.planner.operations, function(op, opkey) {
-			return op.generate(Is, O);
+			var single_node = op.generate(Is, O);
+			single_node.type = opkey;
+			return single_node;
 		}),false,undefined);
 		single_node_solutions = _.map(single_node_solutions, function(o) { return $.makeArray(o); });
 
@@ -25,7 +27,7 @@ pg.planner = {
 				try{
 					if(operation.pre(Is)) return operation.proto;
 				} catch(e) {
-					console.log(e.message);
+					console.log(e.stack);
 					return undefined;
 				}
 			});
@@ -82,7 +84,7 @@ pg.planner = {
 						return _O;
 					} else return false;
 				} catch(e) {
-					console.log(e.message);
+					console.log(e.stack);
 					return false;
 				}
 			},
@@ -94,7 +96,7 @@ pg.planner = {
 					O.V = _.map(I.V, function(el_input) {
 						return this.getter(el_input);
 					}, {'getter':getter});
-				} catch(e) { console.log(e.message); }
+				} catch(e) { console.log(e.stack); }
 				return O;
 			}
 		},
@@ -130,10 +132,10 @@ pg.planner = {
 			generate: function(Is, O){
 				// find a consistent jquery paths selecting the O values (and possibly more)
 				if(!Is || !Is[0] || !isDomList(Is[0].V)) return false;
-				if(!O || !O.V || O.V.length==0) return false;
+				if(!O || !O.V || O.V.length==0 || !isDomList(O.V)) return false;
 
 				var n_extracted_el, n_filtered_el;
-				var element_features = getElementFeatures(O.V);
+				// var element_features = getElementFeatures(O.V);
 				var _O = pg.Node.create(O);
 
 				if(Is[0].V.length > 1) {
@@ -153,7 +155,7 @@ pg.planner = {
 						_O.P = jsonClone(this.proto); 
 						_O.P.param.selector = shortedPath;
 					}
-				} else if(Is[0].V.length==1 && O.V.length>1) {
+				} else if(Is[0].V.length==1) {
 					// 1-to-n extraction
 					var path = $(Is[0].V[0]).findQuerySelector(O.V);
 					if(path===null) return false;
@@ -162,7 +164,7 @@ pg.planner = {
 						_O.P = jsonClone(this.proto); 
 						_O.P.param.selector = path;
 					}
-				}
+				} else return false;
 				return _O;
 			},
 			execute: function(O) {
@@ -197,13 +199,15 @@ pg.planner = {
 			},
 			generate: function(Is, O) {
 				try {	// PRECHECK
+					if(!Is[0] || !isDomList(Is[0].V) || Is[0].V.length==0 || !Is[1] || Is[1].V.length==0 || isDomList(Is[1].V)) return false;
+					if(O.V.length==0 || !isDomList(O.V)) return false;
 					for(var i=0; i<O.V.length; i++) {
 						if(	$.contains(Is[0].V[i], O.V[i])==false &&
 							$.contains(Is[0].V[0], O.V[i])==false) return false;
 						if( Is[1].V[i] == O.V[i] && 
 							Is[1].V[0] == O.V[i])	return false;
 					}
-				} catch(e) { console.log(e.message); return false;}
+				} catch(e) { console.log(e.stack); return false;}
 				var _O = pg.Node.create(O);
 				_O.P = pg.planner.get_prototype({"type":"attach_element"});
 				return _O;
@@ -223,7 +227,7 @@ pg.planner = {
 						$(ta).attach(el);
 					});
 					O.V = elements_to_attach;
-				} catch(e) { console.log(e.message);} 
+				} catch(e) { console.log(e.stack);} 
 				return O;
 			}
 		},
@@ -249,7 +253,7 @@ pg.planner = {
 						$(el_input).hide();
 						return el_input;
 					});
-				} catch(e) { console.log(e.message); }
+				} catch(e) { console.log(e.stack); }
 				return O;
 			}
 		},
@@ -268,7 +272,7 @@ pg.planner = {
 				try{
 					if(!Is || Is.length==0) return false;
 					if(isDomList(Is[0].V)) return true;
-				} catch(e) { console.log(e.message); }
+				} catch(e) { console.log(e.stack); }
 				return false;
 			}, 
 			generate: function(Is, O) {
@@ -283,7 +287,7 @@ pg.planner = {
 					for(var i=0; i<original_el.length; i++) {
 						if($(original_el[i]).fingerprint() != $(modified_el[i]).fingerprint()) return false;
 					}
-				} catch(e) { console.log(e.message); return false; }
+				} catch(e) { console.log(e.stack); return false; }
 
 				// GENERATE
 				var _O = pg.Node.create(O);
@@ -309,7 +313,7 @@ pg.planner = {
 					O.V = _.map(I.V, function(el_input) {
 						return this.setter(el_input);
 					});
-				} catch(e) { console.log(e.message); }
+				} catch(e) { console.log(e.stack); }
 				return O;
 			}
 		},
@@ -342,40 +346,105 @@ pg.planner = {
 			// (list of texts) -> (list of subtexts)  
 			proto: {
 				type:'substring',
-				param:{from:'r/./',  to:'r/\s/'}
+				param:{from:'',  to:'', include_from:false, include_to:false}
 			},
 			parameters: {
-				from: {type:'text', label:"Regex pattern of start position", default:'r/./' },
-				to: {type:'text', label:"Regex pattern of end position", default:'r/\s/' },
+				from: {type:'text', label:"Starting pattern", default:'' },
+				include_from: {type:'text', label:"Include starting pattern?", default:false},
+				to: {type:'text', label:"Ending pattern", default:'[end of line]' },
+				include_to: {type:'text', label:"Include ending pattern?", default:false},
 			},
 			pre: function(Is) {
 				try {
 					if(Is.length==0) return false;
 					if(!isStringList(Is[0].V)) return false;
-					// if(O && !isStringList(O.V)) return false;
-					for (i in Is[0].V) {
-						if (Is.V[i].indexOf(O.V[i])==-1) {
-							return false;
-						}
-					} 
 					return true; 	
 				} catch(e) {
-					console.log(e.message);
+					console.log(e.stack);
 					return false;
 				}
 			},
 			generate: function(Is, O) {
-				// TBD. think about more ways to find substring logic
-				//  e.g. using string pattern token
+				// PRECHECKING: all ooutput must exist in input
+				if(!Is || !Is[0] || isDomList(Is[0].V) || Is[0].V.length==0) return false;
+				if(!O || !O.V || isDomList(O.V) || O.V.length==0) return false;
+	
+				var org_string_list = _.map(Is[0].V, function(v){ return v.toString(); });
+				var substring_list = _.map(O.V, function(v){ return v.toString(); });
+				for(var i in substring_list) {
+					if(org_string_list[i].indexOf(substring_list[i])==-1) return false;
+				}
+				// infer
+				var validCombination = [];
+				var listOfTokenList = _.map(org_string_list.slice(0,substring_list.length), function(v) { return pg.planner.get_tokens(v); });
+				var sharedTokens = _.intersection.apply(this, listOfTokenList);
+				for(var s_tok in sharedTokens) {
+					for(var e_tok in sharedTokens) {
+						var start_token = sharedTokens[s_tok];	var end_token = sharedTokens[e_tok];
+						// 1. inclusive(S)-exclusive(E) case. 
+						var trial_output = [];
+						for(var i in substring_list) {
+							var start_pos = org_string_list[i].indexOf(start_token);
+							var end_pos = org_string_list[i].indexOf(end_token, start_pos+1);
+							if(start_pos==-1) start_pos = 0;
+							if(end_pos==-1) end_pos = org_string_list[i].length;
+							trial_output.push(org_string_list[i].substring(start_pos,end_pos));
+						}
+						if (isSameArray(trial_output, substring_list)) {
+							validCombination.push({'from':start_token, 'to':end_token, 'include_from':true, 'include_to':false});	
+						} 
+						// 2. inclusive(S)-inclusive(E) case. 
+						var trial_output = [];
+						for(var i in substring_list) {
+							var start_pos = org_string_list[i].indexOf(start_token);
+							var end_pos = org_string_list[i].indexOf(end_token, start_pos+1);
+							if(start_pos==-1) start_pos = 0;
+							if(end_pos==-1) end_pos = org_string_list[i].length;
+							trial_output.push(org_string_list[i].substring(start_pos,end_pos+end_token.length));
+						}
+						if (isSameArray(trial_output, substring_list)) 
+							validCombination.push({'from':start_token, 'to':end_token, 'include_from':true, 'include_to':true});
+						// 3. exclusive(S)-exclusive(E) case. 
+						var trial_output = [];
+						for(var i in substring_list) {
+							var start_pos = org_string_list[i].indexOf(start_token);
+							var end_pos = org_string_list[i].indexOf(end_token, start_pos+1);
+							if(start_pos==-1) start_pos = 0;
+							if(end_pos==-1) end_pos = org_string_list[i].length;
+							trial_output.push(org_string_list[i].substring(start_pos+start_token.length,end_pos));
+						}
+						if (isSameArray(trial_output, substring_list))
+							 validCombination.push({'from':start_token, 'to':end_token, 'include_from':false, 'include_to':false});
+						// 4. exclusive(S)-inclusive(E) case. 
+						var trial_output = [];
+						for(var i in substring_list) {
+							var start_pos = org_string_list[i].indexOf(start_token);
+							var end_pos = org_string_list[i].indexOf(end_token, start_pos+1);
+							if(start_pos==-1) start_pos = 0;
+							if(end_pos==-1) end_pos = org_string_list[i].length;
+							trial_output.push(org_string_list[i].substring(start_pos+start_token.length,end_pos+end_token.length));
+						}
+						if (isSameArray(trial_output, substring_list)) 
+							validCombination.push({'from':start_token, 'to':end_token, 'include_from':false, 'include_to':true});
+					}
+				}
+				if(validCombination.length==0) return false;
+				console.log("found substring combinations: "+validCombination);
 				var _O = pg.Node.create(O);
 				_O.P = jsonClone(this.proto);
+				_O.P.param = validCombination[0]; 
 				return _O;
 			},
 			execute: function(O) {
-				// TBD. think about more ways to find substring logic
-				var I_id = (_.isArray(O.I))?O.I[0]:O.I;
-				var I = pg.panel.get_node_by_id(I_id, O);
-				O.V = I.V;
+				if(!O || !O.I || !O.I[0]) return O; 
+				var I = pg.panel.get_node_by_id(O.I[0], O);
+				if(!I || !I.V || !isStringList(I.V) || I.V.length==0 ) return O; 
+				O.V = _.map(I.V, function(input) { 
+					var start_pos = (O.P.param.include_from)? input.indexOf(O.P.param.from): input.indexOf(O.P.param.from)+O.P.param.from.length;
+					var end_pos = (O.P.param.include_to)? input.indexOf(O.P.param.to,start_pos+1)+O.P.param.to.length: input.indexOf(O.P.param.to,start_pos+1);
+					start_pos = Math.max(0,start_pos); end_pos = Math.max(0,end_pos);
+					return input.slice(start_pos,end_pos);
+				});
 				return O;
 			}
 		},
@@ -391,7 +460,7 @@ pg.planner = {
 				try{
 					return true;
 					// return isStringList(Is[0].V);
-				} catch(e) { console.log(e.message); return false; }
+				} catch(e) { console.log(e.stack); return false; }
 			},
 			generate: function(Is,O) {
 				return false;
@@ -422,7 +491,7 @@ pg.planner = {
 					} else if(isURL(url)) {
 						O.V = [url];
 					} 
-				} catch(e) { console.log(e.message); }
+				} catch(e) { console.log(e.stack); }
 				return O;
 			}
 
@@ -442,7 +511,7 @@ pg.planner = {
 					if (_.every(Is, function(I){ return isStringList(I.V); }) == false) {
 						return false;
 					} else return true;
-				} catch(e) { console.log(e.message); return false;} 
+				} catch(e) { console.log(e.stack); return false;} 
 			},
 			generate: function(Is, O) {
 				try{	// PRECHECLONG
@@ -454,7 +523,7 @@ pg.planner = {
 							if(O.V[i].indexOf(Is[j].V[i])==-1) return false;
 						}
 					}
-				} catch(e) { console.log(e.message); }
+				} catch(e) { console.log(e.stack); }
 				// GENERATE
 				// num_el = O.V.length;
 				// _.each(Is, function(node, index) {
@@ -509,7 +578,7 @@ pg.planner = {
 						}
 						return inList.join(connector);
 					});
-				} catch(e) { console.log(e.message); }
+				} catch(e) { console.log(e.stack); }
 				// if(O.P.param.text_A=='_input1' || O.P.param.text_A=='_input2') {
 				// 	firstText_node = pg.panel.get_node_by_id(O.I[0], O);
 				// 	firstText = (firstText_node)? firstText_node.V : [];
@@ -728,7 +797,7 @@ pg.planner = {
 					}
 					O.V = I1.V;
 					return O;	
-				} catch(e) { console.log(e.message);   return false; }
+				} catch(e) { console.log(e.stack);   return false; }
 			}				
 		},
 		store: {
@@ -747,6 +816,10 @@ pg.planner = {
 				else return false;
 			},
 			generate: function(Is, O) {
+				return false;
+				///
+				///	not accessible via generate
+				///
 				if(Is.length==0) return false;
 				if(isDomList(Is[0].V[0])) return false;
 				var _O = pg.Node.create(O);
@@ -781,8 +854,8 @@ pg.planner = {
 				return _O;	
 			},
 			execute: function(O) {
-				// how to execute trigger?
-				// maybe nothing
+				// will execute all the following connected nodes
+				
 			}			
 		},
 		literal: {
@@ -858,7 +931,7 @@ pg.planner = {
 						_O.P = jsonClone(this.proto);
 						_O.P.param.operator = valid_operators[0];
 					}
-				} catch(e) { console.log(e.message); }
+				} catch(e) { console.log(e.stack); }
 				return _O;
 			},
 			execute: function(O) {
@@ -904,7 +977,7 @@ pg.planner = {
 			parameters: {
 			},
 			pre:function(Is) {
-				if(!Is || Is.length<2 || !isBooleanList(I[1].V)) return false;
+				if(!Is || Is.length<2 || !isBooleanList(Is[1].V)) return false;
 				return true;
 			},
 			generate: function(Is, O) {
@@ -923,7 +996,7 @@ pg.planner = {
 					}
 					// passed all test. O is filtered list of input1 with 2
 					_O.P = jsonClone(this.proto);
-				} catch(e) { console.log(e.message); }
+				} catch(e) { console.log(e.stack); }
 				return _O;
 			},
 			execute: function(O) {
@@ -935,7 +1008,7 @@ pg.planner = {
 						if(input_b[i]==true) result.push(input_v);
 					};
 					O.V= result;
-				} catch(e) {console.log(e.message); }
+				} catch(e) {console.log(e.stack); }
 				return O;
 			}
 		},
@@ -961,6 +1034,7 @@ pg.planner = {
 				try{
 					var helper_number_predicate = pg.planner.operations.number_predicate.helper_number_predicate; 
 					var candidate_operators = ["<","<=",">",">=","=="];
+					if(!Is[0] || Is[0].V.length==0 || !O || !O.V || O.V.length==0) return false;
 					if(!isNumberList(Is[0].V) || !isBooleanList(O.V)) return false;
 					// get two operands () -  Is[0] and [1] are node objects
 					
@@ -995,7 +1069,7 @@ pg.planner = {
 						return _O;
 					}
 				} catch(e) { 
-					console.log(e.message); return false; }
+					console.log(e.stack); return false; }
 				
 			},
 			helper_candidate_operands: function(I) {
@@ -1026,7 +1100,7 @@ pg.planner = {
 					O.V = result;
 					return O;
 				} catch(e) { 
-					console.log(e.message);
+					console.log(e.stack);
 					return false; }
 			},
 			helper_number_predicate: function(op1, op2, operator) {
@@ -1088,13 +1162,14 @@ pg.planner = {
 			},
 			execute: function(O) {
 				try {
-					var str_list = pg.panel.get_node_by_id(O.I[0]).V; 
+					var str_list = pg.panel.get_node_by_id(O.I[0],O).V; 
+					if(!isStringList(str_list)) return O;
 					O.V = _.map(str_list, function(str) {
-						if(isIn=="in") return str.indexOf(O.P.key) != -1;
-						if(isIn=="not in") return str.indexOf(O.P.key) == -1;
+						if(isIn=="in") return str.match(O.P.key) !== null;
+						if(isIn=="not in") return str.match(O.P.key) === null;
 					});
 				} catch(e) {	
-					console.log(e.message); 
+					console.log(e.stack); 
 				}
 				return O;
 			}
@@ -1114,7 +1189,7 @@ pg.planner = {
 					if(!isDom(pI) || !isDom(pO)) return false;
 					if(pI.tagName!="BODY" || pO.tagName!="BODY") return false;
 					return true; 
-				} catch(e) { console.log(e.message); return false;} 
+				} catch(e) { console.log(e.stack); return false;} 
 			},
 			generate: function(Is,O){	// I -> original_el -> modified (O)
 				// find differences
@@ -1167,7 +1242,7 @@ pg.planner = {
 						}
 					}
 					return true;
-				} catch (e) {  console.log(e.message);  return false;  }
+				} catch (e) {  console.log(e.stack);  return false;  }
 			},
 			generate: function(Is, O) {	//  I -> elements -> text (O)
 				// extract text from the first OR every element. 
@@ -1307,7 +1382,7 @@ pg.planner = {
 					// 		return extract-text(I,O);
 					// 	},this);
 					// } catch(e) {
-					// 	console.log(e.message);
+					// 	console.log(e.stack);
 					// }
 					// // compose extracted text lists
 					// var all_extraction_nodes = _.union(extraction_programs);
@@ -1376,7 +1451,7 @@ pg.planner = {
 						if (!_.every(O.V, function(el) {return Is[0].V.indexOf(el) != -1;})) return false;
 						return true;
 					} else return false;
-				} catch(e) { console.log(e.message); return false; }
+				} catch(e) { console.log(e.stack); return false; }
 			},
 			generate: function(Is, O) {
 				var _O = pg.Node.create(O);
@@ -1697,6 +1772,14 @@ pg.planner = {
 		}
 
 	],
+
+	get_tokens : function(str) {
+		var basic = ['','____end_of_line___'];
+		var regex_split = /[,\.-:;=\s]/;
+		var bag_of_words = _.without(str.split(regex_split), false, undefined, "");
+		var split_tokens = _.filter([',','\.','-',':',';',' '], function(t) { return str.indexOf(t)!=-1; });
+		return _.union(basic,bag_of_words,split_tokens);
+	},
 	get_prototype : function(p) {
 		if(p && p.type) {
 			if(this.operations[p.type]) {
@@ -1716,6 +1799,6 @@ pg.planner = {
 			} else if(this.tasks[O.P.type]) {
 				return this.tasks[O.P.type].execute(O);	
 			}
-		} catch(e) { console.log(e.message); return O; }
+		} catch(e) { console.log(e.stack); return O; }
 	}
 };

@@ -324,9 +324,12 @@ var isValueList = function(list) {
 	for(var i in list) 		if(isDom(list[i]) || list[i]==undefined) return false;
 	return true;
 };
-var isSameArray = function(a1, a2, option) {
+var isSameArray = function(a1, a2, matchLength) {
 	var aa1=a1; var aa2=a2;
-	if(option=="ALLOW_PARTIAL_OUTPUT") { aa1 = a1.slice(0,a2.length); aa2=a2; }
+	if(matchLength) {
+		if(aa1.length < aa2.length) aa2 = aa2.slice(0,aa1.length);
+		if(aa1.length > aa2.length) aa1 = aa1.slice(0,aa2.length);
+	} 
 	if(aa1.length != aa2.length) return false;
 	for(var i=0;i<aa1.length;i++) {
 		if(aa1[i]!=aa2[i]) return false;

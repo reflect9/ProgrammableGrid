@@ -9,7 +9,8 @@ pg.Node = {
 				V: [],
 				selected: false,
 				position: undefined,
-				type: undefined
+				type: undefined,
+				executed: false
 			};
 		if(p) {
 			n.I = typeof p.I !== 'undefined' ? clone(p.I) : [];
@@ -20,8 +21,15 @@ pg.Node = {
 			n.selected = typeof p.selected !== 'undefined' ? p.V : false;
 			n.position = typeof p.position !== 'undefined' ? clone(p.position) : undefined;
 			n.type = typeof p.type !== 'undefined' ? clone(p.type) : undefined;
+			n.executed = typeof p.executed !== 'undefined' ? clone(p.executed) : undefined;
 		}
 		return n;
+	},
+	execute: function() {
+		if(!this.P) return;
+		this.executed=true;
+		pg.planner.execute(this);
+		pg.panel.redraw();
 	},
 	draw: function(node,node_size) {
 		// NODE BASE

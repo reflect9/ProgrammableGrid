@@ -2,7 +2,8 @@ pg = {
 	init: function() {
 		$("#pg").remove();	// delete #pg if exist
 		$("<div id='pg'></div>").appendTo("body");
-		this.new_script("untitled "+makeid());
+		// this.new_script("untitled "+makeid());
+		this.load_script("_latest");
 
 		// ATTACH EVENT HANDLERS
 		$(document).keydown(function (e) {
@@ -19,15 +20,9 @@ pg = {
 		pg.execute_script(pg.panel.nodes);
 		pg.panel.redraw();
 	},
-
-
-	////////////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////////////
 	new_script: function(title) {
-		pg.save_script(title,[
-				pg.Node.create({P:pg.planner.get_prototype({type:"trigger"}), position:[0,0]})
-			]);
+		var triggerNode = pg.Node.create({type:'trigger', P:pg.planner.get_prototype({type:"trigger"}), position:[0,0]});
+		pg.save_script(title,[triggerNode]);
 		pg.load_script(title);
 	},
 	save_script : function(title, nodes_to_store) {
@@ -38,15 +33,29 @@ pg = {
 		} catch(e) {
 			programs = {};
 		}	
-		programs[title] = nodes_to_store;
+		programs[title] = {
+			'nodes': nodes_to_store,
+			'timestamp': Date.now()
+		}
 		new_data = pg.serialize(programs);
 		localStorage.setItem("prgr",new_data);
 		return programs;
 	},
 	load_script : function(title) {
 		var programs = pg.load_all_scripts();
-		if(programs && programs[title]) {
-			pg.panel.init(title, programs[title]);
+		if(!programs) return false;
+		if(title=="_latest") {
+			var sortedPrograms = _.without(_.sortBy(_.pairs(programs), function(title_program) {
+				return title_program[1].timestamp;
+			}),false, undefined);
+			var latest = sortedPrograms[sortedPrograms.length-1]; 
+			if(!latest) {   
+				pg.new_script("Rothko-"+makeid());
+				return false;
+			}
+			pg.panel.init(latest[0], latest[1].nodes);
+		} else if(programs[title]) {
+			pg.panel.init(title, programs[title].nodes);
 		} else return false;
 	},
 	clear_script: function() {
@@ -75,7 +84,7 @@ pg = {
 	execute_script : function(nodes) {
 		console.log("START SCRIPT");
 		// initialize states of the nodes
-
+		if(nodes==undefined) nodes = pg.panel.nodes;
 
 		var triggers = _.filter(nodes, function(n) {
 			return n && n.P && n.P.type=='trigger';
@@ -121,10 +130,10 @@ pg = {
 		nodeObj = pg.planner.methods
 	},
 	serialize: function(programs) {
-		_.each(programs, function(nodes) {
+		_.each(programs, function(program) {
 			// var output = {};
 			// id_counter = 0;
-			_.each(nodes, function(node, index) {
+			_.each(program.nodes, function(node, index) {
 				// node.ID = id_counter++;
 				node.V = [];
 				// output[node.ID] = node;
@@ -146,7 +155,6 @@ pg = {
 			// _.each(nodes, function(node, index) {
 			// 	node.ID = null;
 			// });
-			return nodes;		
 		});
 		return JSON.stringify(programs);
 	},
@@ -218,9 +226,9 @@ pg = {
 		$("<div class='pg_dialog_backdrop'></div>").appendTo($("#pg"));
 		var diag_el = $("<div class='pg_dialog'></div>")
 		.append(content).appendTo("#pg");
-		$(diag_el).offset({
-			'top': $(window).height()/2 - $(diag_el).height()/2,
-			'left': $(window).width()/2 - $(diag_el).width()/2
+		$(diag_el).css({
+			'bottom': "100px",
+			'left': "100px"
 		});
 		$(diag_el).find(".button_close").click(pg.close_dialog);
 	},

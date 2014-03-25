@@ -90,6 +90,7 @@ pg.panel = {
 		pg.panel.commandUI.remove();
 	},
 	select: function(node) {
+		window.curnode = node;
 		var node_el = $("#"+node.ID).get(0);
 		// deselect all others
 		$("#tiles .node").removeAttr("selected");
@@ -138,9 +139,25 @@ pg.panel = {
 	},
 	insert: function(new_nodes, target_node) {
 		// replace target_node with nodes and push nodes on the right side to right
-		var target_position = target_node.position;
-		var ID_deleted_O = target_node.ID;
-		this.delete(target_node);
+		var target_position;
+		if(target_node) {
+			target_position = target_node.position;
+			this.delete(target_node);
+		} else {
+			// find appropriate target_position
+			// var position_range = [MAX_INT, MIN_INT, MAX_INT, MIN_INT];	// min-y, max-y, min-x, max-x
+			// for(var i in new_nodes) {
+			// 	position_range = [Math.min(position_range[0],new_nodes[i].pos[0]),
+			// 						Math.max(position_range[1],new_nodes[i].pos[0]),
+			// 						Math.min(position_range[2],new_nodes[i].pos[1]),
+			// 						Math.max(position_range[3],new_nodes[i].pos[1])];
+			// }
+			// var req_width = position_range[1]-position_range[0];
+			// var req_height = position_range[3]-position_range[2];
+			var max_y = _.max(pg.panel.nodes, function(n){ return n.position[0];}).position[0]+1;
+			target_position = [max_y,1];
+		}
+		
 		// for(var ni=0; ni<this.nodes.length;ni++) {
 		// 	var n = this.nodes[ni];
 		// 	if(n.position[0] == target_position[0] && n.position[1]>target_position[1]) {
@@ -407,6 +424,7 @@ pg.panel = {
 					<div class='buttons_inspector'>\
 						<button class='release_button'>Release</button>\
 						<button class='extract_button'>Extract</button>\
+						<button class='copy_button'>Copy</button>\
 					</div>\
 				</div>\
 			</div>");
@@ -456,6 +474,12 @@ pg.panel = {
 				pg.panel.editUI.deselect_elements();
 				pg.panel.editUI.toggle_select("off");
 			});
+			$(ui_el).find(".copy_button").click(function() {
+				pg.panel.editUI.share_elements(pg.panel.selected_elements);
+				pg.panel.editUI.deselect_elements();
+				pg.panel.editUI.toggle_select("off");
+			});
+
 			
 			$("#pg").append(ui_el);
 			$(ui_el).draggable();
@@ -506,6 +530,28 @@ pg.panel = {
 			}
 			pg.panel.redraw();
 		},
+		share_elements: function(els) {
+			var jsonList = _.map(els, function(el) { return dom2jsonML(el); });
+			console.log("copied:" + jsonList);
+			chrome.runtime.sendMessage({
+				action:"shareElements", 
+				message: { 
+					'jsonList': jsonList,
+					'href': window.location.href
+				} 
+			});
+		},
+		paste_elements: function(message) {
+			console.log(message);
+			if(!message) return;
+			// var el_list = _.map(message.jsonList, function(json) {
+			// 	return jsonML2dom(json);
+			// });
+			var node = pg.Node.create();
+			node.type="literal_element";
+			node.P = pg.planner.get_prototype({type:'literal_element', param:{jsonML:message.jsonList}});
+			pg.panel.insert([node]);
+		},
 		updateInspector: function(els, target_ul) {
 			$(target_ul).empty();
 			var attr_dict = get_attr_dict(els);
@@ -537,6 +583,7 @@ pg.panel = {
 					<div class='node_info'>\
 						<label>Node ID: </label><span class='node_info_id'></span><span class='node_info_position'></span>\
 						&nbsp;&nbsp;&nbsp;<a class='duplicate_button'>duplicate</a> &nbsp;&nbsp;&nbsp;<a class='copy_button'>copy</a>\
+						&nbsp;&nbsp;&nbsp;<a class='share_button'>share_across_tabs</a>\
 						&nbsp;&nbsp;&nbsp;<a class='insert_left_button'>insert [left</a>,\
 						<a class='insert_above_button'>above]</a> \
 						&nbsp;&nbsp;&nbsp;<a class='delete_row_button'>delete [row</a>,\
@@ -585,36 +632,13 @@ pg.panel = {
 			// $("<button>Delete node</button>").click(function(e){pg.panel.delete(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
 			// $("<button>Clear data</button>").click(function(e){pg.panel.empty(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
 			$(ui_el).find("a.duplicate_button").click(function() {
-				// find empty spaces nearby
-				var node = pg.panel.get_selected_nodes()[0];
-				var newNode = pg.Node.duplicate(node);
-				var candDiff = [[1,0],[-1,0],[0,1],[0,-1]];
-				for(var i in candDiff) {
-					var newPos = [newNode.position[0]+candDiff[i][0],newNode.position[1]+candDiff[i][1]];
-					if(pg.panel.get_node_by_position(newPos)==false) {
-						newNode.position = newPos;
-						pg.panel.nodes.push(newNode);
-						pg.panel.redraw();
-						return;
-					}
-				}
-				alert("To duplicate a node, the node must have an empty neighbor tile.");
+				pg.panel.commandUI.duplicate_node();
 			});
 			$(ui_el).find("a.copy_button").click(function() {
-				var node = pg.panel.get_selected_nodes()[0];
-				var literal_P = jsonClone(pg.planner.operations.literal.proto);
-				var newNode = pg.Node.create({type:"literal", I:[node.ID], P:literal_P, V:node.V, position:clone(node.position)});
-				var candDiff = [[1,0],[-1,0],[0,1],[0,-1]];
-				for(var i in candDiff) {
-					var newPos = [newNode.position[0]+candDiff[i][0],newNode.position[1]+candDiff[i][1]];
-					if(pg.panel.get_node_by_position(newPos)==false) {
-						newNode.position = newPos;
-						pg.panel.nodes.push(newNode);
-						pg.panel.redraw();
-						return;
-					}
-				}
-				alert("To copy a node, the node must have an empty neighbor tile.");
+				pg.panel.commandUI.copy_node_with_literal();
+			});
+			$(ui_el).find("a.share_button").click(function() {
+				pg.panel.commandUI.share_node_across_tabs();
 			});
 			$(ui_el).find("a.insert_left_button").click(function() {
 				var node = pg.panel.get_selected_nodes()[0];
@@ -682,6 +706,63 @@ pg.panel = {
 					console.log(ui.offset);
 				}
 			});
+		},
+		copy_node_with_literal: function(_node) {
+			var node = (_node)? _node: pg.panel.get_selected_nodes()[0];
+			var literal_P = jsonClone(pg.planner.operations.literal.proto);
+			var newNode = pg.Node.create({type:"literal", I:[node.ID], P:literal_P, V:node.V, position:clone(node.position)});
+			var candDiff = [[1,0],[-1,0],[0,1],[0,-1]];
+			for(var i in candDiff) {
+				var newPos = [newNode.position[0]+candDiff[i][0],newNode.position[1]+candDiff[i][1]];
+				if(pg.panel.get_node_by_position(newPos)==false) {
+					newNode.position = newPos;
+					pg.panel.nodes.push(newNode);
+					pg.panel.redraw();
+					return;
+				}
+			}
+			alert("To copy a node, the node must have an empty neighbor tile.");
+		},	
+		duplicate_node: function(_node){
+			// find empty spaces nearby
+			var node = (_node)? _node: pg.panel.get_selected_nodes()[0];
+			var newNode = pg.Node.duplicate(node);
+			var candDiff = [[1,0],[-1,0],[0,1],[0,-1]];
+			for(var i in candDiff) {
+				var newPos = [newNode.position[0]+candDiff[i][0],newNode.position[1]+candDiff[i][1]];
+				if(pg.panel.get_node_by_position(newPos)==false) {
+					newNode.position = newPos;
+					pg.panel.nodes.push(newNode);
+					pg.panel.redraw();
+					return;
+				}
+			}
+			alert("To duplicate a node, the node must have an empty neighbor tile.");
+		},
+		share_node_across_tabs: function(_node_list) {
+			var node_list = (_node_list)? _node_list: pg.panel.get_selected_nodes();
+			var jsonList = serialize_nodes(node_list);
+			chrome.runtime.sendMessage({
+				action:"shareNodes", 
+				message: { 
+					'jsonList': jsonList,
+					'href': window.location.href
+				} 
+			});
+		},
+		paste_nodes: function(message) {
+			console.log(message);
+			if(!message) return;
+			var node_list = _.map(message.jsonList, function(json_node) {
+				var node = JSON.parse(json_node);
+				node.V = _.map(node.V, function(v) {
+					if(_.isArray(v) && _.isString(v[0])) { // v is jsonML 
+						return jsonML2dom(v);
+					} else return v;
+				});
+				return node;
+			});
+			pg.panel.insert(node_list);
 		},
 		redraw: function() {
 			var node = pg.panel.get_selected_nodes()[0];
@@ -906,6 +987,7 @@ pg.panel = {
 	toolbar: {
 		create: function() {
 			var ui_el = $("<div id='control_ui'>		\
+					<input type='checkbox' class='active_checkbox'>\
 					<span class='pg_title'></span>\
 					<select id='script_selector'>	<option selected disabled>Load script</option>\
 					</select>	\
@@ -962,12 +1044,13 @@ pg.panel = {
 				pg.open_dialog(diag_content);
 			});
 			$(ui_el.find("#button_save")).click(function() {
-				pg.save_script(pg.panel.title,pg.panel.nodes);
+				var active = $(pg.body).find("#control_ui").find(".active_checkbox").prop('checked');
+				pg.save_script(pg.panel.title,{nodes:pg.panel.nodes, active:active});
 			});
 			$(ui_el.find("#button_execute")).click(function() {
 				var page_triggers = _.filter(pg.panel.nodes, function(node) {
 					return 	node.P && node.P.param && node.P.type=='trigger' && 
-							node.P.param.event_source=="page" && node.P.param.event_type=="loaded"; 
+							node.P.param.event_source=="page"; 
 				});
 				var triggered = _.uniq(_.flatten(_.map(page_triggers, function(t){ return pg.panel.get_next_nodes(t); })));
 				_.each(pg.panel.nodes, function(n) { n.executed=false; n.V=[]; });

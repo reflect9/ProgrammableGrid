@@ -779,6 +779,29 @@ function get_attr_dict(elements) {
 // }
 
 
+function dom2jsonML(el) {
+  	return JsonML.fromHTML(el);
+}
+
+function jsonML2dom(json) {
+  	return JsonML.toHTML(json);
+}
+
+function serialize_nodes(_nodes) {
+	var nodes = $.makeArray(_nodes);
+	return _.map(nodes, function(n){
+		return pg.Node.serialize(n);
+	});
+}
+
+
+
+
+
+
+
+
+
 
 
 

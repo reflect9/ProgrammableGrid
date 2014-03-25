@@ -6,12 +6,22 @@
 
 $(document).ready(reportOnLoad);
 
-chrome.extension.onMessage.addListener(
+chrome.runtime.onMessage.addListener(
 	function(request,sender,sendResponse) {
 		console.log(request.action);
 		if(request.action === 'openGrid'){
 			// when browser button is clicked.
 			pg.init();
+		}
+		if(request.action === 'shareElements') {
+			if(request.message) pg.panel.editUI.paste_elements(request.message);
+		}
+		if(request.action === 'shareNodes') {
+			if(request.message) pg.panel.commandUI.paste_nodes(request.message);
+		}
+		if(request.action === 'loadPage') {
+			console.log(request.message);
+			// if(request.message) pg.panel.commandUI.paste_nodes(request.message);
 		}
 		else if(true) {}
 		sendResponse({});
@@ -40,7 +50,7 @@ function loadURL(url,callback) {
 	} else {
 		// call xhttprequest if not previously cached
 		console.log("XHTTP RUNS");
-		chrome.extension.sendRequest({
+		chrome.extension.sendMessage({
 			action: "xhttp",
 			url: url
 		}, function(responseText) {
@@ -57,17 +67,6 @@ function loadURL(url,callback) {
 }
 
 
-
-function loadFile(filename,callback) {
-	var req = new XMLHttpRequest();
-	req.open("GET", chrome.extension.getURL(filename), true);
-	req.onreadystatechange = function() {
-		if (req.readyState == 4 && req.status == 200) {
-			callback(req.responseText);
-		}
-	};
-	req.send(null);
-}
 
 function storage(request,key,value) {
 	try{

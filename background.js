@@ -17,27 +17,30 @@ function init() {
 			chrome.tabs.sendMessage(tab.id, {action:"openGrid"}, function(){});
 		});
 	});
-	// chrome.extension.onRequest.addListener(
-	// 	function(request, sender, callback) {
+	chrome.runtime.onMessage.addListener(
+		function(request, sender, sendResponse) {
 	// 		console.log(request.action);
 	// 		// loading cross-domain web page within the worksheet (not opening a new tab)
-	// 		if(request.action == "xhttp") {
-	// 			var xhttp = new XMLHttpRequest(),
-	// 					method = request.method ? request.method.toUpperCase() : 'GET';
-	// 			xhttp.onreadystatechange = function() {
-	// 				if(xhttp.readyState == 4){
-	// 					callback(xhttp.responseText);
-	// 					xhttp.onreadystatechange = xhttp.open = xhttp.send = null;
-	// 					xhttp = null;
-	// 				}
-	// 			};
-	// 			if (method == 'POST') {
-	// 				xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-	// 				xhttp.setRequestHeader("Content-length", request.data.length);
-	// 			}
-	// 			xhttp.open(method, request.url, true);
-	// 			xhttp.send(request.data);
-	// 		} // end of cross domain loading
+			if(request.action == "xhttp") {
+				var xhttp = new XMLHttpRequest();
+				var method = request.method ? request.method.toUpperCase() : 'GET';
+				xhttp.onreadystatechange = $.proxy(function() {
+					if(xhttp.readyState == 4){
+						console.log(xhttp.responseText);
+						// chrome.tabs.query({active;true, currentWindow:true}, func)
+						var sender_tabID = this.sender.tab.id;
+						chrome.tabs.sendMessage(sender_tabID, {action:"loadPage", message:xhttp.responseText}, function(){});
+						xhttp.onreadystatechange = xhttp.open = xhttp.send = null;
+						xhttp = null;
+					}
+				},{sender:sender});
+				if (method == 'POST') {
+					xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+					xhttp.setRequestHeader("Content-length", request.data.length);
+				}
+				xhttp.open(method, request.url, true);
+				xhttp.send(request.data);
+			} // end of cross domain loading
 	// 		// checks whether the loaded tab is a child tab. If true, then openWorksheet 
 	// 		// and create 'save and exit' button to return the sub procedure.
 	// 		if(request.action == "reportOnLoad") {
@@ -66,17 +69,35 @@ function init() {
 	// 			});
 	// 		}
 	// 		// called when childPage returns subprocedure(a list of operations)
-	// 		if(request.action == "insertOperations") {
-	// 			if(!request.targetTab) console.error("targetTab is undefined");
-	// 			if(!request.targetColumnPosition) console.error("targetPosition is undefined");
-	// 			chrome.tabs.get(request.targetTab.id, function(tab) {
-	// 				// call insertOperation function of 
-	// 				chrome.tabs.sendMessage(tab.id, {action:"insertOperations", pos:request.targetColumnPosition, opList:request.opList}, function() {});
-	// 				chrome.tabs.update(tab.id, {selected: true});
-	// 			});
-	// 		}
-	// 	}
-	// );
+			// if(request.action == "insertOperations") {
+			// 	if(!request.targetTab) console.error("targetTab is undefined");
+			// 	if(!request.targetColumnPosition) console.error("targetPosition is undefined");
+			// 	chrome.tabs.get(request.targetTab.id, function(tab) {
+			// 		// call insertOperation function of 
+			// 		chrome.tabs.sendMessage(tab.id, {action:"insertOperations", pos:request.targetColumnPosition, opList:request.opList}, function() {});
+			// 		chrome.tabs.update(tab.id, {selected: true});
+			// 	});
+			// }
+			if(request.action == "shareElements") {
+				console.log(request.message);
+				chrome.tabs.query({active: false},function(tabs) {
+					_.each(tabs, function(t) {
+						chrome.tabs.sendMessage(t.id, {action:"shareElements", message:request.message}, function(){});
+					});
+				});
+			}
+			if(request.action == "shareNodes") {
+				console.log(request.message);
+				chrome.tabs.query({active: false},function(tabs) {
+					_.each(tabs, function(t) {
+						chrome.tabs.sendMessage(t.id, {action:"shareNodes", message:request.message}, function(){});
+					});
+				});
+			}
+			
+
+		}
+	);
 }
 
 function loadURL(url) {

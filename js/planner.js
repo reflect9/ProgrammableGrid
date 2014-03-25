@@ -48,14 +48,14 @@ pg.planner = {
 			proto: {
 				type:'get_attribute', 
 				param:{
-					'key':"text",
-					'value': "_input1"
+					'source': "_input1",
+					'key':"text"					
 				},
 				description:"Get attribute values from the input elements."
 			},
 			parameters: {
-				'key': {type:'text', label:"Attribute to set", default:"text"},
-				'value': {type:'text', label:"New Value", default:"_input1"},
+				'source': {type:'text', label:"Source", default:"_input1"},
+				'key': {type:'text', label:"Attribute key", default:"text"}
 			},
 			pre: function(Is) {
 				try{
@@ -78,7 +78,7 @@ pg.planner = {
 					});
 					if(matchingAttrFunc.length>0) {
 						var getter_function = jsonClone(this.proto);
-						getter_function.param.attr_key = matchingAttrFunc[0].attr_key;
+						getter_function.param.key = matchingAttrFunc[0].key;
 						var _O = pg.Node.create(O);
 						_O.P= getter_function;
 						return _O;
@@ -907,7 +907,7 @@ pg.planner = {
 				return O;
 			}			
 		},
-		type: {
+		type_text: {
 			// when I[0] is input or textarea elements.  I[1] is text.  
 			// parameters are rounding / random / extend the last till the end. 
 			proto: {type:'type', param:{},
@@ -918,8 +918,8 @@ pg.planner = {
 				text: {type:'text', label:"Context to type", default:"_input2"},
 			},
 			pre:function(Is) {
-				if(Is.length==0) return false;
-				if(isDomList(Is[0].V) && $(Is[0].V[0]).prop("tagName")=="INPUT" && _.isString(Is[1].V[0])) return true;
+				if(Is.length==0 || !Is[0].V) return false;
+				if(isDomList(Is[0].V) && $(Is[0].V[0]).prop("tagName")=="INPUT") return true;
 				return false;
 			},
 			generate: function(Is, O) {
@@ -976,12 +976,11 @@ pg.planner = {
 			// without any condition, it triggers the next tile or connected tiles.  
 			proto: {	
 				type:'trigger', 
-				param:{event_source: "page", event_type:"loaded"},
+				param:{event_source: "page"},
 				description:"Trigger the following or connected tiles when the predefined event occurs."
 			},
 			parameters: {
 				event_source: {type:'text', label:'Event source (e.g. page, _input1)', default:"page"},
-				event_type: {type:'text', label:"Event type (e.g. loaded, click, mouseover)", default:"loaded"}
 			},
 			pre:function(Is) {
 				return true;
@@ -1002,7 +1001,11 @@ pg.planner = {
 					var I = pg.panel.get_node_by_id(O.I[0], O);
 					if(!isDomList(I.V)) return;
 					_.each(I.V, function(el) {
-						$(el).click($.proxy(function() {
+						var tag = $(el).prop("tagName").toLowerCase();
+						var ev;
+						if(tag=="button" || tag=="a") ev="click";
+						if(tag=="input" || tag=="textarea" || tag=="select") ev="change";
+						$(el).bind(ev, $.proxy(function() {
 							console.log(this.O.ID);
 							this.O.V = [this.el];
 							var following_nodes = pg.panel.get_next_nodes(this.O);
@@ -1045,12 +1048,50 @@ pg.planner = {
 						var endIndex = (O.P.param.to=='')? sourceV.length: parseInt(O.P.param.to);
 						O.V = _.clone(sourceV.slice(startIndex,endIndex)); 
 					}
-					else O.V = O.P.param.value;
+					else {
+						O.V = O.P.param.value;	
+					}
 				} catch(e) {}
 				return O;
 			}
 		},
-
+		literal_element: {
+			proto: {
+				type:'literal_element',
+				param:{jsonML:"_input"},
+				description: "Create DOM element from JsonML text. Usually copied from other web sites."
+			},
+			parameters: {
+				jsonML: {type:'text', label:"JsonML text specifying the DOM elements"},
+			},
+			pre:function(Is) {
+				return false;
+			},
+			generate: function(Is,O) {
+				return false;
+			},
+			execute: function(O) {
+				if(O.P.param.jsonML=="_input1") var sourceV = pg.panel.get_node_by_id(O.I[0],O).V;
+				else if(O.P.param.jsonML=="_input2") var sourceV = pg.panel.get_node_by_id(O.I[1],O).V;
+				else {
+					sourceV = O.P.param.jsonML;
+				}
+				try{
+					var el_list_created = _.map(sourceV, function(v) {
+						if(_.isString(v)) {
+							var json = JSON.parse(v);
+							return jsonML2dom(json);	
+						} else {
+							return jsonML2dom(v);	
+						}
+					});
+					O.V = el_list_created;
+					return O;
+				} catch(e) {
+					return O;
+				}
+			}
+		},
 		arithmetic: {
 			proto: {
 				type:'arithmetic',
@@ -1938,6 +1979,10 @@ pg.planner = {
 		{	'attr_key': "text",
 			'getter': function(el) { return _.escape($(el).text());},
 			'setter': function(el,val) { return _.escape($(el).text(val));}
+		},
+		{	'attr_key': "value",
+			'getter': function(el) { return _.escape($(el).val());},
+			'setter': function(el,val) { return _.escape($(el).val(val));}
 		},
 		{	'attr_key': "download", 
 			'getter': function(el) { return $(el).attr('download');},

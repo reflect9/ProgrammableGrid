@@ -16,12 +16,21 @@ pg.Node = {
 			n.ID = typeof p.ID !== 'undefined' ? clone(p.ID) : makeid();
 			n.P = typeof p.P !== 'undefined' ? clone(p.P) : undefined;
 			n.V = typeof p.V !== 'undefined' ? p.V : [];
-			n.selected = typeof p.selected !== 'undefined' ? p.V : false;
+			n.selected = typeof p.selected !== 'undefined' ? p.selected : false;
 			n.position = typeof p.position !== 'undefined' ? clone(p.position) : undefined;
 			n.type = typeof p.type !== 'undefined' ? clone(p.type) : undefined;
 			n.executed = typeof p.executed !== 'undefined' ? clone(p.executed) : undefined;
 		}
 		return n;
+	},
+	serialize: function(_n) {
+		var node = pg.Node.create(_n);
+		node.V = _.map(_n.V, function(v) {
+			if(isDom(v)) return dom2jsonML(v);
+			else return v;
+		});
+		node.selected = false;
+		return JSON.stringify(node);
 	},
 	duplicate: function(n) {
 		var dn = pg.Node.create(n);

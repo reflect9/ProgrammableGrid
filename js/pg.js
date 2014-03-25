@@ -45,12 +45,10 @@ pg = {
 		pg.panel.redraw();
 	},
 	new_script: function(title) {
-		var triggerNode = pg.Node.create({type:'trigger', P:pg.planner.get_prototype({type:"trigger"}), position:[1,0]});
-		var currentPageNode = pg.Node.create({type:'loadPage', P:pg.planner.get_prototype({type:"loadPage"}), position:[1,1]});
-		pg.save_script(title,[triggerNode, currentPageNode]);
+		pg.save_script(title);
 		pg.load_script(title);
 	},
-	save_script : function(title, nodes_to_store) {
+	save_script : function(title, program) {
 		try {
 			var old_data = localStorage["prgr"];
 			if (old_data =="undefined" || old_data == "[object Object]" || old_data == "[]") old_data="{}";
@@ -58,17 +56,29 @@ pg = {
 		} catch(e) {
 			programs = {};
 		}	
-		programs[title] = {
-			'nodes': nodes_to_store,
-			'timestamp': Date.now()
+		var p={};
+		var triggerNode = pg.Node.create({type:'trigger', P:pg.planner.get_prototype({type:"trigger"}), position:[1,0]});
+		var currentPageNode = pg.Node.create({type:'loadPage', P:pg.planner.get_prototype({type:"loadPage"}), position:[1,1]});
+		var defaultNodes = [triggerNode, currentPageNode];
+		if(program) {
+			p.nodes = typeof program.nodes !== 'undefined' ? program.nodes : defaultNodes;
+			p.timestamp = Date.now();
+			p.active = typeof program.active !== 'undefined' ? program.active : true;
+			p.domain = typeof program.domain !== 'undefined' ? program.domain : [document.URL];
+		} else {
+			p.nodes = defaultNodes;
+			p.timestamp = Date.now();
+			p.active = true;
+			p.domain = [document.URL];
 		}
+		programs[title] = p;
 		new_data = pg.serialize(programs);
 		localStorage.setItem("prgr",new_data);
 		return programs;
 	},
 	load_script : function(title) {
 		var programs = pg.load_all_scripts();
-		if(!programs) {
+		if(!programs || _.keys(programs).length==0) {
 			pg.new_script("first script");
 			return;
 		}
@@ -119,8 +129,13 @@ pg = {
 		return JSON.stringify(programs);
 	},
 	parse: function(data) {
-		var programs = JSON.parse(data);
-		return programs;
+		try {
+			var programs = JSON.parse(data);
+			return programs;
+		} catch(e) {
+			return {};
+		}
+		
 	},
 	generate : function(problem_title){
 		try {
@@ -134,7 +149,9 @@ pg = {
 			console.error(e.stack);
 		}
 	},
-
+	cleanStorage: function() {
+		localStorage["prgr"]="{}";
+	},
 	////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////
 	//					UTILITY FUNCTIONS

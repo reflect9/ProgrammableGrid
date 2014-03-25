@@ -23,6 +23,7 @@
 #pg a {
   margin: 0;
   padding: 0;
+  color: black;
   font-size: 100%;
   vertical-align: baseline;
   background: transparent;
@@ -56,6 +57,10 @@
   bottom: 0px;
   width: 100%;
   background: rgba(255, 255, 255, 0.8);
+}
+#pg canvas {
+  margin: 0;
+  padding: 0;
 }
 #pg #pg_panel {
   position: fixed;
@@ -376,6 +381,9 @@
 #pg #pg_command_ui .header_panel .node_info,
 #pg #pg_command_ui .header_panel label {
   padding: 3px;
+  color: white;
+}
+#pg #pg_command_ui .header_panel a {
   color: white;
 }
 #pg #pg_command_ui .upper_panel {

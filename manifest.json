@@ -25,6 +25,7 @@
             "js/lib/jsonml-utils.js",
             "js/utils.js",
             "js/pg.js",
+            "js/pageLoader.js",
             "js/panel.js",
             "js/node.js",
             "js/planner.js",

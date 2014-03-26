@@ -104,15 +104,18 @@ pg.planner = {
 			proto: {
 				type:'extract_element', 
 				param:{
+					'source':"_current",
 					'selector':""
 				},
-				description:"Extract DOM elements from _input1"
+				description:"Extract DOM elements from the source"
 			},
 			parameters: {
+				'source': {type:'text', label:"DOM to extract elements from", default:"_current"},
 				'selector': {type:'text', label:"DOM relative path", default:""}
+				
 			},
 			pre: function(Is) {
-				return false; // only applicable via generator
+				return false; // only applicable via generator (Output is required. PBE only)
 
 				// if(!Is || !Is[0] || !isDomList(Is[0].V)) return false;
 				// // if(!O || !O.V || O.V==[]) return false;
@@ -131,37 +134,40 @@ pg.planner = {
 			},
 			generate: function(Is, O){
 				// find a consistent jquery paths selecting the O values (and possibly more)
-				if(!Is || !Is[0] || !isDomList(Is[0].V)) return false;
+				var inputDOM, usingIsAsInput;
 				if(!O || !O.V || O.V.length==0 || !isDomList(O.V)) return false;
-
-				var n_extracted_el, n_filtered_el;
-				// var element_features = getElementFeatures(O.V);
 				var _O = pg.Node.create(O);
-
-				if(Is[0].V.length > 1) {
+				if(!Is || !Is[0] || !isDomList(Is[0].V)) {
+					inputDOM = Is[0].V;
+					_O.I = toArray(Is[0].ID);
+					_O.P = jsonClone(this.proto); 	
+					_O.P.param.source = "_input1";
+					usingIsAsInput = true;
+				} else {
+					inputDOM = $.makeArray($(pg.body));
+					_O.I = [];
+					_O.P = jsonClone(this.proto); 	
+					usingIsAsInput = false;
+				}
+				var n_extracted_el, n_filtered_el;
+				if(inputDOM.length > 1) {
 					// n-to-n extraction
 					var paths = []; 
 					for(var i in O.V) {
-						paths.push(  $(Is[0].V[i]).findQuerySelector([O.V[i]]));
+						paths.push(  $(inputDOM[i]).findQuerySelector([O.V[i]]));
 					}
 					var commonPath = _.uniq(paths);	
 					if(commonPath.length==1) {	// if all the path are same, it's easy
-						_O.I = toArray(Is[0].ID);
-						_O.P = jsonClone(this.proto); 
-						_O.P.param.selector = commonPath[0];
+						_O.P.param.selector = commonPath[0];	
 					} else {  // if some paths are different, then follow the majority
 						var shortedPath = _.first(commonPath.sort());
-						_O.I = toArray(Is[0].ID);
-						_O.P = jsonClone(this.proto); 
 						_O.P.param.selector = shortedPath;
 					}
-				} else if(Is[0].V.length==1) {
+				} else if(inputDOM.length==1) {
 					// 1-to-n extraction
-					var path = $(Is[0].V[0]).findQuerySelector(O.V);
+					var path = $(inputDOM[0]).findQuerySelector(O.V);
 					if(path===null) return false;
 					else {
-						_O.I = toArray(Is[0].ID);
-						_O.P = jsonClone(this.proto); 
 						_O.P.param.selector = path;
 					}
 				} else return false;
@@ -170,13 +176,16 @@ pg.planner = {
 			execute: function(O) {
 				var path = O.P.param.selector;
 				var new_V = [];
-				var I = pg.panel.get_node_by_id(O.I[0], O);
-				if (I.V.length!=1) {
-					for(var i in I.V) {
-						new_V.push($(I.V[i]).find(path).get(0));
+				var inputDOM;
+				if(O.P.param.source=="_input1") inputDOM = pg.panel.get_node_by_id(O.I[0], O).V;
+				else if(O.P.param.source=="_current") inputDOM = $.makeArray($(pg.body));
+				else return O;
+				if (inputDOM.length!=1) {
+					for(var i in inputDOM) {
+						new_V.push($(inputDOM[i]).find(path).get(0));
 					}
 				} else {
-					new_V = $(I.V[0]).find(path).toArray();
+					new_V = $(inputDOM[0]).find(path).toArray();
 				}
 				O.V = new_V;
 				return O;
@@ -619,7 +628,9 @@ pg.planner = {
 						O.V = _.map(I.V, function(v) {
 							if(isURL(v)) {
 								console.log("loadPage: "+v);
-								return v;
+								var str_loading = "LOADING:" + v;
+								
+								return str_loading;
 							} else return "fail to load page: "+v;
 						});
 					} else if(url=="_input2") {
@@ -1997,11 +2008,11 @@ pg.planner = {
 			'setter': function(el,val) { return $(el).css('color',val);}	
 		},
 		{	'attr_key': "source", 
-			'getter': function(el) { return $(el).attr('src');},
+			'getter': function(el) { return $(el)[0].src;},
 			'setter': function(el,val) { return $(el).attr('src',val);}	
 		},
 		{	'attr_key': "link", 
-			'getter': function(el) { return $(el).attr('href');},
+			'getter': function(el) { return $(el).get(0).href; },
 			'setter': function(el,val) { return $(el).attr('href',val);}	
 		}
 

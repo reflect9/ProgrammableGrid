@@ -317,11 +317,11 @@ pg.panel = {
 		if(O.V.length==0) {
 			return pg.planner.find_applicable_operations(Is); // return a list of operations
 		} else {
-			if(Is.length>0) {
+			// if(Is.length>0) {
 				return pg.planner.plan(Is, O);	
-			} else {
-				return [];
-			}
+			// } else {
+			// 	return [];
+			// }
 		}
 		// var solution_nodes = pg.planner.plan(Is,output_node);
 		// this.commandUI.update(solution_nodes);

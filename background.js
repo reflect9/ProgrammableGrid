@@ -29,11 +29,13 @@ function init() {
 						console.log(xhttp.responseText);
 						// chrome.tabs.query({active;true, currentWindow:true}, func)
 						var sender_tabID = this.sender.tab.id;
-						chrome.tabs.sendMessage(sender_tabID, {action:"loadPage", message:xhttp.responseText}, function(){});
+						// this.callback(this.sender.tab.id);
+						chrome.tabs.sendMessage(sender_tabID, {action:"handleHTML", message:xhttp.responseText, url:this.request.url}, function(){});
 						xhttp.onreadystatechange = xhttp.open = xhttp.send = null;
 						xhttp = null;
 					}
-				},{sender:sender});
+				},{sender:sender, request:request});
+				// sendResponse("haha");
 				if (method == 'POST') {
 					xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 					xhttp.setRequestHeader("Content-length", request.data.length);

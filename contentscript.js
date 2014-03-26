@@ -19,8 +19,9 @@ chrome.runtime.onMessage.addListener(
 		if(request.action === 'shareNodes') {
 			if(request.message) pg.panel.commandUI.paste_nodes(request.message);
 		}
-		if(request.action === 'loadPage') {
-			console.log(request.message);
+		if(request.action === 'handleHTML') {
+			// console.log(request.message);
+			pg.pageLoader.handleHTML(request.message, request.url);
 			// if(request.message) pg.panel.commandUI.paste_nodes(request.message);
 		}
 		else if(true) {}
@@ -40,49 +41,20 @@ function reportOnLoad() {
 		// }
 	});
 }
-function loadURL(url,callback) {
-	// if cached, use the cache. 
-	if(url in window.localStorage) {
-		var htmlText = storage("get",url);
-		var dom= html2dom(htmlText).get(0);
-		dom.url = url;
-		callback(null,dom);
-	} else {
-		// call xhttprequest if not previously cached
-		console.log("XHTTP RUNS");
-		chrome.extension.sendMessage({
-			action: "xhttp",
-			url: url
-		}, function(responseText) {
-			// update relative file path in the html text 
-			var urlObj = $.url(url);
-			var domain = urlObj.attr("protocol")+"://"+urlObj.attr("host")+"/";
-			var htmlText = responseText.replace(/src\s*=\s*\"/ig,'src="'+domain);
-			storage("set",url,htmlText);
-			var dom= html2dom(htmlText).get(0);
-			dom.url = url;
-			callback(null,dom);
-		});
-	}
-}
 
+// function storage(request,key,value) {
+// 	try{
+// 		if(request=="set") {
+// 			window.localStorage.removeItem(key);
+// 			window.localStorage.setItem(key,value);
+// 		} else if(request=="get") {
+// 			return window.localStorage.getItem(key);
+// 		}
+// 	} catch(e) {
+// 		console.log(e.stack);
+// 	}
 
-
-function storage(request,key,value) {
-	try{
-		if(request=="set") {
-			window.localStorage.removeItem(key);
-			window.localStorage.setItem(key,value);
-		} else if(request=="get") {
-			return window.localStorage.getItem(key);
-		}
-	} catch(e) {
-		console.log(e.stack);
-	}
-
-}
-
-
+// }
 
 function openChildPage(url,targetColumnPosition) {
 	// new tab will be opened with a child widget. 

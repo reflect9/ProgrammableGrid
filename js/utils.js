@@ -182,11 +182,26 @@ jQuery.fn.trimArray = function() {
 jQuery.fn.hasElement = function(el) {
 	return _.filter(this, function(p) { return p==el;}).length>0;
 };
+
+
 var html2dom = function(htmlStr) {
 	var el = $('<div></div>');
 	el.html(htmlStr);
 	return el;
 };
+
+function HTMLParser(aHTMLString){
+  var html = document.implementation.createDocument("http://www.w3.org/1999/xhtml", "html", null),
+    body = document.createElementNS("http://www.w3.org/1999/xhtml", "body");
+  html.documentElement.appendChild(body);
+
+  body.appendChild(Components.classes["@mozilla.org/feed-unescapehtml;1"]
+    .getService(Components.interfaces.nsIScriptableUnescapeHTML)
+    .parseFragment(aHTMLString, false, null, body));
+
+  return body;
+};
+
 var getContentAtTop = function(list) {
 	var result = [];
 	for(var i=0;i<list.length;i++) {
@@ -297,13 +312,19 @@ var isBooleanList = function(list) {
 		return e!==null && _.isBoolean(e)===false;
 	}).length===0;
 };
-var isURL = function(list) {
+var isURLList = function(list) {
 	var toCheck = (_.isArray(list))? list: [list];
 	toCheck = $(toCheck).trimArray();
 	return _.filter(toCheck, function(e) {
-		return _.isString(e)===false || e.indexOf("http")!==0;
+		return _.isString(e)===false || isURL(e)===false;
 	}).length===0;
 };
+
+function isURL(s) {    
+      var regexp = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
+      return regexp.test(s);    
+ }
+
 var isSrc = function(list) {
 	var toCheck = (_.isArray(list))? list: [list];
 	toCheck = $(toCheck).trimArray();

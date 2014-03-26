@@ -2,7 +2,7 @@ pg.pageLoader = {
 	queue: [], // urls waiting for the call
 	cache: {}, // caching previous calls consist of url:html pairs
 	max_queue_size: 500,	// how big is the url queue
-	max_concurrent_request: 10,	// how many XHTTPrequests will it make at the same time
+	max_concurrent_request: 2,	// how many XHTTPrequests will it make at the same time
 	runState: false,
 	init: function(max_queue_size, max_concurrent_request) {
 		this.max_queue_size = (typeof max_queue_size!=='undefined')? max_queue_size:500; 
@@ -15,14 +15,23 @@ pg.pageLoader = {
 	clean_loaded_requests: function() {
 		this.queue = _.filter(this.queue, function(q) { return q.status!= "loaded"; });
 	},
+	createTask: function(urlList, taskCallback) {
+		async.map(urlList, function(url, callback) {
+			// iterator
+			pg.pageLoader.put(url, callback);
+			// var transformed = "loaded:" + url;
+			// callback(err, transformed);	// saying this is over. 
+		}, taskCallback);
+		pg.pageLoader.run();
+	},
 	put: function(url, callback) {
 		// if the request has already been loaded
-		console.log(_.map(this.queue, function(q) { return q.status; }));
+		// console.log(pg.pageLoader.__str__());
 		var requestedReq = this.find(url, 'requested');
 		var loadedReq = this.find(url, 'loaded');
 		if(loadedReq.length>0) {
-			console.log(loadedReq);
-			callback(loadedReq[0]);
+			// console.log(loadedReq);
+			callback(null, loadedReq[0]);
 		} else if(requestedReq.length>0) {
 			requestedReq[0].callback.push(callback);
 		} else {
@@ -33,7 +42,6 @@ pg.pageLoader = {
 				body:undefined,
 				callback:[callback]
 			});	
-			this.run();
 		}
 	},
 	find: function(url, status, limit) {
@@ -61,6 +69,7 @@ pg.pageLoader = {
 				r.status = 'requested';
 			});
 		} else {
+			pg.panel.redraw();
 			return; 
 		}
 	},
@@ -83,7 +92,10 @@ pg.pageLoader = {
 				req.body=loaded_body;
 				req.status="loaded";
 				if(req.callback && req.callback.length>0) {
-					_.each(req.callback, function(cb) { cb(req); });	
+					_.each(req.callback, function(cb) { 
+						cb(null, req); 
+					});	
+					req.callback= [];
 				} 
 			});
 		}
@@ -101,11 +113,27 @@ pg.pageLoader = {
 				action: "xhttp",
 				url: url
 			}, function(s) {
-				console.log(s);
+				// console.log(s);
 			});
 		// }
 	},
-
+	__str__: function() {
+		return _.map(this.queue, function(q) {
+			return q.url + "," + q.status + "," + $(q.body).text().trim().slice(0,30);
+		});
+	},
+	testTask: function() {
+		var urls = ['http://research.microsoft.com/en-us/um/people/sumitg/pubs/cacm14-abs.html',
+		'http://research.microsoft.com/en-us/um/people/sumitg/pubs/pldi14-flashextract-abs.html',
+		'http://research.microsoft.com/en-us/um/people/sumitg/pubs/pldi14-tds-abs.html',
+		'http://research.microsoft.com/en-us/um/people/sumitg/pubs/iui14-abs.html'
+		];
+		var callback = function(err, results) { 
+			console.log("ALL FINISHED");
+			console.log(results);
+		};
+		pg.pageLoader.createTask(urls,callback);
+	},
 	test: function() {
 		var urls = ['http://research.microsoft.com/en-us/um/people/sumitg/pubs/cacm14-abs.html',
 		'http://research.microsoft.com/en-us/um/people/sumitg/pubs/pldi14-flashextract-abs.html',
@@ -123,9 +151,7 @@ pg.pageLoader = {
 			});
 		});
 
-	}
-
-
+	},
 
 
 }

@@ -94,7 +94,11 @@ pg.planner = {
 					var I = pg.panel.get_node_by_id(I_id, O);
 					var getter = (_.filter(pg.planner.attr_func_list, function(f){ return f.attr_key==O.P.param.key; })[0]).getter;
 					O.V = _.map(I.V, function(el_input) {
-						return this.getter(el_input);
+						if(typeof el_input!=='undefined') {
+							return this.getter(el_input);	
+						} else {
+							return "";
+						}
 					}, {'getter':getter});
 				} catch(e) { console.log(e.stack); }
 				return O;
@@ -134,20 +138,18 @@ pg.planner = {
 			},
 			generate: function(Is, O){
 				// find a consistent jquery paths selecting the O values (and possibly more)
-				var inputDOM, usingIsAsInput;
+				var inputDOM;
 				if(!O || !O.V || O.V.length==0 || !isDomList(O.V)) return false;
 				var _O = pg.Node.create(O);
 				if(!Is || !Is[0] || !isDomList(Is[0].V)) {
+					inputDOM = $.makeArray($(pg.body));
+					_O.I = ["",""];
+					_O.P = jsonClone(this.proto); 	
+				} else {
 					inputDOM = Is[0].V;
-					_O.I = toArray(Is[0].ID);
+					_O.I = [Is[0].ID,""];
 					_O.P = jsonClone(this.proto); 	
 					_O.P.param.source = "_input1";
-					usingIsAsInput = true;
-				} else {
-					inputDOM = $.makeArray($(pg.body));
-					_O.I = [];
-					_O.P = jsonClone(this.proto); 	
-					usingIsAsInput = false;
 				}
 				var n_extracted_el, n_filtered_el;
 				if(inputDOM.length > 1) {
@@ -295,12 +297,13 @@ pg.planner = {
 		set_attribute: {  // from two Is (left: original elements, above: new values) 
 			proto: {
 				type:'set_attribute', 
-				param:{key:"text", value:"_input1"},
+				param:{key:"text", target:"_input1", new_value:"_input2"},
 				description:"Set attribute values from the input elements."
 			},
 			parameters: {
 				'key': {type:'text', label:"Attribute to set", default:"text"},
-				'value': {type:'text', label:"New Value", default:"_input1"}
+				'target': {type:'text', label:"Original Value", default:"_input1"},
+				'new_value': {type:'text', label:"New Value", default:"_input2"}
 			},
 			pre: function(Is) {	// Is[0] and O must be DOM[] with the same fingerprints. 
 				try{
@@ -342,11 +345,24 @@ pg.planner = {
 			},
 			execute: function(O) {
 				try{
-					var I = pg.panel.get_node_by_id(O.I[0], O);
+					var I_target, I_new_value;
+					if (O.P.param.target=="_input1") I_target = pg.panel.get_node_by_id(O.I[0], O).V;
+					else if (O.P.param.target=="_input2") I_target = pg.panel.get_node_by_id(O.I[1], O).V;
+					else return O;
+
+					if (O.P.param.new_value=="_input1") I_new_value = pg.panel.get_node_by_id(O.I[0], O).V;
+					else if (O.P.param.new_value=="_input2") I_new_value = pg.panel.get_node_by_id(O.I[1], O).V;
+					else I_new_value = $.makeArray(O.P.param.new_value);
+
+					if(!I_target || !isDomList(I_target)) return O;
+					if(!I_new_value || !isStringList(I_new_value)) return O;
 					var setter = (_.filter(pg.planner.attr_func_list, function(f){ return f.attr_key==O.P.param.key; },this)[0]).setter;
-					O.V = _.map(I.V, function(el_input) {
-						return this.setter(el_input);
-					});
+					
+					for(var i=0;i<I_target.length;i++) {
+						var j = i % I_new_value.length;
+						setter(I_target, I_new_value[j]);
+					}
+					O.V = I_target;
 				} catch(e) { console.log(e.stack); }
 				return O;
 			}
@@ -504,8 +520,8 @@ pg.planner = {
 			},
 			generate: function(Is, O) {
 				// PRECHECKING: all ooutput must exist in input
-				if(!Is || !Is[0] || isDomList(Is[0].V) || Is[0].V.length==0) return false;
-				if(!O || !O.V || isDomList(O.V) || O.V.length==0) return false;
+				if(!Is || !Is[0] || !isStringList(Is[0].V) || Is[0].V.length==0) return false;
+				if(!O || !O.V || !isStringList(O.V) || O.V.length==0) return false;
 	
 				var org_string_list = _.map(Is[0].V, function(v){ return v.toString(); });
 				var substring_list = _.map(O.V, function(v){ return v.toString(); });
@@ -602,10 +618,10 @@ pg.planner = {
 		loadPage: {
 			proto:{
 				type:'loadPage',
-				param:{url:"_current"}
+				param:{source:"_current"}
 			},
 			parameters:{
-				url:{type:'text', label:"URL of the page to load (e.g. _current, _input1, _input2)", default:"_current"}
+				source:{type:'text', label:"URL of the page to load (e.g. _current, _input1, _input2)", default:"_current"}
 			},
 			pre:function(Is) {
 				try{
@@ -620,34 +636,52 @@ pg.planner = {
 			},
 			execute: function(O) {
 				try{
-					var url = O.P.param.url;
-					if(url=="_current") {
+					var source = O.P.param.source;
+					if(source=="_current") {
 						O.V = $(pg.body).toArray();
-					} else if(url=="_input1") {
-						var I = pg.panel.get_node_by_id(O.I[0], O);
-						O.V = _.map(I.V, function(v) {
-							if(isURL(v)) {
-								console.log("loadPage: "+v);
-								var str_loading = "LOADING:" + v;
-								
-								return str_loading;
-							} else return "fail to load page: "+v;
-						});
-					} else if(url=="_input2") {
-						var I = pg.panel.get_node_by_id(O.I[1], O);			
-						O.V = _.map(I.V, function(v) {
-							if(isURL(v)) {
-								console.log("loadPage: "+v);
-								return v;
-							} else return "fail to load page: "+v;
-						});			
-					} else if(isURL(url)) {
-						O.V = [url];
+						return O;
+					} 
+					// if source is _input1 or _input2 
+					var I;
+					if(source=="_input1") I = pg.panel.get_node_by_id(O.I[0], O);
+					if(source=="_input2") I = pg.panel.get_node_by_id(O.I[1], O);			
+					if(I && I.V && isStringList(I.V)) {
+						pg.pageLoader.createTask(I.V, $.proxy(function(err,requests) {
+							// callback function for the task result.
+							// 		a request contains url, body,status["loaded"]
+							this.O.V = _.map(requests, function(req) { return req.body; });
+							// run following tiles
+							var following_nodes = pg.panel.get_next_nodes(this.O);
+							pg.panel.run_triggered_nodes(following_nodes);
+						},{O:O}));
+						// pg.pageLoader.put(I.V, function() {
+						// 	// callback function to be triggered when loading is finished.
+						// });
+
+
+						// _.each(I.V, function(v, vi) {
+						// 	O.V[vi] = "waiting:"+v;
+
+
+
+						// 	pg.pageLoader.put(v, $.proxy(function(req) {
+						// 		console.log("loading completed "+req.url); 
+						// 		this.target_v[this.target_i] = req.status+":"+req.url;
+						// 	},{target_v: O.V, target_i:vi}));
+						// });
+						return O;
+					} 
+					// 
+					if(isURL(source)) {
+						O.V[0] = "LOADING "+source;
+						pg.pageLoader.put(source, $.proxy(function(req) {
+							console.log("loading completed "+req.url); 
+							this.target_v = req.status+":"+req.url;
+						},{target_v: O.V[0]}));
 					} 
 				} catch(e) { console.log(e.stack); }
 				return O;
 			}
-
 		},
 		compose_text: {
 			proto: {	type:'compose_text',
@@ -1010,7 +1044,8 @@ pg.planner = {
 				if(O.P && O.P.param && O.P.param.event_source == "_input1") {
 					if(!O.I || !O.I[0]) return;
 					var I = pg.panel.get_node_by_id(O.I[0], O);
-					if(!isDomList(I.V)) return;
+					// if(I.P || I.P.param || I.P.param.type=="loadPage") return O;
+					if(!isDomList(I.V)) return O;
 					_.each(I.V, function(el) {
 						var tag = $(el).prop("tagName").toLowerCase();
 						var ev;
@@ -1327,11 +1362,12 @@ pg.planner = {
 		string_predicate: {
 			proto: {
 				type:"string_predicate",
-				param: { key:'', isIn:'in' },
+				param: { source:'_input1', key:'_input2', isIn:'in' },
 				description: "Distinguish whether the input string contains substring and return true / false."
 			},
 			parameters: {
-				key:{ type:'text', label:"Sub-string to look for or input node", default:''},
+				source:{ type:'text', label:"String set to look at", default:'_input1'},
+				key:{ type:'text', label:"Sub-string to look for or input node", default:'_input2'},
 				isIn:{ type: 'text', label: "Sub-string must be 'in' or 'not in'", default:'in'}
 			},
 			pre: function(Is) {
@@ -1345,7 +1381,6 @@ pg.planner = {
 					if(!O.V || !isBooleanList(O.V)) return false;
 					var item_length = Math.min(Is[0].V.length, O.V.length);
 					var _O = pg.Node.create(O);
-
 					if(Is[1] && Is[1].V && isValueList(Is[1].V)) {   // with secondary input as key
 						var result_boolean = _.map(Is[0].V, function(v){ 
 							for(var i=0;i<Is[1].V.length;i++) {
@@ -1394,9 +1429,14 @@ pg.planner = {
 			},
 			execute: function(O) {
 				try {
-					var str_list = pg.panel.get_node_by_id(O.I[0],O).V; 
-					if(!isValueList(str_list)) return O;
 					var key_list;
+					if(!O.P || !O.P.param) return O;
+					var I1 = pg.panel.get_node_by_id(O.I[0],O); 	
+					if(!I1) return O; 
+					var str_list = I1.V;
+					
+					if(!isValueList(str_list)) return O;
+					
 					if(O.P.param.key=="_input2") {
 						key_list = pg.panel.get_node_by_id(O.I[1],O).V;
 					} else {
@@ -2006,6 +2046,10 @@ pg.planner = {
 		{	'attr_key': "color", 
 			'getter': function(el) { return $(el).css('color');},
 			'setter': function(el,val) { return $(el).css('color',val);}	
+		},
+		{	'attr_key': "background-color", 
+			'getter': function(el) { return $(el).css('background-color');},
+			'setter': function(el,val) { return $(el).css('background-color',val);}	
 		},
 		{	'attr_key': "source", 
 			'getter': function(el) { return $(el)[0].src;},

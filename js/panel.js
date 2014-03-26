@@ -281,33 +281,32 @@ pg.panel = {
 	},
 	run_triggered_nodes: function(starting_nodes, _nodes) {
 		// reset 'executed' property of every node
-		console.log("===================================");
+		//console.log("===================================");
 		var nodes = (_nodes)? _.clone(_nodes): _.clone(pg.panel.nodes);
 		var nodesToExecute = pg.panel.get_reachable_nodes(starting_nodes); // including starting nodes
 		_.each(nodesToExecute, function(n) { n.executed = false; });	
 		if(nodesToExecute==undefined || nodesToExecute.length==0 ) return;
 		var queue = starting_nodes;
-		console.log("starting nodes : "+pg.panel.print(starting_nodes));
+		//console.log("starting nodes : "+pg.panel.print(starting_nodes));
 		var executed = [];
 		// nodes = _.difference(nodes, queue);
 		var count=0;
 		while(queue.length>0 && count<nodes.length){
-			console.log("---");
+			//console.log("---");
 			var n = queue.pop();
 			pg.panel.run_node(n, true);
 			executed = _.union(executed, n);
-			console.log("run : "+pg.panel.print([n]));
+			//console.log("run : "+pg.panel.print([n]));
 			// nodes = _.difference(nodes, queue);
 			var nodes_ready = pg.panel.get_ready_nodes(nodesToExecute);
 			var nodes_ready_not_yet_run = _.difference(nodes_ready, executed);
 			queue = _.union(queue, nodes_ready_not_yet_run);
-			console.log("queue : "+pg.panel.print(queue));
-			console.log("nodes : "+pg.panel.print(nodes));
-			console.log("---");
+			//console.log("queue : "+pg.panel.print(queue));
+			//console.log("nodes : "+pg.panel.print(nodes));
+			//console.log("---");
 			count++;
+			pg.panel.redraw();
 		}
-		pg.panel.redraw();
-
 	},
 	infer: function(output_node) {
 		var Is = _.without(_.map(output_node.I, function(input_id) {

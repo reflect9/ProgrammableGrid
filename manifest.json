@@ -59,6 +59,8 @@
     "js/lib/jquery-2.0.3.min.js",
     "js/lib/jquery-ui-1.10.3.custom.min.js",
     "js/lib/jquery-2.0.3.min.map",
+    "js/lib/glyphicons/glyphicons-halflings.png",
+    "js/lib/glyphicons/glyphicons-halflings-150.png",
     "js/lib/glyphicons/glyphicons_153_unchecked.png",
     "js/lib/glyphicons/glyphicons_055_stopwatch.png",
     "js/lib/glyphicons/glyphicons_160_imac.png",

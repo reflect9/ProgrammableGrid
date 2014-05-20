@@ -4,14 +4,18 @@ pg.editor = {
 	flag_inspect: false,
 	selectionBox: null,
 	hoveredElement: null,
-	callback:null,
+	callback: function(el) {
+		// show editing table
+
+
+	},
 	toggle: function() {
 		if(!pg.editor.flag_inspect) {
 			pg.editor.on();
 		}
 		else pg.editor.off();
 	},
-	on : function(callback) {
+	on : function() {
 		if(!pg.editor.flag_inspect) {
 			document.addEventListener('mousemove', pg.editor.onMouseMove, true);
 			document.addEventListener('mouseover', pg.editor.onMouseOver, true);
@@ -19,11 +23,12 @@ pg.editor = {
 			document.addEventListener('click', pg.editor.onMouseClick, true);
 			// $(pg.widget.btn_inspect).addClass("btn-active");
 			pg.editor.flag_inspect = true;
-			pg.editor.selectionBox = new pg.SelectionBox();
-			pg.editor.callback = callback;
+			pg.editor.selectionBox = new pg.SelectionBox(undefined, "#00ff00",undefined);
+			// pg.editor.callback = callback;
 		} else {
 			pg.editor.off();
-			pg.editor.on(callback);
+			// pg.editor.on(callback);
+			pg.editor.on();
 		}
 	},
 	off : function() {
@@ -38,12 +43,12 @@ pg.editor = {
 			// $('body').off('mousedown');
 			// $(pg.widget.btn_inspect).removeClass("btn-active");
 			pg.editor.flag_inspect = false;
-			pg.editor.callback = null;
+			// pg.editor.callback = null;
 			if(pg.editor.selectionBox) pg.editor.selectionBox.destroy();
 		}
 	},
 	createHighlighter: function() {
-		pg.editor.selectionBox = new pg.SelectionBox();
+		pg.editor.selectionBox = new pg.SelectionBox(undefined, "#00ff00",undefined);
 	},
 	destroyHighlighter: function() {
 		if (pg.editor.selectionBox) {
@@ -66,7 +71,7 @@ pg.editor = {
 		pg.editor.hoveredElement_list = els;
 		pg.editor.selectionBox_list = [];
 		_.each(els, function(el) {
-			var sb = new pg.SelectionBox();
+			var sb = new pg.SelectionBox(undefined, "#00ff00",undefined);
 			sb.highlight(el);
 			pg.editor.selectionBox_list.push(sb);
 		});

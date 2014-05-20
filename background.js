@@ -80,6 +80,23 @@ function init() {
 			// 		chrome.tabs.update(tab.id, {selected: true});
 			// 	});
 			// }
+			if(request.action == "openTab") {
+				console.log(request.url + request.script);
+				chrome.tabs.create({url: request.url, active: false, pinned:true}, function(tab) {
+					chrome.tabs.executeScript(tab.id, request.script, function(){});
+				});
+			}
+			if(request.action == "findTab") {
+				console.log(request.url);
+				console.log(request.nodes)
+				chrome.tabs.query({url: request.url}, function(tabs) {
+					// chrome.tabs.executeScript(tab.id, request.script, function(){});
+					_.each(tabs, function(t) {
+						console.log(t);
+						chrome.tabs.sendMessage(t.id, {action:"executeNodes", nodes:request.nodes}, function(){});
+					});
+				});
+			}			
 			if(request.action == "shareElements") {
 				console.log(request.message);
 				chrome.tabs.query({active: false},function(tabs) {

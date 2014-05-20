@@ -41,7 +41,7 @@ pg.planner = {
 		return protos_copy;
 	},
 	get_all_operations: function() {
-		return _.map(pg.planner.operations.proto, function(proto) { return jsonClone(proto); });
+		return _.map(pg.planner.operations, function(op) { return jsonClone(op.proto); });
 	},
 	operations: {
 		get_attribute: {	// from elements, extract one of its attributes
@@ -78,9 +78,10 @@ pg.planner = {
 					});
 					if(matchingAttrFunc.length>0) {
 						var getter_function = jsonClone(this.proto);
-						getter_function.param.key = matchingAttrFunc[0].key;
+						getter_function.param.key = matchingAttrFunc[0].attr_key;
 						var _O = pg.Node.create(O);
 						_O.P= getter_function;
+						_O.I = [_O.I[0]];
 						return _O;
 					} else return false;
 				} catch(e) {
@@ -143,20 +144,21 @@ pg.planner = {
 				var _O = pg.Node.create(O);
 				if(!Is || !Is[0] || !isDomList(Is[0].V)) {
 					inputDOM = $.makeArray($(pg.body));
-					_O.I = ["",""];
+					_O.I = ["_pageLoad"];
 					_O.P = jsonClone(this.proto); 	
 				} else {
 					inputDOM = Is[0].V;
-					_O.I = [Is[0].ID,""];
+					_O.I = [Is[0].ID];
 					_O.P = jsonClone(this.proto); 	
 					_O.P.param.source = "_input1";
 				}
 				var n_extracted_el, n_filtered_el;
+				// when input contains output (general child search case)
 				if(inputDOM.length > 1) {
 					// n-to-n extraction
 					var paths = []; 
 					for(var i in O.V) {
-						paths.push(  $(inputDOM[i]).findQuerySelector([O.V[i]]));
+						if(O.V[i])	paths.push(  $(inputDOM[i]).findQuerySelector([O.V[i]]));
 					}
 					var commonPath = _.uniq(paths);	
 					if(commonPath.length==1) {	// if all the path are same, it's easy
@@ -193,7 +195,58 @@ pg.planner = {
 				return O;
 			}
 		},
-
+		extract_parent: {
+			proto: {
+				type:'extract_parent', 
+				param:{
+					'source':"_input1",
+					'step':1
+				},
+				description:"Get a specific n-step up parent in the DOM tree."
+			},
+			parameters: {
+				'source': {type:'text', label:"DOM to extract parent from", default:"_input1"},
+				'step': {type:'text', label:"Number of up-steps it goes (zero-base)", default:1}
+			},
+			pre: function(Is) {
+				try{
+					return isDomList(Is[0].V); 
+				} catch(e) {return false;}
+			},
+			generate: function(Is, O) {
+				try{
+					if(!Is[0] || !isDomList(Is[0].V)) return false;
+					if(!O || !O.V || !isDomList(O.V)) return false;
+					var step_up_list=[];
+					for(var i=0; i<O.V.length; i++) {
+						if(!Is[0].V || !Is[0].V[i] || !isDom(Is[0].V[i])) return false;
+						if(!$.contains(O.V[i], Is[0].V[i])) return false;
+						else { // now let's find step
+							var step_up = $(Is[0].V[i]).parents().index(O.V[i]);
+							if(step_up==-1) return false;
+							step_up_list.push(step_up);
+						}
+					}
+					if((_.unique(step_up_list)).length!=1) return false;
+					var _O = pg.Node.create(O);
+					_O.P = jsonClone(this.proto); 	
+					_O.P.param.step = (_.unique(step_up_list))[0];
+					return _O;
+				} catch(e) {return false;}
+			},
+			execute: function(O) {
+				var new_V = [];
+				var inputDOM;
+				if(O.P.param.source=="_input1") inputDOM = pg.panel.get_node_by_id(O.I[0], O).V;
+				else if(O.P.param.source=="_input2") inputDOM = pg.panel.get_node_by_id(O.I[1], O).V;
+				else  return O;
+				for(var i in inputDOM) {
+					new_V.push($(inputDOM[i]).parents()[parseInt(O.P.param.step)]);	
+				}
+				O.V = new_V;
+				return O;
+			}
+		},
 
 		attach_element: {
 			proto: {
@@ -228,16 +281,25 @@ pg.planner = {
 					var elements_to_attach = pg.panel.get_node_by_id(O.I[0],O).V;
 					var target_elements = pg.panel.get_node_by_id(O.I[1],O).V;
 					var el_single,ta_single;
-					if(elements_to_attach.length==1) el_single=elements_to_attach[0];
-					if(target_elements.length==1) ta_single=target_elements[0];
-					_.each(_.zip(elements_to_attach, target_elements), function(pair){
-						if(pair[0]==undefined && el_single==undefined) return false;
-						if(pair[1]==undefined && ta_single==undefined) return false;
-						var el= (pair[0]!==undefined)? pair[0]:el_single;
-						var ta= (pair[1]!==undefined)? pair[1]:ta_single;
-						$(ta).append(el);
-					});
-					O.V = elements_to_attach;
+					var new_V = [];
+					if(target_elements.length==1) {
+						_.each(elements_to_attach, function(e) { $(target_elements[0]).append(elements_to_attach[0]); });
+						new_V = elements_to_attach;
+					} else if(target_elements.length>1) {
+						if(elements_to_attach.length==1) {
+							_.each(target_elements, function(e_target) { 
+								var cloned_el = $(elements_to_attach[0]).clone().get(0);
+								$(e_target).append(cloned_el); 
+								new_V.push(cloned_el)
+							});
+						} else if(elements_to_attach.length>1) {
+							for(var i=0;i< Math.min(target_elements.length, elements_to_attach.length);i++) {
+								$(target_elements[i]).append(elements_to_attach[i]);
+								new_V.push($(elements_to_attach[i]).get(0));
+							}
+						} else return O; 
+					}  else return O;
+					O.V = new_V;
 				} catch(e) { console.log(e.stack);} 
 				return O;
 			}
@@ -338,7 +400,7 @@ pg.planner = {
 						else return false;
 					},this)[0];
 					if (!attr_func) return false;
-					_O.I=toArray(Is[0].ID, Is[1].ID);  _O.P=pg.panel.operations.set_attribute.proto; 
+					_O.I=toArray(Is[0].ID, Is[1].ID);  _O.P=pg.planner.operations.set_attribute.proto; 
 					_O.P.param.key = attr_func.attr_key;
 					return _O;	
 				}
@@ -360,7 +422,7 @@ pg.planner = {
 					
 					for(var i=0;i<I_target.length;i++) {
 						var j = i % I_new_value.length;
-						setter(I_target, I_new_value[j]);
+						setter(I_target[i], I_new_value[j]);
 					}
 					O.V = I_target;
 				} catch(e) { console.log(e.stack); }
@@ -372,7 +434,8 @@ pg.planner = {
 			// no generation, only executes
 			proto: {
 				type:'select_representative',
-				param:{}
+				param:{},
+				description:"Find largest non-overlapping parents of input elements."
 			},
 			parameters: {
 
@@ -381,9 +444,11 @@ pg.planner = {
 				return false;
 			},
 			generate: function(I,O) {
-				var _O = pg.Node.create(O);
-				if(!O || O.V==[]) {	_O.P = jsonClone(this.proto); return _O;	}
-				else {
+				if(O) {	
+					var _O = pg.Node.create(O);
+					_O.P = jsonClone(this.proto); 
+					return _O;	
+				} else {
 					return false;
 				}
 			},
@@ -421,7 +486,7 @@ pg.planner = {
 				if(!O || !O.I || !O.I[0]) return false;
 				var I = pg.panel.get_node_by_id(O.I[0],O);
 				if(!I.V) return false;
-				O.V = I.V.length;
+				O.V = $.makeArray(I.V.length);
 				return O;
 			}
 		},
@@ -615,13 +680,105 @@ pg.planner = {
 				return O;
 			}
 		},
+		// loadIFrame: {
+		// 	proto: {
+		// 		type:'loadIFrame',
+		// 		param:{source: "_input1"}
+		// 	},
+		// 	parameters: {
+		// 		source:{type:'text', label:"URL of the page to load (e.g. _current, _input1, _input2)", default:"_current"}
+		// 	},
+		// 	pre:function(Is) {
+		// 		try{
+		// 			return true;
+		// 			// return isStringList(Is[0].V);
+		// 		} catch(e) { console.log(e.stack); return false; }
+		// 	},
+		// 	generate: function(Is,O) {
+		// 		return false;
+		// 		// TBD. 
+		// 		// if(!O || O.V==[]) {	O.P = jsonClone(this.proto); return O;	}
+		// 	},
+		// 	execute: function(O) {
+
+		// 	}
+		// },
+
+
+		// findTab: {
+		// 	proto: {
+		// 		type:'findTab',
+		// 		param:{url:""}
+		// 	},
+		// 	parameters: {
+		// 		url:{type:'text', label:"URL of the tab to execute following nodes", default:""}
+		// 	},
+		// 	pre:function(Is) {
+		// 		return false;
+		// 	},
+		// 	generate: function(Is, O) {
+		// 		return false;
+		// 	},
+		// 	execute: function(O) {
+		// 		try{
+		// 			// creating a set of nodes for remote execution 
+		// 			// 1) page load trigger, 2) parameter literal nodes, and 3) the folowing nodes 
+		// 			var trigger_node, parameter_nodes, following_nodes;
+		// 			var trigger_node = pg.Node.create();
+		// 			trigger_node.P = jsonClone(pg.planner.operations.trigger.proto());
+		// 			parameter_nodes = _.map(O.I, function(oiid) {
+		// 				var original_input_node = pg.panel.get_node_by_id(oiid, O);
+		// 				var copied_input_node = pg.node.create(original_input_node);
+		// 				copied_input_node.I = trigger_node.ID;
+		// 			});
+		// 			var new_O = 
+		// 			following_nodes = pg.panel.get_reachable_nodes([O], false, true);
+		// 			_.each(following_nodes, function(n) { // connect O's next nodes to 
+
+		// 			});
+
+
+
+		// 		} catch(e){ console.log(e.stack); return false; } 
+		// 	}
+
+		// },
+		findTab: {
+			proto: {
+				type:'findTab',
+				param:{url:"_input1"}
+			},
+			parameters: {
+				url:{type:'text', label:"URL of the tab to find "}
+			},
+			pre:function(Is) {
+				return true;
+			},
+			generate: function(Is, O) {
+				return false;
+			},
+			execute: function(O) {
+				try{
+					// get follwoing nodes.
+					if(!O || !O.P || !O.P.param || !O.P.param.url) return O;
+					var url = O.P.param.url;
+					var followingNodes = pg.panel.get_reachable_nodes([O], false, false);
+					var informativeNodes = pg.panel.get_informative_nodes(followingNodes);
+					var nodes_to_inject_another_tab = _.union(followingNodes, informativeNodes);
+					var result = executeNodesAtRemoteTab(url,nodes_to_inject_another_tab);
+					console.log(result);					
+				} catch(e) { console.log(e.stack); }
+				return O;
+			}
+		},
 		loadPage: {
 			proto:{
 				type:'loadPage',
-				param:{source:"_current"}
+				param:{source:"_input1", mode:"iframe"}
 			},
 			parameters:{
-				source:{type:'text', label:"URL of the page to load (e.g. _current, _input1, _input2)", default:"_current"}
+				source:{type:'text', label:"URL of the page to load (e.g. _current, _input1, _input2)", default:"_input1"},
+				mode:{type:'text', label:"How to load page (e.g. xhttp, iframe, tab)", default:"iframe"}
 			},
 			pre:function(Is) {
 				try{
@@ -653,7 +810,7 @@ pg.planner = {
 							// run following tiles
 							var following_nodes = pg.panel.get_next_nodes(this.O);
 							pg.panel.run_triggered_nodes(following_nodes);
-						},{O:O}));
+						}, {O:O}), O.P.param.mode);
 						// pg.pageLoader.put(I.V, function() {
 						// 	// callback function to be triggered when loading is finished.
 						// });
@@ -948,15 +1105,22 @@ pg.planner = {
 			execute: function(O) {
 				var I_id = (_.isArray(O.I))?O.I[0]:O.I;
 				var I = pg.panel.get_node_by_id(I_id, O);
-				_.each(I.V, function(v) {  $(v).trigger("click"); });
+				_.each(I.V, function(v) {  
+					if($(v).attr('type') && $(v).attr('type')=='checkbox')  {  // if v is checkbox
+						if(!$(v).prop('checked')) $(v).attr('checked',true);
+						else $(v).attr('checked',false);
+					} else {
+						v.click(); 	
+					}
+				});
 				return O;
 			}			
 		},
-		type_text: {
+		keyboard: {
 			// when I[0] is input or textarea elements.  I[1] is text.  
 			// parameters are rounding / random / extend the last till the end. 
-			proto: {type:'type', param:{},
-					description:"Type text into input boxes."
+			proto: {type:'keyboard', param:{},
+					description:"Type keys of [text] into [inputBox]."
 			},
 			parameters: {
 				inputBox: {type:'text', label:"Input boxes to type into", default:"_input1"},
@@ -964,7 +1128,7 @@ pg.planner = {
 			},
 			pre:function(Is) {
 				if(Is.length==0 || !Is[0].V) return false;
-				if(isDomList(Is[0].V) && $(Is[0].V[0]).prop("tagName")=="INPUT") return true;
+				if(isDomList(Is[0].V) && ($(Is[0].V[0]).prop("tagName")=="INPUT" || $(Is[0].V[0]).prop("tagName")=="TEXTAREA")) return true;
 				return false;
 			},
 			generate: function(Is, O) {
@@ -976,13 +1140,20 @@ pg.planner = {
 			},
 			execute: function(O) {
 				try{
-					var I1 = pg.panel.get_node_by_id(O.I[0], O);
-					var I2 = pg.panel.get_node_by_id(O.I[1], O);
-					var min_length = Math.min(I1.V.length,I2.V.length);  
-					for(var i=0; i<min_length; i++) {
-						$(I1.V[i]).val(I2.V[i]);
-					}
-					O.V = I1.V;
+					// var input_el_list = get_parameter_value(O.P.param.inputBox, O);
+					// var text_list = get_parameter_value(O.P.param.text, O);
+					
+					// matchLists(text_list, input_el_list, function(txt,inp) {
+					// 	var e = $.Event("keydown");
+
+					// });
+
+					// var textToType = I1
+					// for(var char_idx=0;char_idx<)
+					// var e = $.Event("keydown");
+					// e.which = 
+
+					// O.V = I1.V;
 					return O;	
 				} catch(e) { console.log(e.stack);   return false; }
 			}				
@@ -1082,7 +1253,8 @@ pg.planner = {
 				if(!O || !O.V || !isValueList(O.V) || O.V.length==0) return false;
 				var _O = pg.Node.create(O);
 				_O.P = jsonClone(this.proto);
-				_O.P.param.value=JSON.stringify(O.V);
+				// _O.P.param.value=JSON.stringify(O.V);
+				_O.P.param.value=O.V;
 				return _O;	
 			},
 			execute: function(O) {
@@ -1403,11 +1575,11 @@ pg.planner = {
 						// find the words that may be filter criteria
 						// p_key_words = [];   n_key_words = [];	// p is words for string_contain case,  n is words for strong_not_contain
 						var valid_words_in = _.filter(bagOfWords, function(word) {
-							var result = _.map(_.first(input_list,item_length), function(item) {	return item.indexOf(word) != -1;	});
+							var result = _.map(_.first(input_list,item_length), function(item) {	return item.toLowerCase().indexOf(word.toLowerCase()) != -1;	});
 							return JSON.stringify(result)==JSON.stringify(_.first(O.V,item_length));
 						});
 						var valid_words_not_in = _.filter(bagOfWords, function(word) {
-							var result = _.map(_.first(input_list,item_length), function(item) {	return item.indexOf(word) == -1;	});
+							var result = _.map(_.first(input_list,item_length), function(item) {	return item.toLowerCase().indexOf(word.toLowerCase()) == -1;	});
 							return JSON.stringify(result)==JSON.stringify(_.first(O.V,item_length));
 						});
 						// p_key_words have higher-priority
@@ -1444,8 +1616,8 @@ pg.planner = {
 					}
 					O.V = _.map(str_list, function(str) {
 						for(var i in key_list) {
-							if(O.P.param.isIn=="in" && str.toString().indexOf(key_list[i])!=-1) return true;
-							if(O.P.param.isIn=="not in" && str.toString().indexOf(key_list[i])==-1) return true;
+							if(O.P.param.isIn=="in" && str.toString().toLowerCase().indexOf(key_list[i].toLowerCase())!=-1) return true;
+							if(O.P.param.isIn=="not in" && str.toString().toLowerCase().indexOf(key_list[i].toLowerCase())==-1) return true;
 							return false;	
 						}
 					});
@@ -1502,6 +1674,36 @@ pg.planner = {
 					// if filtering is unnecessary
 					var program_modify_element_attribute = pg.planner.tasks.modify_element_attribute.generate(n_original_el, n_modified_el);
 					return _.union(program_extract_original_elements,program_modify_element_attribute);	
+				}
+			}
+		},
+		find_path: {
+			pre: function(Is, O) {
+				if(Is.length==0  || !Is[0] || !Is[0].V || Is[0].V.length==0 || !isDomList(Is[0].V)) return false;
+				if(!O || !O.V || O.V.length==0 || !isDomList(O.V)) return false;
+				return true;
+			},
+			generate: function(Is, O) {
+				try {
+					// Is[0]-(select_representative)-> n_rep -(select_element)-> O
+					var rep_el = findRepElements(Is[0].V);
+					if(!rep_el || rep_el.length==0) return false;
+					
+					var n_rep = pg.Node.create({
+						'I':[Is[0].ID],
+						'V':rep_el
+					});
+					n_rep = pg.planner.operations.select_representative.generate(Is,n_rep); // fill parameters
+
+					var _O = pg.Node.create(O);	// copy O
+					_O.I = [n_rep.ID];
+					_O = pg.planner.operations.extract_element.generate([n_rep],_O); // fill parameter of extraction query
+					if(!_O) return false;
+					
+					return _.union(n_rep, _O);
+				} catch(e) {
+					console.log(e.stack);
+					return false;
 				}
 			}
 		},
@@ -1577,9 +1779,8 @@ pg.planner = {
 				}
 				return true;
 			},
-			helper_attribute_func: function(Is,O) {
+			helper_attribute_func: function(I,O) {
 				// find which attribute is modified and returns getter and setter functions
-				var I = Is[0];
 				return _.filter(pg.planner.attr_func_list, function(attr_func) {
 					var org_attr = _.map(I.V, attr_func['getter']);
 					var mod_attr = _.map(O.V, attr_func['getter']);
@@ -1589,6 +1790,8 @@ pg.planner = {
 			generate: function(Is, O) {
 				var I = Is[0];
 				var _O = pg.Node.create(O);
+
+				return false;
 				// retrieve the original page DOM 
 				// var backup_I = (pg.backup_page)? pg.backup_page: $("html").get(0);
 
@@ -1625,7 +1828,7 @@ pg.planner = {
 					} else return true;
 				});
 				if (mt_exist_in_rep_el) {	// if every modified-text text of single (consistent) element in rep_el, 
-					var program_extracting_text_from_rep = pg.planner.operations.extract_attribute.generate([n_rep_el], n_modified_attr);
+					var program_extracting_text_from_rep = pg.planner.tasks.extract_attribute.generate([n_rep_el], n_modified_attr);
 					_O = pg.planner.operations.set_attribute.generate([I,n_modified_attr], O);
 					// O = {I:[I, n_modified_attr], V:O.V, P:{type:"set_attribute",param:"text"}};
 					return _.union(n_rep_el, program_extracting_text_from_rep, _O);
@@ -2026,6 +2229,13 @@ pg.planner = {
 		}
 	},	// END OF METHODS //
 
+	attr_func : function(key) {
+		var matching_attr = _.filter(pg.planner.attr_func_list, function(attr) {
+			return attr.attr_key == key;
+		});
+		if(matching_attr.length>0) return matching_attr[0];
+		else return false;
+	},
 	attr_func_list : [
 		{	'attr_key': "text",
 			'getter': function(el) { return _.escape($(el).text());},

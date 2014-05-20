@@ -26,7 +26,7 @@ jQuery.fn.findQuerySelector = function(elements) {
 jQuery.fn.pathWithEverything = function(root) {
 	// if this(commonAncester) and root(I[0]) are same, then return ""
 	if($(this)[0]===$(root)[0]) return "";
-	return _.reduce($(this).parentsUntil(root), function(memo,p) {
+	return "> " + _.reduce($(this).parentsUntil(root), function(memo,p) {
 			return $(p).tagIdClassNth()+" > "+memo;
 	},$(this).tagIdClassNth());
 };
@@ -45,7 +45,7 @@ jQuery.fn.tagIdClassNth = function() {
 jQuery.fn.pathWithNth = function(root) {
 	// if this(commonAncester) and root(I[0]) are same, then return ""
 	if($(this)[0]===$(root)[0]) return "";
-	return _.reduce($(this).parentsUntil(root), function(memo,p) {
+	return "> " + _.reduce($(this).parentsUntil(root), function(memo,p) {
 			return $(p).tagNth()+" > "+memo;
 	},$(this).tagNth());
 };
@@ -799,6 +799,13 @@ function get_attr_dict(elements) {
 
 // }
 
+function getValueType(V) {
+	if(isDomList(V)) return "&lt;" + V[0].tagName + "&gt; elements";
+	if(isStringList(V)) return "string values";
+	if(isNumberList(V)) return "numbers";
+	if(isBooleanList(V)) return "boolean values";
+	return "unknowns";
+}
 
 function dom2jsonML(el) {
   	return JsonML.fromHTML(el);
@@ -816,8 +823,64 @@ function serialize_nodes(_nodes) {
 }
 
 
+function matchLists(l1, l2, func, option) {	// option:= (min_len|repeat|extend)
+	var real1, real2;
+	var result = [];
+	if(l1 && !_.isArray(l1)) real1 = [l1];
+	if(l2 && !_.isArray(l2)) real2 = [l2];
+	if(real1.length==0 || real2.length==0) return false;
+	if (real1.length==1) {
+		if (real2.length==1) {
+			result.push(func(l1[0],l2[0]));
+		} else {	
+			for(var i in l2) result.push(func(l1[0], l2[i]));
+		}
+	} else {
+		if (real2.length==1) {
+			for(var i in l1) result.push(func(l1[0], l2[i]));	
+		} else { // both are longer than 1
+			if (l1.length==l2.length) {
+				for(var i in l1) result.push(func(l1[i], l2[i]));	
+			} else {
+				if(option == "extend") {
+					var min_length = Math.min(l1.length, l2.length);
+					var max_length = Math.max(l1.length, l2.length);
+					for (var i=0; i<min_length; i++) result.push(func(l1[i],l2[i]));
+					if(l1.length<l2.length) 
+						for (var i=min_length; i<max_length; i++) result.push(func(l1[min_length-1],l2[i]));
+					else 
+						for (var i=min_length; i<max_length; i++) result.push(func(l1[i],l2[min_length-1]));
+				} else if(option=="repeat") {
+					var i1=0; var i2=0;
+					for(var i=0; i<Math.max(l1.length, l2.length);i++) {
+						result.push(func(l1[i1],l2[i2]));
+						i1 = (i1<l1.length-1)? i1+1: 0;
+						i2 = (i2<l2.length-1)? i2+1: 0; 
+					}
+				} else{  // option=="min_len" or undefined
+					var min_length = Math.min(l1.length, l2.length);
+					for (var i=0; i<min_length; i++) result.push(func(l1[i],l2[i]));
+				} 
+			}
+		}
+	}
+	return result;
+}
 
-
+function get_parameter_value(parameter, node) {
+	if(parameter.indexOf("_input")==-1) {
+		// parameter is string or number value
+		return parameter;
+	} else {
+		// parameter is node id
+		var param_number = parseInt(parameter.slice(6));
+		var param_node_id = node.I[param_number];
+		if(!param_node_id) return false;
+		var param_node = pg.panel.get_node_by_id(param_node_id, node);
+		if(param_node==false) return false;
+		else return param_node.V;
+	}
+}
 
 
 

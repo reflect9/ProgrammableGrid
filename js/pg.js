@@ -21,10 +21,10 @@ pg = {
 			pg.inspector.off();
 			return;
 		}
-		$("#pg").remove();
 		$("<div id='pg'></div>").appendTo(pg.body);
 		// this.new_script("untitled "+makeid());
-		this.load_script("_latest");
+		
+		// this.load_script("_latest");
 
 		// ATTACH EVENT HANDLERS
 		$(document).keydown(function (e) {
@@ -44,37 +44,40 @@ pg = {
 		pg.execute_script(pg.panel.nodes);
 		pg.panel.redraw();
 	},
-	new_script: function(title) {
-		pg.save_script(title);
+	new_script: function() {
+		var triggerNode = pg.Node.create({type:'trigger', P:pg.planner.get_prototype({type:"trigger"}), position:[1,0]});
+		var defaultNodes = [triggerNode];
+		var program = {nodes:defaultNodes, active:true};
+		var title = "Rothko-"+makeid();
+		pg.save_script(title, program);
 		pg.load_script(title);
 	},
-	save_script : function(title, program) {
+	save_script : function(title, _program) {
+		if(!_program) return false;
 		try {
 			var old_data = localStorage["prgr"];
 			if (old_data =="undefined" || old_data == "[object Object]" || old_data == "[]") old_data="{}";
-			programs = pg.parse(old_data);
+			program_dict = pg.parse(old_data);
 		} catch(e) {
-			programs = {};
+			program_dict = {};
 		}	
-		var p={};
-		var triggerNode = pg.Node.create({type:'trigger', P:pg.planner.get_prototype({type:"trigger"}), position:[1,0]});
-		var currentPageNode = pg.Node.create({type:'loadPage', P:pg.planner.get_prototype({type:"loadPage"}), position:[1,1]});
-		var defaultNodes = [triggerNode, currentPageNode];
-		if(program) {
-			p.nodes = typeof program.nodes !== 'undefined' ? program.nodes : defaultNodes;
-			p.timestamp = Date.now();
-			p.active = typeof program.active !== 'undefined' ? program.active : true;
-			p.domain = typeof program.domain !== 'undefined' ? program.domain : [document.URL];
-		} else {
-			p.nodes = defaultNodes;
-			p.timestamp = Date.now();
-			p.active = true;
-			p.domain = [document.URL];
-		}
-		programs[title] = p;
-		new_data = pg.serialize(programs);
+		// create program object to save
+		var program={};	
+		var clone_nodes = _.map(_program.nodes, function(n) { return pg.Node.create(n); });
+		program.nodes = typeof _program.nodes !== 'undefined' ? clone_nodes : [];
+		program.timestamp = Date.now();
+		program.active = typeof _program.active !== 'undefined' ? _program.active : true;
+		program.domain = typeof _program.domain !== 'undefined' ? _program.domain : [document.URL];
+		
+		program_dict[title] = program;
+		new_data = pg.serialize(program_dict);
 		localStorage.setItem("prgr",new_data);
-		return programs;
+		return program_dict;
+	},
+	load_json_script: function(json, _title) {
+		var title = (_title)?_title:"remote execution";
+		var nodes = JSON.parse(json);
+		pg.panel.init(title, nodes);
 	},
 	load_script : function(title) {
 		var programs = pg.load_all_scripts();
@@ -88,7 +91,7 @@ pg = {
 			}),false, undefined);
 			var latest = sortedPrograms[sortedPrograms.length-1]; 
 			if(!latest) {   
-				pg.new_script("Rothko-"+makeid());
+				pg.new_script();
 				return false;
 			}
 			pg.panel.init(latest[0], latest[1].nodes);

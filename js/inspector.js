@@ -6,43 +6,32 @@ pg.inspector = {
 	hoveredElement: null,
 	callback:null,
 	selectionBox_list:[],
-	toggle: function(callback) {
-		if(!pg.inspector.flag_inspect) {
-			pg.inspector.on(callback);
-		} else {
-			pg.inspector.off();
-		}
-	},
+	// toggle: function(callback) {
+	// 	if(!pg.inspector.flag_inspect) {
+	// 		pg.inspector.on(callback);
+	// 	} else {
+	// 		pg.inspector.off();
+	// 	}
+	// },
 	on : function(callback) {
-		if(!pg.inspector.flag_inspect) {
-			document.addEventListener('mousemove', pg.inspector.onMouseMove, true);
-			document.addEventListener('mouseover', pg.inspector.onMouseOver, true);
-			document.addEventListener('mousedown', pg.inspector.onMouseDown, true);
-			document.addEventListener('click', pg.inspector.onMouseClick, true);
-			// $(pg.widget.btn_inspect).addClass("btn-active");
-			pg.inspector.flag_inspect = true;
-			pg.inspector.selectionBox = new pg.SelectionBox();
-			pg.inspector.callback = callback;
-		} else {
-			pg.inspector.off();
-			pg.inspector.on(callback);
-		}
+		if(pg.inspector.flag_inspect) pg.inspector.off();
+		document.addEventListener('mousemove', pg.inspector.onMouseMove, true);
+		document.addEventListener('mouseover', pg.inspector.onMouseOver, true);
+		document.addEventListener('mousedown', pg.inspector.onMouseDown, true);
+		document.addEventListener('click', pg.inspector.onMouseClick, true);
+		pg.inspector.flag_inspect = true;
+		pg.inspector.selectionBox = new pg.SelectionBox();
+		pg.inspector.callback = callback;
 	},
-	off : function() {
-		if(pg.inspector.flag_inspect) {
-			document.removeEventListener('mousemove', this.onMouseMove, true);
-			document.removeEventListener('mouseover', this.onMouseOver, true);
-			document.removeEventListener('mousedown', this.onMouseDown, true);
-			document.removeEventListener('click', this.onMouseClick, true);
-			// $('body').off('mouseover');
-			// $('body').off('mouseout');
-			// $('body').off('click');
-			// $('body').off('mousedown');
-			// $(pg.widget.btn_inspect).removeClass("btn-active");
-			pg.inspector.flag_inspect = false;
-			pg.inspector.callback = null;
-			if(pg.inspector.selectionBox) pg.inspector.selectionBox.destroy();
-		}
+	off : function(callback) {
+		document.removeEventListener('mousemove', this.onMouseMove, true);
+		document.removeEventListener('mouseover', this.onMouseOver, true);
+		document.removeEventListener('mousedown', this.onMouseDown, true);
+		document.removeEventListener('click', this.onMouseClick, true);
+		if(callback) callback();
+		pg.inspector.flag_inspect = false;
+		pg.inspector.callback = null;
+		if(pg.inspector.selectionBox) pg.inspector.selectionBox.destroy();
 	},
 	createHighlighter: function() {
 		pg.inspector.selectionBox = new pg.SelectionBox();
@@ -103,7 +92,7 @@ pg.inspector = {
 		if (!pg.inspector.belongsToPallette(e.target)) {
 			e.preventDefault();
 			e.stopPropagation();
-			pg.inspector.callback(e.target);
+			pg.inspector.callback(e.target, {x:e.clientX, y:e.clientY});
 			// pg.panel.tool.pushValue(e.target);
 			return false;
 		}
@@ -123,6 +112,10 @@ pg.inspector = {
 		var parent = $el.closest('#pg');
 		if (parent.length !== 0)
 			return true;
+		parent = $el.closest('#pg_data_ui');
+		if (parent.length !== 0)
+			return true;
+
 		return false;
 	}
 };

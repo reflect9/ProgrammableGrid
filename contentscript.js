@@ -12,9 +12,29 @@ chrome.runtime.onMessage.addListener(
 		if(request.action === 'openGrid'){
 			// when browser button is clicked.
 			pg.init();
+			pg.load_script("_latest");
 		}
 		if(request.action === 'shareElements') {
 			if(request.message) pg.panel.editUI.paste_elements(request.message);
+		}
+		if(request.action === 'executeNodes') {
+			console.log("executeNodes");
+			console.log(request.nodes);
+			// pg.load_json_script(request.message.nodes_json);
+			pg.init();
+			pg.injected_nodes = request.nodes;
+			pg.panel.init("injected enhancement",pg.injected_nodes);
+			// pg.panel.redraw();
+
+			var findTab_nodes = _.filter(request.nodes, function(n) {
+				return n.P.type == 'findTab';
+			});
+			// _.each(findTab_nodes, function(n) {
+			// 	// convert findTab to trigger
+			// 	n.P = jsonClone(pg.planner.operations.trigger.proto);
+			// });
+			var triggered = _.uniq(_.flatten(_.map(findTab_nodes, function(t){ return pg.panel.get_next_nodes(t); })));
+			pg.panel.run_triggered_nodes(triggered, false);
 		}
 		if(request.action === 'shareNodes') {
 			if(request.message) pg.panel.commandUI.paste_nodes(request.message);
@@ -42,6 +62,18 @@ function reportOnLoad() {
 	});
 }
 
+function executeNodesAtRemoteTab(url, nodes) {
+	chrome.runtime.sendMessage({
+		action: "findTab",
+		url: url,
+		nodes: nodes
+	}, function(s) {
+		// callback
+		console.log(s);
+	});
+}
+
+
 // function storage(request,key,value) {
 // 	try{
 // 		if(request=="set") {
@@ -56,27 +88,27 @@ function reportOnLoad() {
 
 // }
 
-function openChildPage(url,targetColumnPosition) {
-	// new tab will be opened with a child widget. 
-	// targetColumnPosition is where the button is being clicked. 
-	// A child widget allows users to explore the HTML, create a set of operations to return a DOM or value
-	chrome.extension.sendRequest({
-		action: "openChildPage",
-		url: url,
-		targetColumnPosition: targetColumnPosition
-	}, function(responseText) {
-		console.log(responseText);
-	});
-}
-function returnSubProcedure(opList,masterTab,targetColumnPosition) {
-	// tell the masterTab to insert opList at its targetColumnPosition
-	chrome.extension.sendRequest({
-		action: "insertOperations",
-		opList: opList,
-		targetTab : masterTab,
-		targetColumnPosition: targetColumnPosition
-	}, function(responseText) {
-		console.log(responseText);
-	});
+// function openChildPage(url,targetColumnPosition) {
+// 	// new tab will be opened with a child widget. 
+// 	// targetColumnPosition is where the button is being clicked. 
+// 	// A child widget allows users to explore the HTML, create a set of operations to return a DOM or value
+// 	chrome.extension.sendRequest({
+// 		action: "openChildPage",
+// 		url: url,
+// 		targetColumnPosition: targetColumnPosition
+// 	}, function(responseText) {
+// 		console.log(responseText);
+// 	});
+// }
+// function returnSubProcedure(opList,masterTab,targetColumnPosition) {
+// 	// tell the masterTab to insert opList at its targetColumnPosition
+// 	chrome.extension.sendRequest({
+// 		action: "insertOperations",
+// 		opList: opList,
+// 		targetTab : masterTab,
+// 		targetColumnPosition: targetColumnPosition
+// 	}, function(responseText) {
+// 		console.log(responseText);
+// 	});
 
-}
+// }

@@ -12,14 +12,14 @@ pg.Node = {
 				executed: false
 			};
 		if(p) {
-			n.I = typeof p.I !== 'undefined' ? clone(p.I) : ['_left','_above'];
-			n.ID = typeof p.ID !== 'undefined' ? clone(p.ID) : makeid();
-			n.P = typeof p.P !== 'undefined' ? clone(p.P) : undefined;
-			n.V = typeof p.V !== 'undefined' ? p.V : [];
-			n.selected = typeof p.selected !== 'undefined' ? p.selected : false;
-			n.position = typeof p.position !== 'undefined' ? clone(p.position) : undefined;
-			n.type = typeof p.type !== 'undefined' ? clone(p.type) : undefined;
-			n.executed = typeof p.executed !== 'undefined' ? clone(p.executed) : undefined;
+			n.I = typeof p.I !== 'undefined' ? _.clone(p.I) : ['_left','_above'];
+			n.ID = typeof p.ID !== 'undefined' ? _.clone(p.ID) : makeid();
+			n.P = typeof p.P !== 'undefined' ? jsonClone(p.P) : undefined;
+			n.V = typeof p.V !== 'undefined' ? _.clone(p.V) : [];
+			n.selected = typeof p.selected !== 'undefined' ? _.clone(p.selected) : false;
+			n.position = typeof p.position !== 'undefined' ? _.clone(p.position) : undefined;
+			n.type = typeof p.type !== 'undefined' ? _.clone(p.type) : undefined;
+			n.executed = typeof p.executed !== 'undefined' ? _.clone(p.executed) : undefined;
 		}
 		return n;
 	},
@@ -61,24 +61,26 @@ pg.Node = {
 		// 		.css({position:'absolute', left:node_size/2-11, top:0}).appendTo(n);
 
 		// NODE HEAD: OPERATION
-		var n_head; var n_data;
+		var n_head_el; var n_data;
 		if(node_size<NODE_SIZE_MID) {
-			n_head = $(this.getNodeIcon(node,node_size)).appendTo(n); // show icon of tile type only
-		} else if (node_size<NODE_SIZE_HIGH) {
-			n_head = $("<div class='node-head'></div>").appendTo(n);
-			$(n_head).append(this.getNodeIcon(node,node_size));
+			n_head_el = $(this.getNodeIcon(node,node_size)).appendTo(n); // show icon of tile type only
+		} else if (node_size<NODE_SIZE_HIGH) {  // MID
+			n_head_el = $("<div class='node-head'></div>").appendTo(n);
+			$(n_head_el).append(this.getNodeIcon(node,node_size));
 			if(node.P!==undefined)
-				$(n_head).append("<div class='node-type'>"+node.P.type.toUpperCase().replace("_","<br>")+"</div>");
+				$(n_head_el).append("<div class='node-type'>"+node.P.type.toUpperCase().replace("_","<br>")+"</div>");
 			n_data = $("<div class='node-values-mid'></div>")
 				.append(this.getNodeValueTable(node,node_size))
 				.appendTo(n);
-		} else {
-			n_head = $("<div class='node-head'></div>").appendTo(n);
-			$(n_head).append(this.getNodeIcon(node,node_size));
-			if(node.P!==undefined) {
-				$(n_head).append("<div class='node-type'>"+node.P.type.toUpperCase().replace("_","<br>")+"</div>");
-				// $(n_head).append("<div class='node-description-high'>"+node.P.description+"</div>");  
-			}
+		} else {	// HIGH.  FULL_ZOOM
+			n_head_el = $("<div class='node-head'></div>").appendTo(n);
+			pg.panel.commandUI.makeOperationInfo(node, n_head_el);
+			// $(n_head_el).append(this.getNodeIcon(node,node_size));
+			// if(node.P!==undefined) {
+			// 	$(n_head_el).append("<div class='node-type'>"+node.P.type.toUpperCase()+"</div>");
+			// 	$(n_head_el).append("<div class='node-description-high'>"+node.P.description+"</div>");  
+			// }
+
 			// full description
 			n_data = $("<div class='node-values-high'></div>")
 					.append(this.getNodeValueTable(node,node_size))
@@ -132,26 +134,33 @@ pg.Node = {
 		}
 		// TILE_TYPES = ['Trigger','Page','Element','Variable','Operation'];
 		/* icon for tile types */
-		var png_name= "glyphicons_153_unchecked";
-		if(node.P == undefined) {
-			 //
-		} else if(node.P.type=='extract_element' || node.P.type=='select_representative') {
-			png_name= "glyphicons_377_riflescope";
-		} else if(node.P.type=='get_attribute') {
-			png_name= "glyphicons_027_search";
-		} else if(node.P.type=='create') {
-			png_name= "glyphicons_009_magic";
-		} else if(node.P.type=='substring' || node.P.type=='compose_text') {
-			png_name= "glyphicons_164_iphone_transfer";
-		} else if(node.P.type=='set_attribute') {
-			png_name= "glyphicons_280_settings";
-		} else if(node.P.type=='call') {
-			png_name= "glyphicons_205_electricity";
-		} else if(node.P.type=='loadPage') {
-			png_name= "glyphicons_371_global";
+		// var png_name= "glyphicons_153_unchecked";
+		// if(node.P == undefined) {
+		// 	 //
+		// } else if(node.P.type=='extract_element' || node.P.type=='select_representative') {
+		// 	png_name= "glyphicons_377_riflescope";
+		// } else if(node.P.type=='get_attribute') {
+		// 	png_name= "glyphicons_027_search";
+		// } else if(node.P.type=='create') {
+		// 	png_name= "glyphicons_009_magic";
+		// } else if(node.P.type=='substring' || node.P.type=='compose_text') {
+		// 	png_name= "glyphicons_164_iphone_transfer";
+		// } else if(node.P.type=='set_attribute') {
+		// 	png_name= "glyphicons_280_settings";
+		// } else if(node.P.type=='call') {
+		// 	png_name= "glyphicons_205_electricity";
+		// } else if(node.P.type=='loadPage') {
+		// 	png_name= "glyphicons_371_global";
+		// }
+
+		if(node.P == undefined) { 
+			$(icon).attr("operation","unknown");
+		} else {
+			$(icon).attr("operation",node.P.type);
 		}
-		var url = chrome.extension.getURL("js/lib/glyphicons/"+ png_name + ".png");
-		$(icon).css('background-image', 'url('+ url + ')');
+		
+		// var url = chrome.extension.getURL("js/lib/glyphicons/"+ png_name + ".png");
+		// $(icon).css('background-image', 'url('+ url + ')');
 		
 		// var clickEventHandler = $.proxy(function() {
 			// var nodes = pg.panel.infer(this);

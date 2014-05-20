@@ -156,7 +156,11 @@ pg.panel = {
 		// place new_nodes
 		for(var ni=0; ni<new_nodes.length;ni++) {
 			var nd = new_nodes[ni]; 	
-			nd.position=[target_position[0], target_position[1]+ni]; 
+			if(nd.position) {
+				nd.position=[nd.position[0], nd.position[1]]; 	
+			} else {
+				nd.position=[target_position[0], target_position[1]+ni]; 	
+			}
 			pg.panel.nodes.push(nd);
 		}
 		_.each(new_nodes, function(nd) {
@@ -175,7 +179,111 @@ pg.panel = {
 			});
 		});
 		pg.panel.redraw();
-		
+
+	},
+
+	copy_node_with_literal: function(_node) {
+		var node = (_node)? _node: pg.panel.get_selected_nodes()[0];
+		var literal_P = jsonClone(pg.planner.operations.literal.proto);
+		var newNode = pg.Node.create({type:"literal", I:[node.ID], P:literal_P, V:node.V, position:clone(node.position)});
+		var candDiff = [[1,0],[-1,0],[0,1],[0,-1]];
+		for(var i in candDiff) {
+			var newPos = [newNode.position[0]+candDiff[i][0],newNode.position[1]+candDiff[i][1]];
+			if(pg.panel.get_node_by_position(newPos)==false) {
+				newNode.position = newPos;
+				pg.panel.nodes.push(newNode);
+				pg.panel.redraw();
+				return;
+			}
+		}
+		alert("To copy a node, the node must have an empty neighbor tile.");
+	},	
+	duplicate_node: function(_node){
+		// find empty spaces nearby
+		var node = (_node)? _node: pg.panel.get_selected_nodes()[0];
+		var newNode = pg.Node.duplicate(node);
+		var candDiff = [[1,0],[-1,0],[0,1],[0,-1]];
+		for(var i in candDiff) {
+			var newPos = [newNode.position[0]+candDiff[i][0],newNode.position[1]+candDiff[i][1]];
+			if(pg.panel.get_node_by_position(newPos)==false) {
+				newNode.position = newPos;
+				pg.panel.nodes.push(newNode);
+				pg.panel.redraw();
+				return;
+			}
+		}
+		alert("To duplicate a node, the node must have an empty neighbor tile.");
+	},
+	share_node_across_tabs: function(_node_list) {
+		var node_list = (_node_list)? _node_list: pg.panel.get_selected_nodes();
+		var jsonList = serialize_nodes(node_list);
+		chrome.runtime.sendMessage({
+			action:"shareNodes", 
+			message: { 
+				'jsonList': jsonList,
+				'href': window.location.href
+			} 
+		});
+	},
+	copy_script: function() {
+		// store current script at the background page
+		pg.panel.copy_nodes(pg.panel.nodes);
+	},
+	paste_script: function() {
+		// ask background script for script
+		chrome.runtime.sendMessage({
+			action:"paste_nodes"
+		},function(response) { // deal with nodes
+			pg.panel.fetch_json_nodes(response);
+		});
+	},
+	copy_nodes: function(_node_list) {
+		if(!_node_list) return false;
+		var jsonList = serialize_nodes(_node_list);
+		chrome.runtime.sendMessage({
+			action:"copy_nodes",
+			message: {
+				'jsonList': jsonList,
+				'href': window.location.href 
+			}
+		});
+	},
+	fetch_json_nodes: function(message) {
+		console.log(message);
+		if(!message) return;
+		var node_list = _.map(message.jsonList, function(json_node) {
+			var node = JSON.parse(json_node);
+			node.V = _.map(node.V, function(v) {
+				if(_.isArray(v) && _.isString(v[0])) { // v is jsonML 
+					return jsonML2dom(v);
+				} else return v;
+			});
+			return node;
+		});
+		pg.panel.insert(node_list);
+	},
+
+	share_elements: function(els) {
+		var jsonList = _.map(els, function(el) { return dom2jsonML(el); });
+		console.log("copied:" + jsonList);
+		chrome.runtime.sendMessage({
+			action:"shareElements", 
+			message: { 
+				'jsonList': jsonList,
+				'href': window.location.href
+			} 
+		});
+	},
+	paste_elements: function(message) {
+		console.log(message);
+		if(!message) return;
+		// var el_list = _.map(message.jsonList, function(json) {
+		// 	return jsonML2dom(json);
+		// });
+		var node = pg.Node.create();
+		node.type="literal_element";
+		node.P = pg.planner.get_prototype({type:'literal_element', param:{jsonML:message.jsonList}});
+		pg.panel.insert([node]);
 	},
 	// get_left_node:function(node) {
 	// 	try{
@@ -374,6 +482,11 @@ pg.panel = {
 		// if(!solution_nodes || solution_nodes==[]) alert("no solution found");
 		// return solution_nodes;
 	},
+
+
+
+
+
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//  view methods
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -414,6 +527,17 @@ pg.panel = {
 			}
 		}
 	},
+
+
+
+
+
+
+
+
+
+
+
 	dataUI: {
 		create: function(el, pos) {
 			pg.panel.dataUI.remove();
@@ -451,7 +575,7 @@ pg.panel = {
 				pg.panel.commandUI.addData(this.el);
 			},{el:el})).appendTo(tools_el);
 			$("<button>Send to other tabs</button>").click($.proxy(function() {
-				pg.panel.editUI.share_elements(this.el);
+				pg.panel.share_elements(this.el);
 			},{el:el})).appendTo(tools_el);
 			
 
@@ -558,7 +682,7 @@ pg.panel = {
 				pg.panel.editUI.toggle_select("off");
 			});
 			$(ui_el).find(".copy_button").click(function() {
-				pg.panel.editUI.share_elements(pg.panel.selected_elements);
+				pg.panel.share_elements(pg.panel.selected_elements);
 				pg.panel.editUI.deselect_elements();
 				pg.panel.editUI.toggle_select("off");
 			});
@@ -613,28 +737,7 @@ pg.panel = {
 			}
 			pg.panel.redraw();
 		},
-		share_elements: function(els) {
-			var jsonList = _.map(els, function(el) { return dom2jsonML(el); });
-			console.log("copied:" + jsonList);
-			chrome.runtime.sendMessage({
-				action:"shareElements", 
-				message: { 
-					'jsonList': jsonList,
-					'href': window.location.href
-				} 
-			});
-		},
-		paste_elements: function(message) {
-			console.log(message);
-			if(!message) return;
-			// var el_list = _.map(message.jsonList, function(json) {
-			// 	return jsonML2dom(json);
-			// });
-			var node = pg.Node.create();
-			node.type="literal_element";
-			node.P = pg.planner.get_prototype({type:'literal_element', param:{jsonML:message.jsonList}});
-			pg.panel.insert([node]);
-		},
+		
 		updateInspector: function(els, target_ul) {
 			$(target_ul).empty();
 			var attr_dict = get_attr_dict(els);
@@ -711,13 +814,13 @@ pg.panel = {
 			// $("<button>Delete node</button>").click(function(e){pg.panel.delete(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
 			// $("<button>Clear data</button>").click(function(e){pg.panel.empty(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
 			$(ui_el).find(".duplicate_button").click(function() {
-				pg.panel.commandUI.duplicate_node();
+				pg.panel.duplicate_node();
 			});
 			$(ui_el).find(".copy_button").click(function() {
-				pg.panel.commandUI.copy_node_with_literal();
+				pg.panel.copy_node_with_literal();
 			});
 			$(ui_el).find(".share_button").click(function() {
-				pg.panel.commandUI.share_node_across_tabs();
+				pg.panel.share_node_across_tabs();
 			});
 			$(ui_el).find(".insert_left_button").click(function() {
 				var node = pg.panel.get_selected_nodes()[0];
@@ -786,63 +889,7 @@ pg.panel = {
 				}
 			});
 		},
-		copy_node_with_literal: function(_node) {
-			var node = (_node)? _node: pg.panel.get_selected_nodes()[0];
-			var literal_P = jsonClone(pg.planner.operations.literal.proto);
-			var newNode = pg.Node.create({type:"literal", I:[node.ID], P:literal_P, V:node.V, position:clone(node.position)});
-			var candDiff = [[1,0],[-1,0],[0,1],[0,-1]];
-			for(var i in candDiff) {
-				var newPos = [newNode.position[0]+candDiff[i][0],newNode.position[1]+candDiff[i][1]];
-				if(pg.panel.get_node_by_position(newPos)==false) {
-					newNode.position = newPos;
-					pg.panel.nodes.push(newNode);
-					pg.panel.redraw();
-					return;
-				}
-			}
-			alert("To copy a node, the node must have an empty neighbor tile.");
-		},	
-		duplicate_node: function(_node){
-			// find empty spaces nearby
-			var node = (_node)? _node: pg.panel.get_selected_nodes()[0];
-			var newNode = pg.Node.duplicate(node);
-			var candDiff = [[1,0],[-1,0],[0,1],[0,-1]];
-			for(var i in candDiff) {
-				var newPos = [newNode.position[0]+candDiff[i][0],newNode.position[1]+candDiff[i][1]];
-				if(pg.panel.get_node_by_position(newPos)==false) {
-					newNode.position = newPos;
-					pg.panel.nodes.push(newNode);
-					pg.panel.redraw();
-					return;
-				}
-			}
-			alert("To duplicate a node, the node must have an empty neighbor tile.");
-		},
-		share_node_across_tabs: function(_node_list) {
-			var node_list = (_node_list)? _node_list: pg.panel.get_selected_nodes();
-			var jsonList = serialize_nodes(node_list);
-			chrome.runtime.sendMessage({
-				action:"shareNodes", 
-				message: { 
-					'jsonList': jsonList,
-					'href': window.location.href
-				} 
-			});
-		},
-		paste_nodes: function(message) {
-			console.log(message);
-			if(!message) return;
-			var node_list = _.map(message.jsonList, function(json_node) {
-				var node = JSON.parse(json_node);
-				node.V = _.map(node.V, function(v) {
-					if(_.isArray(v) && _.isString(v[0])) { // v is jsonML 
-						return jsonML2dom(v);
-					} else return v;
-				});
-				return node;
-			});
-			pg.panel.insert(node_list);
-		},
+		
 		redraw: function() {
 			var node = pg.panel.get_selected_nodes()[0];
 			var Is = _.without(_.map(node.I, function(input_id) {
@@ -1141,6 +1188,9 @@ pg.panel = {
 					<button class='zoom_button' id='zoom_to_mid'  node_size=150>medium</button>\
 					<button class='zoom_button' id='zoom_to_high' node_size=300>large</button>\
 					<button class='zoom_button' id='zoom_to_high' node_size='showAll'>show all</button>\
+					<label>&nbsp;SCRIPT:</label>\
+					<button class='button_copy_script' id='button_copy_script'>copy</button>\
+					<button class='button_paste_script' id='button_paste_script'>paste</button>\
 				</div>\
 			");
 			$(ui_el).find(".pg_title").text(pg.panel.title);
@@ -1191,9 +1241,15 @@ pg.panel = {
 			$(ui_el).find('button.zoom_button').click(function() {
 				pg.panel.zoom($(this).attr('node_size'));
 			});
-			$(ui_el).find("#delete_node").click(function() {
-				pg.panel.delete("selected_node");
-				pg.panel.redraw();
+			// $(ui_el).find("#delete_node").click(function() {
+			// 	pg.panel.delete("selected_node");
+			// 	pg.panel.redraw();
+			// });
+			$(ui_el).find("#button_copy_script").click(function() {
+				pg.panel.copy_script();
+			});
+			$(ui_el).find("#button_paste_script").click(function() {
+				pg.panel.paste_script();
 			});
 			$("#pg > #pg_panel").append(ui_el);
 		}

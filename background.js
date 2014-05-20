@@ -2,6 +2,7 @@
 // shared wg.program 
 var program = null;
 var tabs = {};
+var node_clipboard = null;
 
 window.addEventListener('load', function() {
 	init();
@@ -43,43 +44,6 @@ function init() {
 				xhttp.open(method, request.url, true);
 				xhttp.send(request.data);
 			} // end of cross domain loading
-	// 		// checks whether the loaded tab is a child tab. If true, then openWorksheet 
-	// 		// and create 'save and exit' button to return the sub procedure.
-	// 		if(request.action == "reportOnLoad") {
-	// 			console.log("New Tab Loaded---------");
-	// 			console.log(request);
-	// 			console.log(sender);
-	// 			console.log("-------- New Tab Loaded");
-	// 			// var activeHosts = _.map(tabs, function(t) { return t.host; });
-	// 			if(tabs[sender.tab.id]) {
-	// 				var options = {};
-	// 				// let wg to open worksheet with predefined program(null mostly) and 
-	// 				// tab info that contains the tab's role and the master tab
-	// 				callback({action:"openGrid",program:null, tab:tabs[sender.tab.id]});
-	// 			}
-	// 		}
-	// 		// 
-	// 		if(request.action == "openChildPage") {
-	// 			chrome.tabs.create({'url': request.url, active:true, index:sender.tab.index+1}, function(tab) {
-	// 				tabs[tab.id] = {
-	// 					host : $.url(tab.url).attr('host'),	// domain url
-	// 					role : "child",	// 'master' or 'child'
-	// 					from : sender.tab,		// a tab object that the tab is opened from
-	// 					targetColumnPosition : request.targetColumnPosition
-	// 				};
-	// 				//chrome.tabs.sendMessage(tab.id, {action: "openWorksheet", program:program },function() {});
-	// 			});
-	// 		}
-	// 		// called when childPage returns subprocedure(a list of operations)
-			// if(request.action == "insertOperations") {
-			// 	if(!request.targetTab) console.error("targetTab is undefined");
-			// 	if(!request.targetColumnPosition) console.error("targetPosition is undefined");
-			// 	chrome.tabs.get(request.targetTab.id, function(tab) {
-			// 		// call insertOperation function of 
-			// 		chrome.tabs.sendMessage(tab.id, {action:"insertOperations", pos:request.targetColumnPosition, opList:request.opList}, function() {});
-			// 		chrome.tabs.update(tab.id, {selected: true});
-			// 	});
-			// }
 			if(request.action == "openTab") {
 				console.log(request.url + request.script);
 				chrome.tabs.create({url: request.url, active: false, pinned:true}, function(tab) {
@@ -113,7 +77,18 @@ function init() {
 					});
 				});
 			}
-			
+			if(request.action == "copy_nodes") {
+				console.log(request.message);
+				// store jsonList data
+				node_clipboard = request.message.jsonList;
+			}
+			if(request.action == "paste_nodes") { 
+				console.log(request.message);
+				// if there's copied script data, send it back with callback function 
+				if(node_clipboard) {
+					sendResponse({jsonList:node_clipboard});	
+				}
+			}
 
 		}
 	);

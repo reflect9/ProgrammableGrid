@@ -435,7 +435,7 @@ pg.planner = {
 			proto: {
 				type:'select_representative',
 				param:{},
-				description:"Find largest non-overlapping parents of input elements."
+				description:"Find largest non-overlapping parents of input."
 			},
 			parameters: {
 
@@ -444,13 +444,17 @@ pg.planner = {
 				return false;
 			},
 			generate: function(I,O) {
-				if(O) {	
-					var _O = pg.Node.create(O);
-					_O.P = jsonClone(this.proto); 
-					return _O;	
-				} else {
-					return false;
-				}
+				return false;	// DEPRECATED :  use extract_parent
+				// if(!Is || !Is[0] || !Is[0].V || !isDomList([0].V)) return false;
+				// if(!O || !O.V || O.V.length==0 || !isDomList(O.V)) return false;
+				// if(O.V[0] != Is[0].V.length) return false;
+				// if(O) {	
+				// 	var _O = pg.Node.create(O);
+				// 	_O.P = jsonClone(this.proto); 
+				// 	return _O;	
+				// } else {
+				// 	return false;
+				// }
 			},
 			execute: function(O) {
 				var I_id = (_.isArray(O.I))?O.I[0]:O.I;
@@ -1693,7 +1697,7 @@ pg.planner = {
 						'I':[Is[0].ID],
 						'V':rep_el
 					});
-					n_rep = pg.planner.operations.select_representative.generate(Is,n_rep); // fill parameters
+					n_rep = pg.planner.operations.extract_parent.generate(Is,n_rep); // fill parameters
 
 					var _O = pg.Node.create(O);	// copy O
 					_O.I = [n_rep.ID];

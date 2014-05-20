@@ -15,7 +15,7 @@ chrome.runtime.onMessage.addListener(
 			pg.load_script("_latest");
 		}
 		if(request.action === 'shareElements') {
-			if(request.message) pg.panel.editUI.paste_elements(request.message);
+			if(request.message) pg.panel.paste_elements(request.message);
 		}
 		if(request.action === 'executeNodes') {
 			console.log("executeNodes");
@@ -37,7 +37,7 @@ chrome.runtime.onMessage.addListener(
 			pg.panel.run_triggered_nodes(triggered, false);
 		}
 		if(request.action === 'shareNodes') {
-			if(request.message) pg.panel.commandUI.paste_nodes(request.message);
+			if(request.message) pg.panel.fetch_json_nodes(request.message);
 		}
 		if(request.action === 'handleHTML') {
 			// console.log(request.message);

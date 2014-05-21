@@ -782,7 +782,7 @@ pg.planner = {
 			},
 			parameters:{
 				source:{type:'text', label:"URL of the page to load (e.g. _current, _input1, _input2)", default:"_input1"},
-				mode:{type:'text', label:"How to load page (e.g. xhttp, iframe, tab)", default:"iframe"}
+				mode:{type:'text', label:"How to load page (e.g. xhttp, iframe, tab)", default:"xhttp"}
 			},
 			pre:function(Is) {
 				try{

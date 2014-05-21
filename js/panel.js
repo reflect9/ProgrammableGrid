@@ -575,7 +575,7 @@ pg.panel = {
 				pg.panel.commandUI.addData(this.el);
 			},{el:el})).appendTo(tools_el);
 			$("<button>Send to other tabs</button>").click($.proxy(function() {
-				pg.panel.share_elements(this.el);
+				pg.panel.share_elements([this.el]);
 			},{el:el})).appendTo(tools_el);
 			
 
@@ -955,7 +955,7 @@ pg.panel = {
 								$("div.node").removeClass("input_node_hover");
 							}
 						);
-						var n_values_in_the_input = $("<div style='margin-left:13px;margin-top:3px;'><label>"+inputNode.V.length+" "+getValueType(inputNode.V)+"</label></div>");
+						var n_values_in_the_input = $("<div style='margin-top:3px;'><label>"+inputNode.V.length+" "+getValueType(inputNode.V)+"</label></div>");
 						var data_ul = $("<ul class='data_ul'></ul>").appendTo(n_values_in_the_input);
 						$(n_values_in_the_input).find("label").click($.proxy(function() {
 							if($(this.data_ul).html()=="") pg.panel.commandUI.makeDataTable(this.inputNode.V, this.data_ul, true);		
@@ -963,7 +963,7 @@ pg.panel = {
 						},{inputNode:inputNode, data_ul:data_ul}));
 						$(inputNode_el).find(".input_node_data_container").append(n_values_in_the_input);
 					} else {
-						$(inputNode_el).find(".input_node_data_container").append("<div style='margin-left:13px;margin-top:3px;'>empty</div>");
+						$(inputNode_el).find(".input_node_data_container").append("<div style='margin-top:3px;'>empty</div>");
 					}
 					$(input_container).append(inputNode_el);
 				} catch(e) {	console.error(e.stack); 	continue;	}
@@ -1069,24 +1069,24 @@ pg.panel = {
 		makeDataTable: function(V, target_ul, isReadOnly) {
 			var isInputData = ($(target_ul).parents(".input_data").length>0)? true: false;
 			$(target_ul).empty();
-			if(!isReadOnly && V.length==0) {
-				var html = "<div class='data_table_instruction_container'>\
-								<div class='dt_inst'>\
-									The node data is empty.<br> You can either<br>\
-									<button class='extract_button'>Extract from page</button>\
-									<div style='width:100%; text-align:center'>or</div>\
-									<input class='input_type_data' placeholder='Type data here'></input>\
-								</div>\
-							</div>";
-				var datable_el = $(html).appendTo(target_ul);
-				$(datable_el).find("input.input_type_data").change(function() {
-					pg.panel.commandUI.addData($(this).val());
-					$(this).val("");
-					$("#pg_command_ui").find(".new_data_input").focus();
-				});
-				$(datable_el).find("button.extract_button").click(function(){ pg.panel.commandUI.toggleExtract(); });
-				$("#pg_command_ui").find(".output_data_buttons").hide();
-			} else {	// node has some data to display
+			// if(!isReadOnly && V.length==0) {
+			// 	var html = "<div class='data_table_instruction_container'>\
+			// 					<div class='dt_inst'>\
+			// 						The node data is empty.<br> You can either<br>\
+			// 						<button class='extract_button'>Extract from page</button>\
+			// 						<div style='width:100%; text-align:center'>or</div>\
+			// 						<input class='input_type_data' placeholder='Type data here'></input>\
+			// 					</div>\
+			// 				</div>";
+			// 	var datable_el = $(html).appendTo(target_ul);
+			// 	$(datable_el).find("input.input_type_data").change(function() {
+			// 		pg.panel.commandUI.addData($(this).val());
+			// 		$(this).val("");
+			// 		$("#pg_command_ui").find(".new_data_input").focus();
+			// 	});
+			// 	$(datable_el).find("button.extract_button").click(function(){ pg.panel.commandUI.toggleExtract(); });
+			// 	$("#pg_command_ui").find(".output_data_buttons").hide();
+			// } else {	// node has some data to display
 				for(i in V) {
 					var v = V[i]; 	var idx_to_show = parseInt(i)+1;
 					var entryEl = $("<li data_index='"+i+"'><label class='data_label'>"+idx_to_show+"</label></li>"); 
@@ -1124,7 +1124,7 @@ pg.panel = {
 					$(target_ul).append(entryEl);
 				}
 				$("#pg_command_ui").find(".output_data_buttons").show();
-			}
+			// }
 		},
 		addData: function(val, targetNode) {
 			var node = pg.panel.get_selected_nodes()[0];

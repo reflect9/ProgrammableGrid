@@ -778,7 +778,7 @@ pg.planner = {
 		loadPage: {
 			proto:{
 				type:'loadPage',
-				param:{source:"_input1", mode:"iframe"}
+				param:{source:"_input1", mode:"xhttp"}
 			},
 			parameters:{
 				source:{type:'text', label:"URL of the page to load (e.g. _current, _input1, _input2)", default:"_input1"},
@@ -1196,11 +1196,11 @@ pg.planner = {
 			// without any condition, it triggers the next tile or connected tiles.  
 			proto: {	
 				type:'trigger', 
-				param:{event_source: "page"},
+				param:{event_source: "_input1"},
 				description:"Trigger the following or connected tiles when the predefined event occurs."
 			},
 			parameters: {
-				event_source: {type:'text', label:'Event source (e.g. page, _input1)', default:"page"},
+				event_source: {type:'text', label:'Event source (e.g. page, _input1)', default:"_input1"},
 			},
 			pre:function(Is) {
 				return true;
@@ -1230,7 +1230,12 @@ pg.planner = {
 							console.log(this.O.ID);
 							this.O.V = [this.el];
 							var following_nodes = pg.panel.get_next_nodes(this.O);
-							pg.panel.run_triggered_nodes(following_nodes);
+							if(following_nodes && following_nodes.length>0) {
+								pg.panel.run_triggered_nodes(following_nodes);
+							} else {
+								pg.panel.redraw();
+							}
+
 						},{O:O, el:el}));
 					});
 				}
@@ -1930,6 +1935,25 @@ pg.planner = {
 		// 	}
 		// },
 		
+		filter_object: { 
+			// 
+			pre: function(Is, O) {
+				try{
+					if(!Is || Is.length==0 || !Is[0].V || Is[0].V.length==0) return false;
+					if(!O || !O.V || O.V.length==0) return false;	
+					var IV = _.clone(Is[0].V);
+					for(var i in O.V) {
+						var idx = IV.indexOf(O.V[i]);
+						if(idx==-1) return false;
+						else IV.splice(idx,1);
+					}
+					return true;
+				} catch(e) { console.log(e.stack); return false; }
+			},
+			generate: function(Is, O) {
+				return false;
+			}
+		},
 
 		filter_element: {
 			pre: function(Is, O) {
@@ -2023,21 +2047,6 @@ pg.planner = {
 				// }
 				
 				
-			},
-			execute: function(O) {
-				if (O.P.type !== "filter_element") return false;
-				var n_original_els = pg.panel.get_node_by_id(O.I[0], O);
-				var n_extracted_keys = pg.panel.get_node_by_id(O.I[1], O);
-				var temp_node = {I:toArray(n_extracted_keys.ID), V:[], P:pg.planner.get_prototype({type:'filter', param: O.P.param})};
-				var booleans = pg.planner.tasks.filter.execute_helper(temp_node);
-				var filtered = []
-				for (var i = 0; i < booleans.length; i++) {
-					if (booleans[i]) {
-						filtered.push(n_original_els.V[i]);
-					}
-				}
-				O.V = filtered;
-				return O;
 			}
 		},
 

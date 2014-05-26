@@ -49,6 +49,10 @@ pg.Node = {
 		var html = "<div class='node' id='"+node.ID+"'>\
 			<div class='node_cover'></div>\
 			<div class='node_content'></div>\
+			<div class='node_borders'>\
+				<div class='above'></div><div class='below'></div>\
+				<div class='left'></div><div class='right'></div>\
+			</div>\
 			<div class='node_bg'></div>\
 		</div>";
 		var n = $(html);
@@ -98,6 +102,12 @@ pg.Node = {
 				pg.inspector.unhighlight_list();
 			});
 		}
+		_.each(node.I, function(input) {
+			if(input=='_left') $(n).attr('border_left',true);
+			else if(input=='_right') $(n).attr('border_right',true);
+			else if(input=='_above') $(n).attr('border_above',true);
+			else if(input=='_below') $(n).attr('border_below',true);
+		});
 		$(n).disableSelection().css({
 			'top':pg.panel.p2c(node.position)[0],
 			'left':pg.panel.p2c(node.position)[1],

@@ -283,7 +283,7 @@ pg.planner = {
 					var el_single,ta_single;
 					var new_V = [];
 					if(target_elements.length==1) {
-						_.each(elements_to_attach, function(e) { $(target_elements[0]).append(elements_to_attach[0]); });
+						_.each(elements_to_attach, function(e) { $(target_elements[0]).append(e); });
 						new_V = elements_to_attach;
 					} else if(target_elements.length>1) {
 						if(elements_to_attach.length==1) {

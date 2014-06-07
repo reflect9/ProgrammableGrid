@@ -927,7 +927,7 @@ div.pg_data_table div.dt_inst label {
 }
 #pg_data_ui {
   position: absolute;
-  z-index: 9998;
+  z-index: 10007;
   background: white;
   border: 1px solid #aaa;
   border-radius: 8px;

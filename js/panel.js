@@ -4,7 +4,7 @@ pg.panel = {
 		this.title = (title)? title:"untitled";
 		this.nodes = (nodes)? nodes:[];
 		this.commands = [];
-		this.selected_elements = [];
+		this.selected_element;
 		this.node_dimension = DEFAULT_NODE_DIMENSION;
 		this.el = $("<div id='pg_panel' class='panel'>\
 								<div id='resize_handle_panel'></div>\
@@ -582,7 +582,14 @@ pg.panel = {
 	} ,
 	dataUI: {
 		create: function(el, pos) {
-			pg.panel.dataUI.remove();
+			if(pg.panel.selected_element && pg.panel.selected_element==el) {
+				pg.panel.dataUI.remove();
+				pg.panel.selected_element = null;
+				return;
+			} else {
+				pg.panel.selected_element = el; 
+				pg.panel.dataUI.remove();
+			}
 			var ui_el = $("<div id='pg_data_ui'>\
 					<div class='parents_list'></div>\
 					<div class='pg_data_tools'></div>\
@@ -668,138 +675,138 @@ pg.panel = {
 			// pg.panel.get_node_by_id(node_id).V = data_list;
 		}
 	},
-	editUI: {
-		create: function() {
-			var ui_el = $("<div id='pg_edit_ui'>  \
-				<div>\
-					<button class='select_button'>Select</button>\
-				</div>\
-				<div id='inspector_all_sel'>\
-					<div class='buttons_inspector'>\
-						<button class='release_button'>Release</button>\
-						<button class='extract_button'>Extract</button>\
-						<button class='copy_button'>Share</button>\
-					</div>\
-					<div class='label_selected_elements'>no selection</div>\
-					<div class='table_inspector'>\
-						<ul></ul>\
-					</div>\
-				</div>\
-			</div>");
-			$(ui_el).find(".select_button").click(function(event) {
-				pg.panel.editUI.toggle_select();
-			});
-			// $(ui_el).find(".load_page_button").click(function() {
-			// 	var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
-			// 	if(currently_selected_nodes.length>0) {
-			// 		var n = currently_selected_nodes[0];
-			// 		n.V = $(pg.body).toArray();
-			// 		n.P = pg.planner.get_prototype({type:"loadPage"});
-			// 	} else {
-			// 		console.log("no node is selected now.");
-			// 	}
-			// 	pg.panel.redraw();
-			// });
-			// $(ui_el).find(".snapshot_button").click(function() {
-			// 	var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
-			// 	if(currently_selected_nodes.length>0) {
-			// 		var n = currently_selected_nodes[0];
-			// 		var body = $("body").clone();
-			// 		$(body).find("#pg_panel").remove();
-			// 		$(body).find("#pg_edit_ui").remove();
-			// 		$(body).find("#pg_command_ui").remove();
-			// 		n.V = $(body).toArray();
-			// 	} else {
-			// 		console.log("no node is selected now.");
-			// 	}
-			// 	pg.panel.redraw();
-			// });
-			$(ui_el).find(".release_button").click(function() {
-				pg.panel.editUI.deselect_elements();
-				pg.panel.editUI.toggle_select("off");
-			});
-			$(ui_el).find(".extract_button").click(function() {
-				pg.panel.editUI.extract_selected_elements(pg.panel.selected_elements);
-				pg.panel.editUI.deselect_elements();
-				pg.panel.editUI.toggle_select("off");
-			});
-			$(ui_el).find(".copy_button").click(function() {
-				pg.panel.share_elements(pg.panel.selected_elements);
-				pg.panel.editUI.deselect_elements();
-				pg.panel.editUI.toggle_select("off");
-			});
+	// editUI: {
+	// 	create: function() {
+	// 		var ui_el = $("<div id='pg_edit_ui'>  \
+	// 			<div>\
+	// 				<button class='select_button'>Select</button>\
+	// 			</div>\
+	// 			<div id='inspector_all_sel'>\
+	// 				<div class='buttons_inspector'>\
+	// 					<button class='release_button'>Release</button>\
+	// 					<button class='extract_button'>Extract</button>\
+	// 					<button class='copy_button'>Share</button>\
+	// 				</div>\
+	// 				<div class='label_selected_elements'>no selection</div>\
+	// 				<div class='table_inspector'>\
+	// 					<ul></ul>\
+	// 				</div>\
+	// 			</div>\
+	// 		</div>");
+	// 		$(ui_el).find(".select_button").click(function(event) {
+	// 			pg.panel.editUI.toggle_select();
+	// 		});
+	// 		// $(ui_el).find(".load_page_button").click(function() {
+	// 		// 	var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
+	// 		// 	if(currently_selected_nodes.length>0) {
+	// 		// 		var n = currently_selected_nodes[0];
+	// 		// 		n.V = $(pg.body).toArray();
+	// 		// 		n.P = pg.planner.get_prototype({type:"loadPage"});
+	// 		// 	} else {
+	// 		// 		console.log("no node is selected now.");
+	// 		// 	}
+	// 		// 	pg.panel.redraw();
+	// 		// });
+	// 		// $(ui_el).find(".snapshot_button").click(function() {
+	// 		// 	var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
+	// 		// 	if(currently_selected_nodes.length>0) {
+	// 		// 		var n = currently_selected_nodes[0];
+	// 		// 		var body = $("body").clone();
+	// 		// 		$(body).find("#pg_panel").remove();
+	// 		// 		$(body).find("#pg_edit_ui").remove();
+	// 		// 		$(body).find("#pg_command_ui").remove();
+	// 		// 		n.V = $(body).toArray();
+	// 		// 	} else {
+	// 		// 		console.log("no node is selected now.");
+	// 		// 	}
+	// 		// 	pg.panel.redraw();
+	// 		// });
+	// 		$(ui_el).find(".release_button").click(function() {
+	// 			pg.panel.editUI.deselect_elements();
+	// 			pg.panel.editUI.toggle_select("off");
+	// 		});
+	// 		$(ui_el).find(".extract_button").click(function() {
+	// 			pg.panel.editUI.extract_selected_elements(pg.panel.selected_elements);
+	// 			pg.panel.editUI.deselect_elements();
+	// 			pg.panel.editUI.toggle_select("off");
+	// 		});
+	// 		$(ui_el).find(".copy_button").click(function() {
+	// 			pg.panel.share_elements(pg.panel.selected_elements);
+	// 			pg.panel.editUI.deselect_elements();
+	// 			pg.panel.editUI.toggle_select("off");
+	// 		});
 
 			
-			$("#pg").append(ui_el);
-			$(ui_el).draggable();
-		},
-		toggle_select: function(mode) {
-			var select_button = $("#pg_edit_ui").find(".select_button");
-			if(mode && mode=='on') {
-				$(select_button).addClass("selected");
-				pg.inspector.on(pg.panel.editUI.callback_select_element);	
-			} else if(mode && mode=='off') {
-				pg.inspector.off(pg.panel.dataUI.remove);
-				$(select_button).removeClass("selected");
-			} else {
-				// when mode is not defined 
-				if($(select_button).hasClass("selected")) {
-					$(select_button).removeClass("selected");
-					pg.inspector.off(pg.panel.dataUI.remove);
-				} else {
-					$(select_button).addClass("selected");
-					pg.inspector.on(pg.panel.editUI.callback_select_element);	
-				}
-			}
-		},
-		callback_select_element: function(el) {	// called by Inpector when a page element is selected
-			if(!(el in pg.panel.selected_elements)) 
-				pg.panel.selected_elements.push(el);
-			var attr_table_el = $("#pg_edit_ui").find(".table_inspector").find("ul");
-			pg.inspector.unhighlight_list();
-			pg.inspector.highlight_list(pg.panel.selected_elements);
-			pg.panel.editUI.updateInspector(pg.panel.selected_elements, $(attr_table_el).get(0));
-		},
-		deselect_elements: function() {
-			pg.panel.selected_elements = [];
-			pg.inspector.unhighlight_list();		
-			$("#pg_edit_ui").find(".table_inspector").find("ul").empty();
-			var num_label = $("#inspector_all_sel > .label_selected_elements");
-			$(num_label).text("Nothing selected.");
-		},
-		extract_selected_elements: function(els) {
-			// add selected elements to the V of the current node
-			var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
-			if(currently_selected_nodes.length>0) {
-				var n = currently_selected_nodes[0];
-				if(n.V==undefined) n.V=[];
-				n.V = _.union(n.V, els);
-			} else {
-				console.log("no tile is selected now.");
-			}
-			pg.panel.redraw();
-		},
+	// 		$("#pg").append(ui_el);
+	// 		$(ui_el).draggable();
+	// 	},
+	// 	toggle_select: function(mode) {
+	// 		var select_button = $("#pg_edit_ui").find(".select_button");
+	// 		if(mode && mode=='on') {
+	// 			$(select_button).addClass("selected");
+	// 			pg.inspector.on(pg.panel.editUI.callback_select_element);	
+	// 		} else if(mode && mode=='off') {
+	// 			pg.inspector.off(pg.panel.dataUI.remove);
+	// 			$(select_button).removeClass("selected");
+	// 		} else {
+	// 			// when mode is not defined 
+	// 			if($(select_button).hasClass("selected")) {
+	// 				$(select_button).removeClass("selected");
+	// 				pg.inspector.off(pg.panel.dataUI.remove);
+	// 			} else {
+	// 				$(select_button).addClass("selected");
+	// 				pg.inspector.on(pg.panel.editUI.callback_select_element);	
+	// 			}
+	// 		}
+	// 	},
+	// 	callback_select_element: function(el) {	// called by Inpector when a page element is selected
+	// 		if(!(el in pg.panel.selected_elements)) 
+	// 			pg.panel.selected_elements.push(el);
+	// 		var attr_table_el = $("#pg_edit_ui").find(".table_inspector").find("ul");
+	// 		pg.inspector.unhighlight_list();
+	// 		pg.inspector.highlight_list(pg.panel.selected_elements);
+	// 		pg.panel.editUI.updateInspector(pg.panel.selected_elements, $(attr_table_el).get(0));
+	// 	},
+	// 	deselect_elements: function() {
+	// 		pg.panel.selected_elements = [];
+	// 		pg.inspector.unhighlight_list();		
+	// 		$("#pg_edit_ui").find(".table_inspector").find("ul").empty();
+	// 		var num_label = $("#inspector_all_sel > .label_selected_elements");
+	// 		$(num_label).text("Nothing selected.");
+	// 	},
+	// 	extract_selected_elements: function(els) {
+	// 		// add selected elements to the V of the current node
+	// 		var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
+	// 		if(currently_selected_nodes.length>0) {
+	// 			var n = currently_selected_nodes[0];
+	// 			if(n.V==undefined) n.V=[];
+	// 			n.V = _.union(n.V, els);
+	// 		} else {
+	// 			console.log("no tile is selected now.");
+	// 		}
+	// 		pg.panel.redraw();
+	// 	},
 		
-		updateInspector: function(els, target_ul) {
-			$(target_ul).empty();
-			var attr_dict = get_attr_dict(els);
-			var num_label = $("#inspector_all_sel > .label_selected_elements");
-			if(els.length>0) {
-				$(num_label).text(els.length+" selected.");
-				_.each(attr_dict, function(value,key) {
-					$(target_ul).append("	<li class='attr'><span class='attr_key'>"+ key +":</span>   \
-											<span class='attr_value'>"+value+"</span></li>	\
-						");
-				});	
-			} else { // when nothing is selected
-				$(num_label).text("Nothing selected.");
-			}
+	// 	updateInspector: function(els, target_ul) {
+	// 		$(target_ul).empty();
+	// 		var attr_dict = get_attr_dict(els);
+	// 		var num_label = $("#inspector_all_sel > .label_selected_elements");
+	// 		if(els.length>0) {
+	// 			$(num_label).text(els.length+" selected.");
+	// 			_.each(attr_dict, function(value,key) {
+	// 				$(target_ul).append("	<li class='attr'><span class='attr_key'>"+ key +":</span>   \
+	// 										<span class='attr_value'>"+value+"</span></li>	\
+	// 					");
+	// 			});	
+	// 		} else { // when nothing is selected
+	// 			$(num_label).text("Nothing selected.");
+	// 		}
 			
-			// 
-			// get all the property keys of els 
+	// 		// 
+	// 		// get all the property keys of els 
 
-		}
-	},
+	// 	}
+	// },
 	commandUI: {
 		top:100,
 		left:100,

@@ -102,12 +102,6 @@ pg.Node = {
 				pg.inspector.unhighlight_list();
 			});
 		}
-		_.each(node.I, function(input) {
-			if(input=='_left') $(n).attr('border_left',true);
-			else if(input=='_right') $(n).attr('border_right',true);
-			else if(input=='_above') $(n).attr('border_above',true);
-			else if(input=='_below') $(n).attr('border_below',true);
-		});
 		$(n).disableSelection().css({
 			'top':pg.panel.p2c(node.position)[0],
 			'left':pg.panel.p2c(node.position)[1],

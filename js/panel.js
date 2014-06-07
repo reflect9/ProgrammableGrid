@@ -336,6 +336,7 @@ pg.panel = {
 		if(direction=="_right") return pg.panel.get_node_by_position([node.position[0], node.position[1]+1], allNodes);			
 		if(direction=="_above") return pg.panel.get_node_by_position([node.position[0]-1, node.position[1]], allNodes);			
 		if(direction=="_below") return pg.panel.get_node_by_position([node.position[0]+1, node.position[1]], allNodes);							
+		return false;
 	},
 	get_node_by_id: function(node_id, reference_output_node, _allNodes) {
 		var allNodes = (_allNodes)?_allNodes: pg.panel.nodes;
@@ -532,7 +533,7 @@ pg.panel = {
 			pg.panel.deselect();
 			pg.panel.select(n);
 		}
-		// pg.panel.drawConnector_nodes(pg.panel.nodes);
+		pg.panel.drawConnector_nodes(pg.panel.nodes);
 	},
 	drawPlate: function() {
 		var el_plate = $("#pg_panel > #plate_container > #plate");
@@ -552,12 +553,16 @@ pg.panel = {
 	},
 	drawConnector_nodes: function(node_list) {
 		_.each(node_list, function(n) {
+			var n_el = $(".node#"+n.ID); 
+			if(n_el.length==0) return;
 			_.each(n.I, function(inp_n_id){
-				if(inp_n_id!="_left" && inp_n_id!="_right" && inp_n_id!="_above" && inp_n_id!="_below") {
-					var from_node_el = $(".node#"+inp_n_id);
-					var to_node_el = $(".node#"+n.ID);
-					if(from_node_el.length==0 || to_node_el.length==0) return;
-					pg.panel.drawConnector($(from_node_el).position(), $(to_node_el).position());
+				if(pg.panel.get_adjacent_node(inp_n_id, n)!= false) {
+					$(n_el).attr('border'+inp_n_id,true);	
+				} else {
+					// var from_node_el = $(".node#"+inp_n_id);
+					// var to_node_el = $(".node#"+n.ID);
+					// if(from_node_el.length==0 || to_node_el.length==0) return;
+					// pg.panel.drawConnector($(from_node_el).position(), $(to_node_el).position());
 				}
 			});
 		});
@@ -1195,6 +1200,7 @@ pg.panel = {
 			});
 			$(el).click($.proxy(function() {
 				pg.panel.insert(this, pg.panel.get_selected_nodes()[0]);
+				pg.panel.run_node(this[0]);
 			},nodes));
 			return el;
 		},
@@ -1206,7 +1212,9 @@ pg.panel = {
 				"); 
 			if(dimmed) $(el).attr('dimmed','yes');
 			$(el).click($.proxy(function() {
-				pg.panel.get_selected_nodes()[0].P = this;
+				var n = pg.panel.get_selected_nodes()[0];
+				n.P = this;
+				pg.panel.run_node(n);
 				pg.panel.redraw();
 			},command));
 			return el;

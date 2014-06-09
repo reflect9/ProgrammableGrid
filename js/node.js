@@ -50,8 +50,18 @@ pg.Node = {
 			<div class='node_cover'></div>\
 			<div class='node_content'></div>\
 			<div class='node_borders'>\
-				<div class='above'></div><div class='below'></div>\
-				<div class='left'></div><div class='right'></div>\
+				<div class='above'>\
+					<i class='fa fa-caret-down fa-lg'></i>\
+				</div>\
+				<div class='below'>\
+					<i class='fa fa-caret-up fa-lg'></i>\
+				</div>\
+				<div class='left'>\
+					<i class='fa fa-caret-right fa-lg'></i>\
+				</div>\
+				<div class='right'>\
+					<i class='fa fa-caret-left fa-lg'></i>\
+				</div>\
 			</div>\
 			<div class='node_bg'></div>\
 		</div>";

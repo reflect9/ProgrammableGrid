@@ -28,7 +28,7 @@ pg.panel = {
 		// this.editUI.create();
 		// this.commandUI.create();  this.commandUI.remove();
 		this.toolbar.create();
-		//
+		pg.panel.drawPlate();
 		pg.panel.redraw();
 	},
 	close: function() {
@@ -543,7 +543,6 @@ pg.panel = {
 
 		$("#pg_panel > #plate_container > #tiles").empty();
 		$("#control_ui").find(".pg_title").text(pg.panel.title);
-		this.drawPlate();
 		// draw nodes based on current module
 		_.each(this.nodes, function(n,ni){
 			try{
@@ -577,8 +576,8 @@ pg.panel = {
 				ctx.moveTo(c*this.node_dimension-5, r*this.node_dimension);
 				ctx.lineTo(c*this.node_dimension+5, r*this.node_dimension);
 				ctx.stroke();
-				//ctx.fillRect(	c*this.node_dimension+NODE_MARGIN, r*this.node_dimension+NODE_MARGIN, 
-				//				this.node_dimension-NODE_MARGIN*2, this.node_dimension-NODE_MARGIN*2);		
+				// ctx.fillRect(	c*this.node_dimension+NODE_MARGIN, r*this.node_dimension+NODE_MARGIN, 
+								// this.node_dimension-NODE_MARGIN*2, this.node_dimension-NODE_MARGIN*2);		
 			}
 		}
 	},
@@ -1413,10 +1412,10 @@ pg.panel = {
 			.hover(function(){
 				if($(""))
 				var node = pg.panel.get_node_by_id($(this).attr('id'));
-				pg.panel.node_show_inputs(node);
+				// pg.panel.node_show_inputs(node);
 			},function(){
 				var node = pg.panel.get_node_by_id($(this).attr('id'));
-				pg.panel.node_hide_inputs(this);
+				// pg.panel.node_hide_inputs(this);
 			})
 			.dblclick(function(e) {
 				// console.log($(this).attr('id') + " is double clicked");

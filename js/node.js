@@ -46,12 +46,14 @@ pg.Node = {
 	},
 	draw: function(node,node_size) {
 		// NODE BASE
-		var n = $("<div class='node'></div>")
-			.attr('id',node.ID)
-			.attr("selected",node.selected)
-			.addClass("node-"+node.type);
-		if (node.selected) $(n).addClass("node-selected");
-
+		var html = "<div class='node' id='"+node.ID+"'>\
+			<div class='node_cover'></div>\
+			<div class='node_content'></div>\
+			<div class='node_bg'></div>\
+		</div>";
+		var n = $(html);
+		if(node.selected) n.attr("selected",true);
+		var n_content = $(n).find(".node_content");
 		// DRAW INPUT ARROW
 		// if (node.I.indexOf('_left') !== -1) 
 		// 	$(this.getInputTriangle('right',[7,22]))
@@ -63,17 +65,17 @@ pg.Node = {
 		// NODE HEAD: OPERATION
 		var n_head_el; var n_data;
 		if(node_size<NODE_SIZE_MID) {
-			n_head_el = $(this.getNodeIcon(node,node_size)).appendTo(n); // show icon of tile type only
+			n_head_el = $(this.getNodeIcon(node,node_size)).appendTo(n_content); // show icon of tile type only
 		} else if (node_size<NODE_SIZE_HIGH) {  // MID
-			n_head_el = $("<div class='node-head'></div>").appendTo(n);
+			n_head_el = $("<div class='node-head'></div>").appendTo(n_content);
 			$(n_head_el).append(this.getNodeIcon(node,node_size));
 			if(node.P!==undefined)
 				$(n_head_el).append("<div class='node-type'>"+node.P.type.toUpperCase().replace("_","<br>")+"</div>");
 			n_data = $("<div class='node-values-mid'></div>")
 				.append(this.getNodeValueTable(node,node_size))
-				.appendTo(n);
+				.appendTo(n_content);
 		} else {	// HIGH.  FULL_ZOOM
-			n_head_el = $("<div class='node-head'></div>").appendTo(n);
+			n_head_el = $("<div class='node-head'></div>").appendTo(n_content);
 			pg.panel.commandUI.makeOperationInfo(node, n_head_el);
 			// $(n_head_el).append(this.getNodeIcon(node,node_size));
 			// if(node.P!==undefined) {
@@ -84,12 +86,12 @@ pg.Node = {
 			// full description
 			n_data = $("<div class='node-values-high'></div>")
 					.append(this.getNodeValueTable(node,node_size))
-					.appendTo(n);
+					.appendTo(n_content);
 		}
 		// when mouse is over the node, it highlights all the elements in the page 
 		if(node.V && _.isArray(node.V) && _.isElement(node.V[0])) {
 			$(n_data).hover(function() {
-				var id = $(this).parent().attr("id");
+				var id = $(this).parents(".node").attr("id");
 				var node = pg.panel.get_node_by_id(id);
 				pg.inspector.highlight_list(node.V);
 			},function() {

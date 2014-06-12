@@ -30,18 +30,7 @@ jQuery.fn.pathWithEverything = function(root) {
 			return $(p).tagIdClassNth()+" > "+memo;
 	},$(this).tagIdClassNth());
 };
-jQuery.fn.tagIdClassNth = function() {
-	var Id, cls, nth;
-	var tag = $(this).prop("tagName");
-	if ($(this).attr("class")) cls = "."+$(this).attr("class").trim().replace(/\s+/g,".");
-	else cls="";
-	Id = ($(this).attr("id"))? "#"+$(this).attr("id"): "";
-	var siblings = $(this).parent().children();
-	if(siblings.length>1) {
-		nth = ":nth-child("+(siblings.index(this)+1)+")";
-	} else nth = "";
-	return tag+Id+cls+nth;
-};
+
 jQuery.fn.pathWithNth = function(root) {
 	// if this(commonAncester) and root(I[0]) are same, then return ""
 	if($(this)[0]===$(root)[0]) return "";
@@ -49,14 +38,13 @@ jQuery.fn.pathWithNth = function(root) {
 			return $(p).tagNth()+" > "+memo;
 	},$(this).tagNth());
 };
+
 jQuery.fn.tagNth = function() {
 	var nth;
 	var tag = $(this).prop("tagName");
-	//if ($(this).attr("class"))  var cls = "."+$(this).attr("class").trim().replace(/\s+/g,".");
-	//else var cls="";
-	var siblings = $(this).parent().children();
+	var siblings = $(this).parent().children(tag);
 	if(siblings.length>1) {
-		nth = ":nth-child("+(siblings.index(this)+1)+")";
+		nth = ":nth-of-type("+(siblings.index(this)+1)+")";
 	} else nth = "";
 	return tag+nth;
 };
@@ -66,12 +54,26 @@ jQuery.fn.tagClassNth = function() {
 	var tag = $(this).prop("tagName");
 	if ($(this).attr("class")) cls = "."+$(this).attr("class").trim().replace(/\s+/g,".");
 	else cls="";
-	var siblings = $(this).parent().children();
+	var siblings = $(this).parent().children(tag+cls);
 	if(siblings.length>1) {
-		nth = ":nth-child("+(siblings.index(this)+1)+")";
+		nth = ":nth-of-type("+(siblings.index(this)+1)+")";
 	} else nth = "";
 	return tag+cls+nth;
 };
+
+jQuery.fn.tagIdClassNth = function() {
+	var Id, cls, nth;
+	var tag = $(this).prop("tagName");
+	if ($(this).attr("class")) cls = "."+$(this).attr("class").trim().replace(/\s+/g,".");
+	else cls="";
+	Id = ($(this).attr("id"))? "#"+$(this).attr("id"): "";
+	var siblings = $(this).parent().children(tag+Id+cls+nth);
+	if(siblings.length>1) {
+		nth = ":nth-of-type("+(siblings.index(this)+1)+")";
+	} else nth = "";
+	return tag+Id+cls+nth;
+};
+
 jQuery.fn.leafNodePath = function(commonAncester) {
 	if($(this)[0]===$(commonAncester)[0]) return "";
 	var listOfParents = $(this).parentsUntil($(commonAncester));
@@ -771,7 +773,7 @@ function get_attr_dict(elements) {
 	_.each($.makeArray(elements), function(el) {
 		_.each(pg.planner.attr_func_list, function(attr, key) {
 			var value = attr.getter(el);
-			if(value) {
+			if(value || (el.tagName=='A' && attr.attr_key=='download')) {
 				if((attr.attr_key in dict) && dict[attr.attr_key]!=value)
 					dict[attr.attr_key] = "(multiple values)";
 				else 

@@ -47,16 +47,29 @@ pg.Node = {
 	draw: function(node,node_size) {
 		// NODE BASE
 		var html = "<div class='node' id='"+node.ID+"'>\
-			<div class='node_cover'></div>\
+			<div class='node_cover'>\
+				<div class='nth-input-text'></div>\
+			</div>\
 			<div class='node_content'></div>\
 			<div class='node_borders'>\
-				<div class='above'></div><div class='below'></div>\
-				<div class='left'></div><div class='right'></div>\
+				<div class='above'>\
+					<i class='fa fa-caret-down fa-lg'></i>\
+				</div>\
+				<div class='below'>\
+					<i class='fa fa-caret-up fa-lg'></i>\
+				</div>\
+				<div class='left'>\
+					<i class='fa fa-caret-right fa-lg'></i>\
+				</div>\
+				<div class='right'>\
+					<i class='fa fa-caret-left fa-lg'></i>\
+				</div>\
 			</div>\
 			<div class='node_bg'></div>\
 		</div>";
 		var n = $(html);
 		if(node.selected) n.attr("selected",true);
+		if(node.P && node.P.kind) $(n).attr("kind",node.P.kind);
 		var n_content = $(n).find(".node_content");
 		// DRAW INPUT ARROW
 		// if (node.I.indexOf('_left') !== -1) 
@@ -163,6 +176,20 @@ pg.Node = {
 			$(icon).attr("operation","unknown");
 		} else {
 			$(icon).attr("operation",node.P.type);
+			$(icon).attr("kind",node.P.kind);
+			if(node.P.icon && _.isArray(node.P.icon) && node.P.icon.length==2) {
+				$(icon).append("\
+					<span class='fa-stack fa-lg'>\
+					  <i class='fa fa-"+node.P.icon[0]+" fa-stack-lg'></i>\
+					  <i class='fa fa-"+node.P.icon[1]+"'></i>\
+					</span>\
+				");
+			} else {
+				if(node.P.icon) $(icon).append("<i class='fa fa-"+node.P.icon+" fa-lg'></i>");	
+			}
+			// if(node.P.kind=="pick")	$(icon).append("<i class='fa fa-search fa-2x'></i>");
+			// if(node.P.kind=="transform")	$(icon).append("<i class='fa fa-share fa-2x'></i>");
+			// if(node.P.kind=="apply")	$(icon).append("<i class='fa fa-magic fa-2x'></i>");
 		}
 		
 		// var url = chrome.extension.getURL("js/lib/glyphicons/"+ png_name + ".png");

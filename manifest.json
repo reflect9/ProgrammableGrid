@@ -37,7 +37,8 @@
       		],
       "css": [  
            // "js/lib/ui-lightness/jquery-ui-1.10.3.custom.css",
-            "js/style.css"
+            "js/style.css",
+            "js/lib/font-awesome/css/font-awesome.css"
               ],
       "run_at" : "document_idle",
       "all_frames" : false
@@ -73,7 +74,12 @@
     "js/lib/glyphicons/glyphicons_164_iphone_transfer.png",
     "js/lib/glyphicons/glyphicons_280_settings.png",
     "js/lib/glyphicons/glyphicons_205_electricity.png",
-    "js/lib/glyphicons/glyphicons_371_global.png"
+    "js/lib/glyphicons/glyphicons_371_global.png",
+    "js/lib/font-awesome/fonts/fontawesome-webfont.eot",
+    "js/lib/font-awesome/fonts/fontawesome-webfont.svg",
+    "js/lib/font-awesome/fonts/fontawesome-webfont.ttf",
+    "js/lib/font-awesome/fonts/fontawesome-webfont.woff",
+    "js/lib/font-awesome/fonts/fontawesome-webfont.otf"
   ],
   "manifest_version": 2
 }

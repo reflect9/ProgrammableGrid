@@ -44,11 +44,12 @@ pg = {
 		pg.execute_script(pg.panel.nodes);
 		pg.panel.redraw();
 	},
-	new_script: function() {
+	new_script: function(_title) {
 		var triggerNode = pg.Node.create({type:'trigger', P:pg.planner.get_prototype({type:"trigger"}), position:[1,0]});
+		triggerNode.P.param.event_source = "page";
 		var defaultNodes = [triggerNode];
 		var program = {nodes:defaultNodes, active:true};
-		var title = "Rothko-"+makeid();
+		var title = _title || "Rothko-"+makeid();
 		pg.save_script(title, program);
 		pg.load_script(title);
 	},
@@ -186,7 +187,7 @@ pg = {
 
 DEFAULT_PLATE_DIMENSION = 3000
 DEFAULT_NODE_DIMENSION = 100
-NODE_MARGIN = 1
+NODE_MARGIN = 2
 
 NODE_SIZE_LOW = 50
 NODE_SIZE_MID = 100

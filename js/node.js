@@ -49,6 +49,10 @@ pg.Node = {
 		var html = "<div class='node' id='"+node.ID+"'>\
 			<div class='node_cover'></div>\
 			<div class='node_content'></div>\
+			<div class='node_borders'>\
+				<div class='above'></div><div class='below'></div>\
+				<div class='left'></div><div class='right'></div>\
+			</div>\
 			<div class='node_bg'></div>\
 		</div>";
 		var n = $(html);

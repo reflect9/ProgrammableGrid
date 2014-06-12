@@ -201,13 +201,26 @@
   border: 1px solid #dcc;
   overflow: auto;
 }
+#pg #pg_panel #plate_container #overlay {
+  position: absolute;
+  z-index: 102;
+  width: 100%;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+  pointer-events: none;
+}
+#pg #pg_panel #plate_container #overlay .path_connector {
+  fill: none;
+  stroke: black;
+  stroke-width: 2;
+}
 #pg #pg_panel #node_size_slider {
   margin: 5px;
   width: 200px;
 }
 #pg #pg_panel .node {
   position: absolute;
-  overflow: hidden;
 }
 #pg #pg_panel .node .node_cover {
   position: absolute;
@@ -228,25 +241,89 @@
   left: 10%;
 }
 #pg #pg_panel .node .node_content {
+  overflow: hidden;
   position: absolute;
   z-index: 100;
   top: 0px;
   left: 0px;
-  width: 100%;
-  height: 100%;
+  padding: 1px;
+  width: calc(96%);
+  height: calc(96%);
 }
-#pg #pg_panel .node .node_bg {
+#pg #pg_panel .node .node_borders {
   position: absolute;
   z-index: 99;
   top: 0px;
   left: 0px;
-  background: #999;
-  box-shadow: inset 0 0 0 1px #ffffff;
   width: 100%;
   height: 100%;
 }
+#pg #pg_panel .node .node_borders .above {
+  display: none;
+  position: absolute;
+  top: -2px;
+  left: 2px;
+  width: calc(96%);
+  height: 4px;
+  background: #999;
+}
+#pg #pg_panel .node .node_borders .below {
+  display: none;
+  position: absolute;
+  bottom: -2px;
+  left: 2px;
+  width: calc(96%);
+  height: 4px;
+  background: #999;
+}
+#pg #pg_panel .node .node_borders .left {
+  display: none;
+  position: absolute;
+  top: 2px;
+  left: -2px;
+  width: 4px;
+  height: calc(96%);
+  background: #999;
+}
+#pg #pg_panel .node .node_borders .right {
+  display: none;
+  position: absolute;
+  top: 2px;
+  right: -2px;
+  width: 4px;
+  height: calc(96%);
+  background: #999;
+}
+#pg #pg_panel .node .node_bg {
+  position: absolute;
+  z-index: 98;
+  top: 0px;
+  left: 0px;
+  background: #999;
+  box-shadow: inset 0 0 0 2px #ffffff;
+  width: 100%;
+  height: 100%;
+}
+#pg #pg_panel .node[border_left] .node_borders .left {
+  display: block;
+}
+#pg #pg_panel .node[border_right] .node_borders .right {
+  display: block;
+}
+#pg #pg_panel .node[border_above] .node_borders .above {
+  display: block;
+}
+#pg #pg_panel .node[border_below] .node_borders .below {
+  display: block;
+}
 #pg #pg_panel .node[selected] .node_bg {
   background-color: #9b4681;
+}
+#pg #pg_panel .node[selected] .node_borders .above,
+#pg #pg_panel .node[selected] .node_borders .below,
+#pg #pg_panel .node[selected] .node_borders .left,
+#pg #pg_panel .node[selected] .node_borders .right {
+  background: #9b4681;
 }
 #pg #pg_panel .node-head {
   /*height:30px;*/

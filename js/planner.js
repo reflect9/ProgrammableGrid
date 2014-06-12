@@ -1210,7 +1210,8 @@ pg.planner = {
 				return false;
 				//
 
-				var _O = pg.Node.create(O);
+				var _O = pg.Node.create(O); 
+				_O.I = [O[0]];
 				_O.P = jsonClone(this.proto);
 				return _O;	
 			},

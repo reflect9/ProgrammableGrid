@@ -9,6 +9,9 @@ pg.panel = {
 		this.el = $("<div id='pg_panel' class='panel'>\
 								<div id='resize_handle_panel'></div>\
 								<div id='plate_container'>\
+									<div id='overlay'>\
+										<svg></svg>\
+									</div>\
 									<div id='tiles'></div>\
 									<div id='plate'></div>\
 								</div>\
@@ -297,6 +300,7 @@ pg.panel = {
 			(pg.panel.get_selected_nodes()[0]).I[this.i]=_id;
 			e.stopPropagation();
 			pg.panel.node_select_modal_off();
+			pg.panel.redraw();
 		},{i:i}));
 	},
 	node_select_modal_off: function() {
@@ -332,6 +336,7 @@ pg.panel = {
 		if(direction=="_right") return pg.panel.get_node_by_position([node.position[0], node.position[1]+1], allNodes);			
 		if(direction=="_above") return pg.panel.get_node_by_position([node.position[0]-1, node.position[1]], allNodes);			
 		if(direction=="_below") return pg.panel.get_node_by_position([node.position[0]+1, node.position[1]], allNodes);							
+		return false;
 	},
 	get_node_by_id: function(node_id, reference_output_node, _allNodes) {
 		var allNodes = (_allNodes)?_allNodes: pg.panel.nodes;
@@ -528,6 +533,7 @@ pg.panel = {
 			pg.panel.deselect();
 			pg.panel.select(n);
 		}
+		pg.panel.drawConnector_nodes(pg.panel.nodes);
 	},
 	drawPlate: function() {
 		var el_plate = $("#pg_panel > #plate_container > #plate");
@@ -535,7 +541,7 @@ pg.panel = {
 		var canvas = $("<canvas id='plate_canvas' width='3000' height='3000'></canvas>");
 		$(el_plate).append(canvas);
 		var ctx = canvas.get(0).getContext("2d");
-		ctx.fillStyle = "#dadada";
+		ctx.fillStyle = "#f1f1f1";
 		var num_row = Math.round(DEFAULT_PLATE_DIMENSION / this.node_dimension);
 		var num_col = Math.round(DEFAULT_PLATE_DIMENSION / this.node_dimension);
 		for (r=0;r<num_row;r++) {
@@ -545,17 +551,35 @@ pg.panel = {
 			}
 		}
 	},
-
-
-
-
-
-
-
-
-
-
-
+	drawConnector_nodes: function(node_list) {
+		_.each(node_list, function(n) {
+			var n_el = $(".node#"+n.ID); 
+			if(n_el.length==0) return;
+			_.each(n.I, function(inp_n_id){
+				if(pg.panel.get_adjacent_node(inp_n_id, n)!= false) {
+					$(n_el).attr('border'+inp_n_id,true);	
+				} else {
+					// var from_node_el = $(".node#"+inp_n_id);
+					// var to_node_el = $(".node#"+n.ID);
+					// if(from_node_el.length==0 || to_node_el.length==0) return;
+					// pg.panel.drawConnector($(from_node_el).position(), $(to_node_el).position());
+				}
+			});
+		});
+	},
+	drawConnector: function(_from, _to) {
+		// draw connecting line at the #pg_panel>#plate_container>#overlay>svg
+		var svg = $("#pg_panel > #plate_container > #overlay > svg");
+		var newPath = document.createElementNS('http://www.w3.org/2000/svg','path');
+		var _mid = {left:(_from.left+_to.left)/2, top:(_from.top+_to.top)/2};
+		var from = (_from.left+_from.width-20) + "," + (_from.top+20) + " ";
+		var mid = _mid.left + "," + _mid.top + " ";
+		var to = (_to.left+20) + "," + (_to.top+20) + " ";
+		var d = "M"+from+" q10,0 "+mid+" T"+to+"";
+		newPath.setAttribute('d',d);
+		newPath.setAttribute('class','path_connector');
+		$(svg).append(newPath);
+	} ,
 	dataUI: {
 		create: function(el, pos) {
 			pg.panel.dataUI.remove();
@@ -801,7 +825,7 @@ pg.panel = {
 						<div class='input_nodes_container'></div>\
 					</div>\
 					<div class='operation_menu'>\
-						<label>Current Operation</label>\
+						<label>Current Operation<i class='fa fa-camera-retro fa-lg'></i></label>\
 						<div class='operation_info'>\
 						</div>\
 						<label>Tasks matching with Input and Data </label>\
@@ -964,6 +988,7 @@ pg.panel = {
 						var i = $(this).attr('inputNodeIdx');
 						var newInputID = $(this).val();
 						(pg.panel.get_selected_nodes()[0]).I[i]=newInputID;
+						pg.panel.redraw();
 					});
 					// $(inputNode_el).find("input").bind("mouseup keyup" ,function() {  // UPDATE INPUT NODE ID
 					// 	var i = $(this).attr('inputNodeIdx');
@@ -1175,6 +1200,7 @@ pg.panel = {
 			});
 			$(el).click($.proxy(function() {
 				pg.panel.insert(this, pg.panel.get_selected_nodes()[0]);
+				pg.panel.run_node(this[0]);
 			},nodes));
 			return el;
 		},
@@ -1186,7 +1212,9 @@ pg.panel = {
 				"); 
 			if(dimmed) $(el).attr('dimmed','yes');
 			$(el).click($.proxy(function() {
-				pg.panel.get_selected_nodes()[0].P = this;
+				var n = pg.panel.get_selected_nodes()[0];
+				n.P = this;
+				pg.panel.run_node(n);
 				pg.panel.redraw();
 			},command));
 			return el;

@@ -518,7 +518,7 @@ pg.panel = {
 
 		$("#pg_panel > #plate_container > #tiles").empty();
 		$("#control_ui").find(".pg_title").text(pg.panel.title);
-		this.drawPlate();
+		// this.drawPlate();
 		// draw nodes based on current module
 		_.each(this.nodes, function(n,ni){
 			try{
@@ -533,7 +533,7 @@ pg.panel = {
 			pg.panel.deselect();
 			pg.panel.select(n);
 		}
-		pg.panel.drawConnector_nodes(pg.panel.nodes);
+		// pg.panel.drawConnector_nodes(pg.panel.nodes);
 	},
 	drawPlate: function() {
 		var el_plate = $("#pg_panel > #plate_container > #plate");

@@ -283,7 +283,7 @@ pg.planner = {
 					var el_single,ta_single;
 					var new_V = [];
 					if(target_elements.length==1) {
-						_.each(elements_to_attach, function(e) { $(target_elements[0]).append(elements_to_attach[0]); });
+						_.each(elements_to_attach, function(e) { $(target_elements[0]).append(e); });
 						new_V = elements_to_attach;
 					} else if(target_elements.length>1) {
 						if(elements_to_attach.length==1) {
@@ -563,6 +563,53 @@ pg.planner = {
 				return O;
 			}
 		},	
+		join: {
+			proto: {
+				type:'join',
+				param:{},
+				description: "Join all the inputs."
+			},
+			parameters: {
+				// 'data_type': {type:'text', label:'Type of data (string, number, boolean)', default:'string'},
+				// 'func': {type:'text', label:'What summary information (count, unique)',default:'unique'} 
+			},
+			pre: function(Is) {
+				if(!Is || !Is.length<2) return false;
+				for(var i=0;i<Is.length;i++) {
+					if(!Is[i] || !Is[i].V || !Is[i].V.length==0) return false;	
+				}
+				return true;
+			},
+			generate: function(Is, O) {
+				// check input nodes have multiple values to join
+				if(!Is || !Is.length<2) return false;
+				for(var i=0;i<Is.length;i++) {
+					if(!Is[i] || !Is[i].V || !Is[i].V.length==0) return false;	
+				}
+				// check output
+				if(!O || !O.V || !O.V.length==0) return false;
+				var true_joined_list = [];
+				for(var i=0;i<Is.length;i++) {
+					true_joined_list = true_joined_list.concat(Is[i].V);
+				}
+				if(!isSameArray(O.V, true_joined_list)) return false;
+				// OKAY. generate join.
+				var _O = pg.Node.create(O);
+				_O.P = jsonClone(this.proto); 
+				return _O;
+			},
+			execute: function(O) {
+				var I;
+				if(!O || !O.I) return false;
+				var joined_list=[];
+				for(var i=0;i<O.I.length;i++) {
+					I = pg.panel.get_node_by_id(O.I[i],O);
+					if(I.V) joined_list = joined_list.concat(I.V);
+				}
+				O.V = joined_list;
+				return O;
+			}
+		},
 
 
 		substring: {

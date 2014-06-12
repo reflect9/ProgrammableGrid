@@ -135,6 +135,14 @@ pg = {
 	parse: function(data) {
 		try {
 			var programs = JSON.parse(data);
+			_.each(programs, function(prg) {
+				_.each(prg.nodes, function(node) {
+					if(node.P) {
+						node.P.kind = (pg.planner.get_prototype(node.P)).kind;
+						node.P.icon = (pg.planner.get_prototype(node.P)).icon;
+					}
+				});
+			});
 			return programs;
 		} catch(e) {
 			return {};

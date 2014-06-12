@@ -1,8 +1,14 @@
 @purple: rgb(155, 70, 129);
+@purple-light: #bf81b3;
 @skyblue: #02aff0;
 @yellow: #ffdc48;
 @grassgreen: #889a0f;
 @orange: #ea7e00;
+
+
+@paleblue: #54a6ad;
+@palegreen: #92ba67;
+@palered: #c96b6b;
 
 #pg{
 
@@ -165,7 +171,10 @@
 			top:0px; left:0px;
 			pointer-events:none;
 			.path_connector {
-				fill:none; stroke:#222; stroke-width:3;
+				fill:none; stroke:#222; stroke-width:1;
+			}
+			circle {
+				fill:white; stroke:#222; stroke-width:2;
 			}
 		}
 	}
@@ -184,11 +193,17 @@
 			top:0px; left:0px;
 			z-index:101;
 			display:none;
-			background:rgba(255,0,0,0.1);
+			//background:rgba(255,0,0,0.1);
 			width:100%; height:100%;
-			font-size:2em;
-			text-align:center;
-			width:100%; height:100%;
+			.nth-input-text {
+				position:absolute;
+				top:50%;
+				margin-top:-0.5em;
+				width:100%;
+				background:rgba(255,255,255,0.2);
+				text-align:center;
+				font-size:1.5em;
+			}
 		}
 		.node_content {
 			overflow:hidden;
@@ -259,12 +274,24 @@
 	.node[border_above] { .node_borders { .above{ display:block; }}   }
 	.node[border_below] { .node_borders { .below{ display:block; }}   }
 
+	.node:hover {
+		.node_bg { box-shadow:inset 0px 0px 2px 2px rgba(0,0,0,0.2); }
+	}
+
+
+
+	.node[kind='flow'] {		}
+	.node[kind='pick'] {		.node_bg { background-color:  @paleblue; }		}
+	.node[kind='transform'] {	.node_bg { background-color:  @palegreen; }		}
+	.node[kind='apply'] {		.node_bg { background-color:  @palered; }		}
+
+
 	.node[selected] {
 		.node_bg {
-			background-color:@purple;
+			box-shadow:inset 0px 0px 3px 3px rgba(0,0,0,0.6);
 		}
 		.node_borders {
-			.above, .below, .left, .right { background:@purple; }
+			//.above, .below, .left, .right { background:@purple; }
 		}
 	}
 
@@ -300,9 +327,10 @@
 	.node-icon {
 		width:30px;
 		height:30px;
-		background-repeat:no-repeat;
-		background-position: center center;
-		background-image: url('chrome-extension://__MSG_@@extension_id__/js/lib/glyphicons/glyphicons-halflings-150.png')
+		padding:4px;
+		//background-repeat:no-repeat;
+		//background-position: center center;
+		//background-image: url('chrome-extension://__MSG_@@extension_id__/js/lib/glyphicons/glyphicons-halflings-150.png')
 	}
 	.node-icon[operation='run'] {	background-position:  -395px -106px;  }
 
@@ -407,7 +435,7 @@
 	.node-type {
 		/* mid-level detail when there's no value in the node */
 		position:absolute;
-		top:2px; left: 32px;
+		top:2px; left: 28px;
 		font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 		font-size: 13px;
 		line-height:13px;

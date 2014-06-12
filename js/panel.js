@@ -4,14 +4,11 @@ pg.panel = {
 		this.title = (title)? title:"untitled";
 		this.nodes = (nodes)? nodes:[];
 		this.commands = [];
-		this.selected_element;
+		this.selected_elements = [];
 		this.node_dimension = DEFAULT_NODE_DIMENSION;
 		this.el = $("<div id='pg_panel' class='panel'>\
 								<div id='resize_handle_panel'></div>\
 								<div id='plate_container'>\
-									<div id='overlay'>\
-										<svg></svg>\
-									</div>\
 									<div id='tiles'></div>\
 									<div id='plate'></div>\
 								</div>\
@@ -91,11 +88,8 @@ pg.panel = {
 		$(node_el).attr("selected",true);
 		_.each(pg.panel.nodes, function(n) { n.selected=false; });
 		node.selected = true;
-		console.log("commandUI redraw start");
 		pg.panel.commandUI.redraw();
-		console.log("commandUI redraw end");
 		pg.panel.commandUI.turn_inspector(true);
-		console.log("inspector turned on");
 	},
 	deselect: function() {
 		pg.inspector.unhighlight_list();
@@ -104,17 +98,13 @@ pg.panel = {
 		_.each(pg.panel.nodes, function(n) { n.selected=false; });
 		pg.panel.commandUI.remove();
 		pg.panel.commandUI.turn_inspector(false);
-		pg.panel.node_select_modal_off();
 	},
 	delete: function(target_nodeObj) {
-		console.log("delete start");
 		pg.inspector.unhighlight_list();
 		if(!target_nodeObj) target_nodeObj = pg.panel.get_selected_nodes()[0];
 		this.nodes = _.without(pg.panel.nodes, target_nodeObj);
 		this.commandUI.remove();
-		console.log("redraw start");
 		this.redraw();
-		console.log("redraw end");
 	},
 	clear: function(target_nodeObj) {
 		if(!target_nodeObj) target_nodeObj = pg.panel.get_selected_nodes()[0];
@@ -166,11 +156,7 @@ pg.panel = {
 		// place new_nodes
 		for(var ni=0; ni<new_nodes.length;ni++) {
 			var nd = new_nodes[ni]; 	
-			if(nd.position) {
-				nd.position=[nd.position[0], nd.position[1]]; 	
-			} else {
-				nd.position=[target_position[0], target_position[1]+ni]; 	
-			}
+			nd.position=[target_position[0], target_position[1]+ni]; 
 			pg.panel.nodes.push(nd);
 		}
 		_.each(new_nodes, function(nd) {
@@ -189,148 +175,7 @@ pg.panel = {
 			});
 		});
 		pg.panel.redraw();
-
-	},
-
-	copy_node_with_literal: function(_node) {
-		var node = (_node)? _node: pg.panel.get_selected_nodes()[0];
-		var literal_P = jsonClone(pg.planner.operations.literal.proto);
-		var newNode = pg.Node.create({type:"literal", I:[node.ID], P:literal_P, V:node.V, position:clone(node.position)});
-		var candDiff = [[1,0],[-1,0],[0,1],[0,-1]];
-		for(var i in candDiff) {
-			var newPos = [newNode.position[0]+candDiff[i][0],newNode.position[1]+candDiff[i][1]];
-			if(pg.panel.get_node_by_position(newPos)==false) {
-				newNode.position = newPos;
-				pg.panel.nodes.push(newNode);
-				pg.panel.redraw();
-				return;
-			}
-		}
-		alert("To copy a node, the node must have an empty neighbor tile.");
-	},	
-	duplicate_node: function(_node){
-		// find empty spaces nearby
-		var node = (_node)? _node: pg.panel.get_selected_nodes()[0];
-		var newNode = pg.Node.duplicate(node);
-		var candDiff = [[1,0],[-1,0],[0,1],[0,-1]];
-		for(var i in candDiff) {
-			var newPos = [newNode.position[0]+candDiff[i][0],newNode.position[1]+candDiff[i][1]];
-			if(pg.panel.get_node_by_position(newPos)==false) {
-				newNode.position = newPos;
-				pg.panel.nodes.push(newNode);
-				pg.panel.redraw();
-				return;
-			}
-		}
-		alert("To duplicate a node, the node must have an empty neighbor tile.");
-	},
-	share_node_across_tabs: function(_node_list) {
-		var node_list = (_node_list)? _node_list: pg.panel.get_selected_nodes();
-		var jsonList = serialize_nodes(node_list);
-		chrome.runtime.sendMessage({
-			action:"shareNodes", 
-			message: { 
-				'jsonList': jsonList,
-				'href': window.location.href
-			} 
-		});
-	},
-	copy_script: function() {
-		// store current script at the background page
-		pg.panel.copy_nodes(pg.panel.nodes);
-	},
-	paste_script: function() {
-		// ask background script for script
-		chrome.runtime.sendMessage({
-			action:"paste_nodes"
-		},function(response) { // deal with nodes
-			pg.panel.fetch_json_nodes(response);
-		});
-	},
-	copy_nodes: function(_node_list) {
-		if(!_node_list) return false;
-		var jsonList = serialize_nodes(_node_list);
-		chrome.runtime.sendMessage({
-			action:"copy_nodes",
-			message: {
-				'jsonList': jsonList,
-				'href': window.location.href 
-			}
-		});
-	},
-	fetch_json_nodes: function(message) {
-		console.log(message);
-		if(!message) return;
-		var node_list = _.map(message.jsonList, function(json_node) {
-			var node = JSON.parse(json_node);
-			node.V = _.map(node.V, function(v) {
-				if(_.isArray(v) && _.isString(v[0])) { // v is jsonML 
-					return jsonML2dom(v);
-				} else return v;
-			});
-			return node;
-		});
-		pg.panel.insert(node_list);
-	},
-
-	share_elements: function(els) {
-		var jsonList = _.map(els, function(el) { return dom2jsonML(el); });
-		console.log("copied:" + jsonList);
-		chrome.runtime.sendMessage({
-			action:"shareElements", 
-			message: { 
-				'jsonList': jsonList,
-				'href': window.location.href
-			} 
-		});
-	},
-	paste_elements: function(message) {
-		console.log(message);
-		if(!message) return;
-		// var el_list = _.map(message.jsonList, function(json) {
-		// 	return jsonML2dom(json);
-		// });
-		var node = pg.Node.create();
-		node.type="literal_element";
-		node.P = pg.planner.get_prototype({type:'literal_element', param:{jsonML:message.jsonList}});
-		pg.panel.insert([node]);
-	},
-
-	node_select_modal_on: function(i) {
-		$(".node .node_cover .nth-input-text").html("INPUT<br>"+(i+1));
-		$(".node .node_cover").show();
-		$(".node .node_cover").click($.proxy(function(e) {
-			var _id = $(e.target).parents(".node").attr("id");
-			console.log(_id + " is selected as "+this.i+"-th input");
-			$("#pg_command_ui").find("input[inputNodeIdx='"+this.i+"']").val(_id);
-			(pg.panel.get_selected_nodes()[0]).I[this.i]=_id;
-			e.stopPropagation();
-			pg.panel.node_select_modal_off();
-			pg.panel.redraw();
-		},{i:i}));
-	},
-	node_select_modal_off: function() {
-		$(".node .node_cover .nth-input-text").empty();
-		$(".node .node_cover").hide().unbind('click');
-	},
-	node_show_inputs: function(node) {
-		_.each(node.I, function(input_node_id, n_th) {
-			var input_node = pg.panel.get_node_by_id(input_node_id, node);
-			if(!input_node) return;
-			$(".node[id='"+input_node.ID+"'] .node_cover .nth-input-text").text("Input "+(n_th+1));
-			$(".node[id='"+input_node.ID+"'] .node_cover").show();
-			if(input_node_id=='_left' || input_node_id=='_right'|| input_node_id=='_above'|| input_node_id=='_below') {
-				return;
-			} else {
-				pg.panel.drawConnector_two_nodes(input_node, node, n_th+1);	
-			}
-			
-		});
-	},
-	node_hide_inputs: function(node) {
-		$(".node .node_cover .nth-input-text").empty();
-		$(".node .node_cover").hide();
-		pg.panel.clearConnector();
+		
 	},
 	// get_left_node:function(node) {
 	// 	try{
@@ -361,7 +206,6 @@ pg.panel = {
 		if(direction=="_right") return pg.panel.get_node_by_position([node.position[0], node.position[1]+1], allNodes);			
 		if(direction=="_above") return pg.panel.get_node_by_position([node.position[0]-1, node.position[1]], allNodes);			
 		if(direction=="_below") return pg.panel.get_node_by_position([node.position[0]+1, node.position[1]], allNodes);							
-		return false;
 	},
 	get_node_by_id: function(node_id, reference_output_node, _allNodes) {
 		var allNodes = (_allNodes)?_allNodes: pg.panel.nodes;
@@ -530,11 +374,6 @@ pg.panel = {
 		// if(!solution_nodes || solution_nodes==[]) alert("no solution found");
 		// return solution_nodes;
 	},
-
-
-
-
-
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//  view methods
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -558,7 +397,6 @@ pg.panel = {
 			pg.panel.deselect();
 			pg.panel.select(n);
 		}
-		//pg.panel.drawConnector_node_list();
 	},
 	drawPlate: function() {
 		var el_plate = $("#pg_panel > #plate_container > #plate");
@@ -566,96 +404,19 @@ pg.panel = {
 		var canvas = $("<canvas id='plate_canvas' width='3000' height='3000'></canvas>");
 		$(el_plate).append(canvas);
 		var ctx = canvas.get(0).getContext("2d");
-		ctx.strokeStyle = "#ddd";
+		ctx.fillStyle = "#dadada";
 		var num_row = Math.round(DEFAULT_PLATE_DIMENSION / this.node_dimension);
 		var num_col = Math.round(DEFAULT_PLATE_DIMENSION / this.node_dimension);
 		for (r=0;r<num_row;r++) {
 			for(c=0;c<num_col;c++) {
-				ctx.moveTo(c*this.node_dimension, r*this.node_dimension-5);
-				ctx.lineTo(c*this.node_dimension, r*this.node_dimension+5);
-				ctx.stroke();
-				ctx.moveTo(c*this.node_dimension-5, r*this.node_dimension);
-				ctx.lineTo(c*this.node_dimension+5, r*this.node_dimension);
-				ctx.stroke();
-				//ctx.fillRect(	c*this.node_dimension+NODE_MARGIN, r*this.node_dimension+NODE_MARGIN, 
-				//				this.node_dimension-NODE_MARGIN*2, this.node_dimension-NODE_MARGIN*2);		
+				ctx.fillRect(	c*this.node_dimension+NODE_MARGIN, r*this.node_dimension+NODE_MARGIN, 
+								this.node_dimension-NODE_MARGIN*2, this.node_dimension-NODE_MARGIN*2);		
 			}
 		}
 	},
-	drawConnector_node_list: function(_nodes) {
-		var node_list = _nodes || pg.panel.nodes;
-		_.each(node_list, function(n) {
-			var n_el = $(".node#"+n.ID); 
-			if(n_el.length==0) return;
-			_.each(n.I, function(inp_n_id){
-				if(pg.panel.get_adjacent_node(inp_n_id, n)!= false) {
-					$(n_el).attr('border'+inp_n_id,true);	
-				} else {
-					// var from_node_el = $(".node#"+inp_n_id);
-					// var to_node_el = $(".node#"+n.ID);
-					// if(from_node_el.length==0 || to_node_el.length==0) return;
-					// pg.panel.drawConnector($(from_node_el).position(), $(to_node_el).position());
-				}
-			});
-		});
-	},
-	drawConnector_two_nodes: function(_fromNode, _toNode, nth_input) {
-		var from_node_el = $(".node#"+_fromNode.ID);
-		var to_node_el = $(".node#"+_toNode.ID);
-		if(from_node_el.length==0 || to_node_el.length==0) return;
-		pg.panel.drawConnector(from_node_el, to_node_el, nth_input);
-	},
-	drawConnector: function(_fromEl, _toEl, nth_input) {
-		// draw connecting line at the #pg_panel>#plate_container>#overlay>svg
-		var marginPortion = 0.1;
-		var margin = $(_fromEl).width()*marginPortion;
-		var fromPos = {left: $(_fromEl).position().left+$(_fromEl).width()-margin, top:$(_fromEl).position().top+margin};
-		var toPos = {left: $(_toEl).position().left+margin, top:$(_toEl).position().top+margin*nth_input};
-
-		// var qPos = {left:fromPos.left+10, top:fromPos.top};
-		// var midPos = {left:(fromPos.left+toPos.left)/2, top:(fromPos.top+toPos.top)/2};
-
-		var svg = $("#pg_panel > #plate_container > #overlay > svg");
-		// var newPath = document.createElementNS('http://www.w3.org/2000/svg','path');
-		// var d = "M"+fromPos.left+","+fromPos.top+" Q "+qPos.left+","+qPos.top+" "+midPos.left+","+midPos.top+" T"+toPos.left+","+toPos.top;
-		// newPath.setAttribute('d',d);
-		// newPath.setAttribute('class','path_connector');
-		// $(svg).append(newPath);
-		var newLine = document.createElementNS('http://www.w3.org/2000/svg','line');
-		newLine.setAttribute('x1',fromPos.left); 	newLine.setAttribute('y1',fromPos.top);
-		newLine.setAttribute('x2',toPos.left); 	newLine.setAttribute('y2',toPos.top);
-		newLine.setAttribute('class','path_connector');
-		$(svg).append(newLine);
-
-		if(typeof nth_input !== 'undefined') {
-			var circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
-			circle.setAttribute('cx', fromPos.left);	circle.setAttribute('cy', fromPos.top);
-			circle.setAttribute('r', "10");
-			$(svg).append(circle);
-			var nth =  document.createElementNS('http://www.w3.org/2000/svg','text');
-			nth.setAttribute('text-anchor','middle');
-			nth.setAttribute('x',fromPos.left);
-			nth.setAttribute('y',fromPos.top+5);  nth.setAttribute('fill','black');
-			$(nth).text(nth_input);
-			$(svg).append(nth);
-
-		}
-
-	},
-	clearConnector: function() {
-		$("#pg_panel > #plate_container > #overlay > svg").empty();
-	},
-
 	dataUI: {
 		create: function(el, pos) {
-			if(pg.panel.selected_element && pg.panel.selected_element==el) {
-				pg.panel.dataUI.remove();
-				pg.panel.selected_element = null;
-				return;
-			} else {
-				pg.panel.selected_element = el; 
-				pg.panel.dataUI.remove();
-			}
+			pg.panel.dataUI.remove();
 			var ui_el = $("<div id='pg_data_ui'>\
 					<div class='parents_list'></div>\
 					<div class='pg_data_tools'></div>\
@@ -690,7 +451,7 @@ pg.panel = {
 				pg.panel.commandUI.addData(this.el);
 			},{el:el})).appendTo(tools_el);
 			$("<button>Send to other tabs</button>").click($.proxy(function() {
-				pg.panel.share_elements([this.el]);
+				pg.panel.editUI.share_elements(this.el);
 			},{el:el})).appendTo(tools_el);
 			
 
@@ -741,138 +502,159 @@ pg.panel = {
 			// pg.panel.get_node_by_id(node_id).V = data_list;
 		}
 	},
-	// editUI: {
-	// 	create: function() {
-	// 		var ui_el = $("<div id='pg_edit_ui'>  \
-	// 			<div>\
-	// 				<button class='select_button'>Select</button>\
-	// 			</div>\
-	// 			<div id='inspector_all_sel'>\
-	// 				<div class='buttons_inspector'>\
-	// 					<button class='release_button'>Release</button>\
-	// 					<button class='extract_button'>Extract</button>\
-	// 					<button class='copy_button'>Share</button>\
-	// 				</div>\
-	// 				<div class='label_selected_elements'>no selection</div>\
-	// 				<div class='table_inspector'>\
-	// 					<ul></ul>\
-	// 				</div>\
-	// 			</div>\
-	// 		</div>");
-	// 		$(ui_el).find(".select_button").click(function(event) {
-	// 			pg.panel.editUI.toggle_select();
-	// 		});
-	// 		// $(ui_el).find(".load_page_button").click(function() {
-	// 		// 	var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
-	// 		// 	if(currently_selected_nodes.length>0) {
-	// 		// 		var n = currently_selected_nodes[0];
-	// 		// 		n.V = $(pg.body).toArray();
-	// 		// 		n.P = pg.planner.get_prototype({type:"loadPage"});
-	// 		// 	} else {
-	// 		// 		console.log("no node is selected now.");
-	// 		// 	}
-	// 		// 	pg.panel.redraw();
-	// 		// });
-	// 		// $(ui_el).find(".snapshot_button").click(function() {
-	// 		// 	var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
-	// 		// 	if(currently_selected_nodes.length>0) {
-	// 		// 		var n = currently_selected_nodes[0];
-	// 		// 		var body = $("body").clone();
-	// 		// 		$(body).find("#pg_panel").remove();
-	// 		// 		$(body).find("#pg_edit_ui").remove();
-	// 		// 		$(body).find("#pg_command_ui").remove();
-	// 		// 		n.V = $(body).toArray();
-	// 		// 	} else {
-	// 		// 		console.log("no node is selected now.");
-	// 		// 	}
-	// 		// 	pg.panel.redraw();
-	// 		// });
-	// 		$(ui_el).find(".release_button").click(function() {
-	// 			pg.panel.editUI.deselect_elements();
-	// 			pg.panel.editUI.toggle_select("off");
-	// 		});
-	// 		$(ui_el).find(".extract_button").click(function() {
-	// 			pg.panel.editUI.extract_selected_elements(pg.panel.selected_elements);
-	// 			pg.panel.editUI.deselect_elements();
-	// 			pg.panel.editUI.toggle_select("off");
-	// 		});
-	// 		$(ui_el).find(".copy_button").click(function() {
-	// 			pg.panel.share_elements(pg.panel.selected_elements);
-	// 			pg.panel.editUI.deselect_elements();
-	// 			pg.panel.editUI.toggle_select("off");
-	// 		});
+	editUI: {
+		create: function() {
+			var ui_el = $("<div id='pg_edit_ui'>  \
+				<div>\
+					<button class='select_button'>Select</button>\
+				</div>\
+				<div id='inspector_all_sel'>\
+					<div class='buttons_inspector'>\
+						<button class='release_button'>Release</button>\
+						<button class='extract_button'>Extract</button>\
+						<button class='copy_button'>Share</button>\
+					</div>\
+					<div class='label_selected_elements'>no selection</div>\
+					<div class='table_inspector'>\
+						<ul></ul>\
+					</div>\
+				</div>\
+			</div>");
+			$(ui_el).find(".select_button").click(function(event) {
+				pg.panel.editUI.toggle_select();
+			});
+			// $(ui_el).find(".load_page_button").click(function() {
+			// 	var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
+			// 	if(currently_selected_nodes.length>0) {
+			// 		var n = currently_selected_nodes[0];
+			// 		n.V = $(pg.body).toArray();
+			// 		n.P = pg.planner.get_prototype({type:"loadPage"});
+			// 	} else {
+			// 		console.log("no node is selected now.");
+			// 	}
+			// 	pg.panel.redraw();
+			// });
+			// $(ui_el).find(".snapshot_button").click(function() {
+			// 	var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
+			// 	if(currently_selected_nodes.length>0) {
+			// 		var n = currently_selected_nodes[0];
+			// 		var body = $("body").clone();
+			// 		$(body).find("#pg_panel").remove();
+			// 		$(body).find("#pg_edit_ui").remove();
+			// 		$(body).find("#pg_command_ui").remove();
+			// 		n.V = $(body).toArray();
+			// 	} else {
+			// 		console.log("no node is selected now.");
+			// 	}
+			// 	pg.panel.redraw();
+			// });
+			$(ui_el).find(".release_button").click(function() {
+				pg.panel.editUI.deselect_elements();
+				pg.panel.editUI.toggle_select("off");
+			});
+			$(ui_el).find(".extract_button").click(function() {
+				pg.panel.editUI.extract_selected_elements(pg.panel.selected_elements);
+				pg.panel.editUI.deselect_elements();
+				pg.panel.editUI.toggle_select("off");
+			});
+			$(ui_el).find(".copy_button").click(function() {
+				pg.panel.editUI.share_elements(pg.panel.selected_elements);
+				pg.panel.editUI.deselect_elements();
+				pg.panel.editUI.toggle_select("off");
+			});
 
 			
-	// 		$("#pg").append(ui_el);
-	// 		$(ui_el).draggable();
-	// 	},
-	// 	toggle_select: function(mode) {
-	// 		var select_button = $("#pg_edit_ui").find(".select_button");
-	// 		if(mode && mode=='on') {
-	// 			$(select_button).addClass("selected");
-	// 			pg.inspector.on(pg.panel.editUI.callback_select_element);	
-	// 		} else if(mode && mode=='off') {
-	// 			pg.inspector.off(pg.panel.dataUI.remove);
-	// 			$(select_button).removeClass("selected");
-	// 		} else {
-	// 			// when mode is not defined 
-	// 			if($(select_button).hasClass("selected")) {
-	// 				$(select_button).removeClass("selected");
-	// 				pg.inspector.off(pg.panel.dataUI.remove);
-	// 			} else {
-	// 				$(select_button).addClass("selected");
-	// 				pg.inspector.on(pg.panel.editUI.callback_select_element);	
-	// 			}
-	// 		}
-	// 	},
-	// 	callback_select_element: function(el) {	// called by Inpector when a page element is selected
-	// 		if(!(el in pg.panel.selected_elements)) 
-	// 			pg.panel.selected_elements.push(el);
-	// 		var attr_table_el = $("#pg_edit_ui").find(".table_inspector").find("ul");
-	// 		pg.inspector.unhighlight_list();
-	// 		pg.inspector.highlight_list(pg.panel.selected_elements);
-	// 		pg.panel.editUI.updateInspector(pg.panel.selected_elements, $(attr_table_el).get(0));
-	// 	},
-	// 	deselect_elements: function() {
-	// 		pg.panel.selected_elements = [];
-	// 		pg.inspector.unhighlight_list();		
-	// 		$("#pg_edit_ui").find(".table_inspector").find("ul").empty();
-	// 		var num_label = $("#inspector_all_sel > .label_selected_elements");
-	// 		$(num_label).text("Nothing selected.");
-	// 	},
-	// 	extract_selected_elements: function(els) {
-	// 		// add selected elements to the V of the current node
-	// 		var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
-	// 		if(currently_selected_nodes.length>0) {
-	// 			var n = currently_selected_nodes[0];
-	// 			if(n.V==undefined) n.V=[];
-	// 			n.V = _.union(n.V, els);
-	// 		} else {
-	// 			console.log("no tile is selected now.");
-	// 		}
-	// 		pg.panel.redraw();
-	// 	},
-		
-	// 	updateInspector: function(els, target_ul) {
-	// 		$(target_ul).empty();
-	// 		var attr_dict = get_attr_dict(els);
-	// 		var num_label = $("#inspector_all_sel > .label_selected_elements");
-	// 		if(els.length>0) {
-	// 			$(num_label).text(els.length+" selected.");
-	// 			_.each(attr_dict, function(value,key) {
-	// 				$(target_ul).append("	<li class='attr'><span class='attr_key'>"+ key +":</span>   \
-	// 										<span class='attr_value'>"+value+"</span></li>	\
-	// 					");
-	// 			});	
-	// 		} else { // when nothing is selected
-	// 			$(num_label).text("Nothing selected.");
-	// 		}
+			$("#pg").append(ui_el);
+			$(ui_el).draggable();
+		},
+		toggle_select: function(mode) {
+			var select_button = $("#pg_edit_ui").find(".select_button");
+			if(mode && mode=='on') {
+				$(select_button).addClass("selected");
+				pg.inspector.on(pg.panel.editUI.callback_select_element);	
+			} else if(mode && mode=='off') {
+				pg.inspector.off(pg.panel.dataUI.remove);
+				$(select_button).removeClass("selected");
+			} else {
+				// when mode is not defined 
+				if($(select_button).hasClass("selected")) {
+					$(select_button).removeClass("selected");
+					pg.inspector.off(pg.panel.dataUI.remove);
+				} else {
+					$(select_button).addClass("selected");
+					pg.inspector.on(pg.panel.editUI.callback_select_element);	
+				}
+			}
+		},
+		callback_select_element: function(el) {	// called by Inpector when a page element is selected
+			if(!(el in pg.panel.selected_elements)) 
+				pg.panel.selected_elements.push(el);
+			var attr_table_el = $("#pg_edit_ui").find(".table_inspector").find("ul");
+			pg.inspector.unhighlight_list();
+			pg.inspector.highlight_list(pg.panel.selected_elements);
+			pg.panel.editUI.updateInspector(pg.panel.selected_elements, $(attr_table_el).get(0));
+		},
+		deselect_elements: function() {
+			pg.panel.selected_elements = [];
+			pg.inspector.unhighlight_list();		
+			$("#pg_edit_ui").find(".table_inspector").find("ul").empty();
+			var num_label = $("#inspector_all_sel > .label_selected_elements");
+			$(num_label).text("Nothing selected.");
+		},
+		extract_selected_elements: function(els) {
+			// add selected elements to the V of the current node
+			var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
+			if(currently_selected_nodes.length>0) {
+				var n = currently_selected_nodes[0];
+				if(n.V==undefined) n.V=[];
+				n.V = _.union(n.V, els);
+			} else {
+				console.log("no tile is selected now.");
+			}
+			pg.panel.redraw();
+		},
+		share_elements: function(els) {
+			var jsonList = _.map(els, function(el) { return dom2jsonML(el); });
+			console.log("copied:" + jsonList);
+			chrome.runtime.sendMessage({
+				action:"shareElements", 
+				message: { 
+					'jsonList': jsonList,
+					'href': window.location.href
+				} 
+			});
+		},
+		paste_elements: function(message) {
+			console.log(message);
+			if(!message) return;
+			// var el_list = _.map(message.jsonList, function(json) {
+			// 	return jsonML2dom(json);
+			// });
+			var node = pg.Node.create();
+			node.type="literal_element";
+			node.P = pg.planner.get_prototype({type:'literal_element', param:{jsonML:message.jsonList}});
+			pg.panel.insert([node]);
+		},
+		updateInspector: function(els, target_ul) {
+			$(target_ul).empty();
+			var attr_dict = get_attr_dict(els);
+			var num_label = $("#inspector_all_sel > .label_selected_elements");
+			if(els.length>0) {
+				$(num_label).text(els.length+" selected.");
+				_.each(attr_dict, function(value,key) {
+					$(target_ul).append("	<li class='attr'><span class='attr_key'>"+ key +":</span>   \
+											<span class='attr_value'>"+value+"</span></li>	\
+						");
+				});	
+			} else { // when nothing is selected
+				$(num_label).text("Nothing selected.");
+			}
 			
-	// 		// 
-	// 		// get all the property keys of els 
+			// 
+			// get all the property keys of els 
 
-	// 	}
-	// },
+		}
+	},
 	commandUI: {
 		top:100,
 		left:100,
@@ -928,19 +710,14 @@ pg.panel = {
 			// }).appendTo($(ui_el).find("#node_tools"));
 			// $("<button>Delete node</button>").click(function(e){pg.panel.delete(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
 			// $("<button>Clear data</button>").click(function(e){pg.panel.empty(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
-			$(ui_el).find(".operation_menu").scroll(function(e) {
-				e.stopPropagation();
-				return false;
-			});			
-
 			$(ui_el).find(".duplicate_button").click(function() {
-				pg.panel.duplicate_node();
+				pg.panel.commandUI.duplicate_node();
 			});
 			$(ui_el).find(".copy_button").click(function() {
-				pg.panel.copy_node_with_literal();
+				pg.panel.commandUI.copy_node_with_literal();
 			});
 			$(ui_el).find(".share_button").click(function() {
-				pg.panel.share_node_across_tabs();
+				pg.panel.commandUI.share_node_across_tabs();
 			});
 			$(ui_el).find(".insert_left_button").click(function() {
 				var node = pg.panel.get_selected_nodes()[0];
@@ -1009,7 +786,63 @@ pg.panel = {
 				}
 			});
 		},
-		
+		copy_node_with_literal: function(_node) {
+			var node = (_node)? _node: pg.panel.get_selected_nodes()[0];
+			var literal_P = jsonClone(pg.planner.operations.literal.proto);
+			var newNode = pg.Node.create({type:"literal", I:[node.ID], P:literal_P, V:node.V, position:clone(node.position)});
+			var candDiff = [[1,0],[-1,0],[0,1],[0,-1]];
+			for(var i in candDiff) {
+				var newPos = [newNode.position[0]+candDiff[i][0],newNode.position[1]+candDiff[i][1]];
+				if(pg.panel.get_node_by_position(newPos)==false) {
+					newNode.position = newPos;
+					pg.panel.nodes.push(newNode);
+					pg.panel.redraw();
+					return;
+				}
+			}
+			alert("To copy a node, the node must have an empty neighbor tile.");
+		},	
+		duplicate_node: function(_node){
+			// find empty spaces nearby
+			var node = (_node)? _node: pg.panel.get_selected_nodes()[0];
+			var newNode = pg.Node.duplicate(node);
+			var candDiff = [[1,0],[-1,0],[0,1],[0,-1]];
+			for(var i in candDiff) {
+				var newPos = [newNode.position[0]+candDiff[i][0],newNode.position[1]+candDiff[i][1]];
+				if(pg.panel.get_node_by_position(newPos)==false) {
+					newNode.position = newPos;
+					pg.panel.nodes.push(newNode);
+					pg.panel.redraw();
+					return;
+				}
+			}
+			alert("To duplicate a node, the node must have an empty neighbor tile.");
+		},
+		share_node_across_tabs: function(_node_list) {
+			var node_list = (_node_list)? _node_list: pg.panel.get_selected_nodes();
+			var jsonList = serialize_nodes(node_list);
+			chrome.runtime.sendMessage({
+				action:"shareNodes", 
+				message: { 
+					'jsonList': jsonList,
+					'href': window.location.href
+				} 
+			});
+		},
+		paste_nodes: function(message) {
+			console.log(message);
+			if(!message) return;
+			var node_list = _.map(message.jsonList, function(json_node) {
+				var node = JSON.parse(json_node);
+				node.V = _.map(node.V, function(v) {
+					if(_.isArray(v) && _.isString(v[0])) { // v is jsonML 
+						return jsonML2dom(v);
+					} else return v;
+				});
+				return node;
+			});
+			pg.panel.insert(node_list);
+		},
 		redraw: function() {
 			var node = pg.panel.get_selected_nodes()[0];
 			var Is = _.without(_.map(node.I, function(input_id) {
@@ -1051,26 +884,14 @@ pg.panel = {
 					// 	</div>");
 					var inputNode_el = $("<div class='input_node_info'>\
 							<span>"+(i+1)+" </span><input type='text' inputNodeIdx='"+i+"' value='"+node.I[i]+"'/>\
-								<a class='pick_button' inputNodeIdx='"+i+"' style='color:#888; font-size:12px;'>&nbsp;P</a>\
 								<a class='delete_button' inputNodeIdx='"+i+"' style='color:#888; font-size:12px;'>&nbsp;x</a>\
 							<div class='input_node_data_container'></div>\
-						</div>");
-					$(inputNode_el).find("input").change(function() {
-						// update the input node ID 
-						console.log("change");
+						</div>")
+					$(inputNode_el).find("input").bind("mouseup keyup" ,function() {  // UPDATE INPUT NODE ID
 						var i = $(this).attr('inputNodeIdx');
 						var newInputID = $(this).val();
 						(pg.panel.get_selected_nodes()[0]).I[i]=newInputID;
-						pg.panel.redraw();
 					});
-					// $(inputNode_el).find("input").bind("mouseup keyup" ,function() {  // UPDATE INPUT NODE ID
-					// 	var i = $(this).attr('inputNodeIdx');
-					// 	var newInputID = $(this).val();
-					// 	(pg.panel.get_selected_nodes()[0]).I[i]=newInputID;
-					// });
-					$(inputNode_el).find("a.pick_button").click($.proxy(function() {
-						pg.panel.node_select_modal_on(this.i);
-					},{i:i}));
 					$(inputNode_el).find("a.delete_button").click($.proxy(function() {
 						this.node.I.splice(this.i,1);
 						pg.panel.redraw();
@@ -1087,7 +908,7 @@ pg.panel = {
 								$("div.node").removeClass("input_node_hover");
 							}
 						);
-						var n_values_in_the_input = $("<div style='margin-top:3px;'><label>"+inputNode.V.length+" "+getValueType(inputNode.V)+"</label></div>");
+						var n_values_in_the_input = $("<div style='margin-left:13px;margin-top:3px;'><label>"+inputNode.V.length+" "+getValueType(inputNode.V)+"</label></div>");
 						var data_ul = $("<ul class='data_ul'></ul>").appendTo(n_values_in_the_input);
 						$(n_values_in_the_input).find("label").click($.proxy(function() {
 							if($(this.data_ul).html()=="") pg.panel.commandUI.makeDataTable(this.inputNode.V, this.data_ul, true);		
@@ -1095,7 +916,7 @@ pg.panel = {
 						},{inputNode:inputNode, data_ul:data_ul}));
 						$(inputNode_el).find(".input_node_data_container").append(n_values_in_the_input);
 					} else {
-						$(inputNode_el).find(".input_node_data_container").append("<div style='margin-top:3px;'>empty</div>");
+						$(inputNode_el).find(".input_node_data_container").append("<div style='margin-left:13px;margin-top:3px;'>empty</div>");
 					}
 					$(input_container).append(inputNode_el);
 				} catch(e) {	console.error(e.stack); 	continue;	}
@@ -1201,24 +1022,24 @@ pg.panel = {
 		makeDataTable: function(V, target_ul, isReadOnly) {
 			var isInputData = ($(target_ul).parents(".input_data").length>0)? true: false;
 			$(target_ul).empty();
-			// if(!isReadOnly && V.length==0) {
-			// 	var html = "<div class='data_table_instruction_container'>\
-			// 					<div class='dt_inst'>\
-			// 						The node data is empty.<br> You can either<br>\
-			// 						<button class='extract_button'>Extract from page</button>\
-			// 						<div style='width:100%; text-align:center'>or</div>\
-			// 						<input class='input_type_data' placeholder='Type data here'></input>\
-			// 					</div>\
-			// 				</div>";
-			// 	var datable_el = $(html).appendTo(target_ul);
-			// 	$(datable_el).find("input.input_type_data").change(function() {
-			// 		pg.panel.commandUI.addData($(this).val());
-			// 		$(this).val("");
-			// 		$("#pg_command_ui").find(".new_data_input").focus();
-			// 	});
-			// 	$(datable_el).find("button.extract_button").click(function(){ pg.panel.commandUI.toggleExtract(); });
-			// 	$("#pg_command_ui").find(".output_data_buttons").hide();
-			// } else {	// node has some data to display
+			if(!isReadOnly && V.length==0) {
+				var html = "<div class='data_table_instruction_container'>\
+								<div class='dt_inst'>\
+									The node data is empty.<br> You can either<br>\
+									<button class='extract_button'>Extract from page</button>\
+									<div style='width:100%; text-align:center'>or</div>\
+									<input class='input_type_data' placeholder='Type data here'></input>\
+								</div>\
+							</div>";
+				var datable_el = $(html).appendTo(target_ul);
+				$(datable_el).find("input.input_type_data").change(function() {
+					pg.panel.commandUI.addData($(this).val());
+					$(this).val("");
+					$("#pg_command_ui").find(".new_data_input").focus();
+				});
+				$(datable_el).find("button.extract_button").click(function(){ pg.panel.commandUI.toggleExtract(); });
+				$("#pg_command_ui").find(".output_data_buttons").hide();
+			} else {	// node has some data to display
 				for(i in V) {
 					var v = V[i]; 	var idx_to_show = parseInt(i)+1;
 					var entryEl = $("<li data_index='"+i+"'><label class='data_label'>"+idx_to_show+"</label></li>"); 
@@ -1256,7 +1077,7 @@ pg.panel = {
 					$(target_ul).append(entryEl);
 				}
 				$("#pg_command_ui").find(".output_data_buttons").show();
-			// }
+			}
 		},
 		addData: function(val, targetNode) {
 			var node = pg.panel.get_selected_nodes()[0];
@@ -1273,7 +1094,6 @@ pg.panel = {
 			});
 			$(el).click($.proxy(function() {
 				pg.panel.insert(this, pg.panel.get_selected_nodes()[0]);
-				pg.panel.run_node(this[0]);
 			},nodes));
 			return el;
 		},
@@ -1285,9 +1105,7 @@ pg.panel = {
 				"); 
 			if(dimmed) $(el).attr('dimmed','yes');
 			$(el).click($.proxy(function() {
-				var n = pg.panel.get_selected_nodes()[0];
-				n.P = this;
-				pg.panel.run_node(n);
+				pg.panel.get_selected_nodes()[0].P = this;
 				pg.panel.redraw();
 			},command));
 			return el;
@@ -1323,9 +1141,6 @@ pg.panel = {
 					<button class='zoom_button' id='zoom_to_mid'  node_size=150>medium</button>\
 					<button class='zoom_button' id='zoom_to_high' node_size=300>large</button>\
 					<button class='zoom_button' id='zoom_to_high' node_size='showAll'>show all</button>\
-					<label>&nbsp;SCRIPT:</label>\
-					<button class='button_copy_script' id='button_copy_script'>copy</button>\
-					<button class='button_paste_script' id='button_paste_script'>paste</button>\
 				</div>\
 			");
 			$(ui_el).find(".pg_title").text(pg.panel.title);
@@ -1376,15 +1191,9 @@ pg.panel = {
 			$(ui_el).find('button.zoom_button').click(function() {
 				pg.panel.zoom($(this).attr('node_size'));
 			});
-			// $(ui_el).find("#delete_node").click(function() {
-			// 	pg.panel.delete("selected_node");
-			// 	pg.panel.redraw();
-			// });
-			$(ui_el).find("#button_copy_script").click(function() {
-				pg.panel.copy_script();
-			});
-			$(ui_el).find("#button_paste_script").click(function() {
-				pg.panel.paste_script();
+			$(ui_el).find("#delete_node").click(function() {
+				pg.panel.delete("selected_node");
+				pg.panel.redraw();
 			});
 			$("#pg > #pg_panel").append(ui_el);
 		}
@@ -1394,54 +1203,43 @@ pg.panel = {
 		$(".node")
 			.off()
 			.draggable({ 	
-				cancel: "div.node_cover",
 				grid: [ this.node_dimension, this.node_dimension],
 				stop: function(e) {
 					var node = pg.panel.get_node_by_id($(this).attr('id'));
 					if(node) {
-						var position = [ Math.round($(this).position().top / pg.panel.node_dimension),
-											Math.round($(this).position().left / pg.panel.node_dimension)	];
+						var position = [ Math.floor($(this).position().top / pg.panel.node_dimension),
+											Math.floor($(this).position().left / pg.panel.node_dimension)	];
 						if (_.isEqual(position,node.position)) return;
 						var existing_node = pg.panel.get_node_by_position(position);
 						if(existing_node) pg.panel.delete(existing_node);
 						node.position = position;
 					}
-					//if(pg.panel.get_selected_nodes()[0]!=node) pg.panel.select(node);
+					if(pg.panel.get_selected_nodes()[0]!=node) pg.panel.select(node);
 					pg.panel.redraw();
 				}
-			})
-			.hover(function(){
-				if($(""))
-				var node = pg.panel.get_node_by_id($(this).attr('id'));
-				pg.panel.node_show_inputs(node);
-			},function(){
-				var node = pg.panel.get_node_by_id($(this).attr('id'));
-				pg.panel.node_hide_inputs(this);
 			})
 			.dblclick(function(e) {
 				// console.log($(this).attr('id') + " is double clicked");
 				// var clicked_node = pg.panel.get_node_by_id($(this).attr("id"));
 				// pg.panel.zoom([clicked_node]);
 				e.stopPropagation();
+			})
+			.click(function(e) {
+				if($(this).is('.ui-draggable-dragging')){
+					return;
+				}
+				var node = pg.panel.get_node_by_id($(this).attr('id'));
+				var previously_selected_node = pg.panel.get_selected_nodes()[0];
+				console.log(node);
+				if(node==previously_selected_node) pg.panel.deselect();
+				else {
+					pg.panel.deselect();
+					pg.panel.select(node);
+				}
+				e.stopPropagation();
+				// console.log("Click: "+$(e.target).attr("id"));
+				// plate.toggleNode($(e.target).attr("id"));
 			});
-		$(".node .node_content").click(function(e) {
-			var n = $(e.target).parents(".node");
-			if($(n).is('.ui-draggable-dragging')){
-				return;
-			}
-			var node = pg.panel.get_node_by_id($(n).attr('id'));
-			var previously_selected_node = pg.panel.get_selected_nodes()[0];
-			console.log(node);
-			if(node==previously_selected_node) pg.panel.deselect();
-			else {
-				pg.panel.deselect();
-				pg.panel.select(node);
-			}
-			e.stopPropagation();
-			// console.log("Click: "+$(e.target).attr("id"));
-			// plate.toggleNode($(e.target).attr("id"));
-		})
-
 		// now attach event handlers
 		// 1. create a new tile when empty plate is clicked
 		var el_tiles = $("#pg").find("#tiles");
@@ -1454,11 +1252,8 @@ pg.panel = {
 			console.log("plate clicked "+ mouse_pos.left + "," +mouse_pos.top);
 			var new_node = pg.Node.create();
 			new_node.position = [mouse_pos.top, mouse_pos.left];
-			console.log("before push");
 			pg.panel.nodes.push(new_node);
-			console.log("before redraw");
 			pg.panel.redraw();
-			console.log("after redraw");
 			pg.panel.select(new_node);
 
 		});

@@ -46,14 +46,12 @@ pg.planner = {
 	operations: {
 		get_attribute: {	// from elements, extract one of its attributes
 			proto: {
-				kind:'pick',
-				icon:'list-alt', //['list-alt','long-arrow-right'],
 				type:'get_attribute', 
 				param:{
 					'source': "_input1",
 					'key':"text"					
 				},
-				description:"Get [key] of [source]."
+				description:"Get attribute values from the input elements."
 			},
 			parameters: {
 				'source': {type:'text', label:"Source", default:"_input1"},
@@ -109,14 +107,12 @@ pg.planner = {
 		},
 		extract_element: {
 			proto: {
-				kind:'pick',
 				type:'extract_element', 
-				icon:'crosshairs',
 				param:{
 					'source':"_current",
 					'selector':""
 				},
-				description:"Extract elements at [selector] from [source]."
+				description:"Extract DOM elements from the source"
 			},
 			parameters: {
 				'source': {type:'text', label:"DOM to extract elements from", default:"_current"},
@@ -201,14 +197,12 @@ pg.planner = {
 		},
 		extract_parent: {
 			proto: {
-				kind:'pick',
 				type:'extract_parent', 
-				icon:'crosshairs',
 				param:{
 					'source':"_input1",
 					'step':1
 				},
-				description:"Get enclosing elements of [source], [step]-step above."
+				description:"Get a specific n-step up parent in the DOM tree."
 			},
 			parameters: {
 				'source': {type:'text', label:"DOM to extract parent from", default:"_input1"},
@@ -256,18 +250,11 @@ pg.planner = {
 
 		attach_element: {
 			proto: {
-				kind:'apply',
 				type:'attach_element',
-				icon:'gavel',
-				param: { 
-					'source':"_input1",
-					'target':"_input2"
-				},
-				description: "Attach [sources] to [target]."
+				param: {},
+				description: "Attach Input1 elements to Input2."
 			},
 			parameters: {
-				'source': {type:'text', label:"Elements to attach", default:"_input1"},
-				'target': {type:'text', label:"Place to attach elements", default:"_input2"},
 			},
 			pre:function(Is) {
 				try{
@@ -296,7 +283,7 @@ pg.planner = {
 					var el_single,ta_single;
 					var new_V = [];
 					if(target_elements.length==1) {
-						_.each(elements_to_attach, function(e) { $(target_elements[0]).append(e); });
+						_.each(elements_to_attach, function(e) { $(target_elements[0]).append(elements_to_attach[0]); });
 						new_V = elements_to_attach;
 					} else if(target_elements.length>1) {
 						if(elements_to_attach.length==1) {
@@ -319,16 +306,11 @@ pg.planner = {
 		},
 		hide: {
 			proto: {
-				kind:'apply',
 				type:'hide',
-				icon:'eye-slash',
-				param:{
-					'target':"_input1",
-				},
-				description:"Hide elements in [target]."
+				param:{},
+				description:"Hide elements."
 			},
 			parameters: {
-				'target': {type:'text', label:"Elements to hide", default:"_input1"},
 			},
 			pre:function(Is) {
 				if(Is.length>0 && isDomList(Is[0].V))return true;
@@ -350,16 +332,11 @@ pg.planner = {
 		},
 		show: {
 			proto: {
-				kind:'apply',
 				type:'show',
-				icon:'eye',
-				param:{
-					'target':"_input1",
-				},
-				description:"Show elements in [target]."
+				param:{},
+				description:"Show elements."
 			},
 			parameters: {
-				'target': {type:'text', label:"Elements to show", default:"_input1"},
 			},
 			pre:function(Is) {
 				if(Is.length>0 && isDomList(Is[0].V))return true;
@@ -381,9 +358,7 @@ pg.planner = {
 		},
 		set_attribute: {  // from two Is (left: original elements, above: new values) 
 			proto: {
-				kind:'apply',
 				type:'set_attribute', 
-				icon:'pencil-square-o',
 				param:{key:"text", target:"_input1", new_value:"_input2"},
 				description:"Set attribute values from the input elements."
 			},
@@ -458,30 +433,24 @@ pg.planner = {
 			// it selects representatibe nodes from the input 
 			// no generation, only executes
 			proto: {
-				kind:'pick',
 				type:'select_representative',
-				icon:'crosshairs',
-				param:{ 'target':'_input1'},
-				description:"Find non-overlapping parents of [target]."
+				param:{},
+				description:"Find largest non-overlapping parents of input elements."
 			},
 			parameters: {
-				'target': {type:'text', label:"Elements to find parrents of", default:"_input1"},
+
 			},
 			pre: function(Is) {
 				return false;
 			},
 			generate: function(I,O) {
-				return false;	// DEPRECATED :  use extract_parent
-				// if(!Is || !Is[0] || !Is[0].V || !isDomList([0].V)) return false;
-				// if(!O || !O.V || O.V.length==0 || !isDomList(O.V)) return false;
-				// if(O.V[0] != Is[0].V.length) return false;
-				// if(O) {	
-				// 	var _O = pg.Node.create(O);
-				// 	_O.P = jsonClone(this.proto); 
-				// 	return _O;	
-				// } else {
-				// 	return false;
-				// }
+				if(O) {	
+					var _O = pg.Node.create(O);
+					_O.P = jsonClone(this.proto); 
+					return _O;	
+				} else {
+					return false;
+				}
 			},
 			execute: function(O) {
 				var I_id = (_.isArray(O.I))?O.I[0]:O.I;
@@ -493,14 +462,11 @@ pg.planner = {
 		},
 		count: {
 			proto: {
-				kind:'transform',
 				type:'count',
-				icon:'list-ol',
-				param:{'target':"_input1"},
-				description: "Count [target]."
+				param:{},
+				description: "Count number of values in _input1."
 			},
 			parameters: {
-				'target': {type:'text', label:"Elements to count", default:"_input1"},
 				// 'data_type': {type:'text', label:'Type of data (string, number, boolean)', default:'string'},
 				// 'func': {type:'text', label:'What summary information (count, unique)',default:'unique'} 
 			},
@@ -526,11 +492,9 @@ pg.planner = {
 		},
 		sort:{
 			proto:{
-				kind:'transform',
 				type:'sort',
-				icon:'sort-alpha-asc',
 				param:{direction:'up', source:"_input1"},
-				description: "Sort [source] in [direction]-order."
+				description: "Sort the source list"
 			},
 			parameters: {
 				'direction': {type:'text', label:'up or down', default:'up'},
@@ -562,14 +526,13 @@ pg.planner = {
 		},
 		unique: {
 			proto: {
-				kind:'transform',
 				type:'unique',
-				icon:'bars', //['bars','asterisk'],
-				param:{ 'target':"_input1" },
-				description: "Get list of unique elements of [target]."
+				param:{},
+				description: "Get list of unique elements in _input1."
 			},
 			parameters: {
-				'target': {type:'text', label:"Elements to get ", default:"_input1"},
+				// 'data_type': {type:'text', label:'Type of data (string, number, boolean)', default:'string'},
+				// 'func': {type:'text', label:'What summary information (count, unique)',default:'unique'} 
 			},
 			pre: function(Is) {
 				if(!Is || !Is[0] || !Is[0].V || !isValueList(Is[0].V)) return false;
@@ -596,65 +559,13 @@ pg.planner = {
 				return O;
 			}
 		},	
-		join: {
-			proto: {
-				kind:'transform',
-				type:'join',
-				icon: 'bars', //['bars','compress'],
-				param:{},
-				description: "Join all the inputs."
-			},
-			parameters: {
-				// 'data_type': {type:'text', label:'Type of data (string, number, boolean)', default:'string'},
-				// 'func': {type:'text', label:'What summary information (count, unique)',default:'unique'} 
-			},
-			pre: function(Is) {
-				if(!Is || !Is.length<2) return false;
-				for(var i=0;i<Is.length;i++) {
-					if(!Is[i] || !Is[i].V || !Is[i].V.length==0) return false;	
-				}
-				return true;
-			},
-			generate: function(Is, O) {
-				// check input nodes have multiple values to join
-				if(!Is || !Is.length<2) return false;
-				for(var i=0;i<Is.length;i++) {
-					if(!Is[i] || !Is[i].V || !Is[i].V.length==0) return false;	
-				}
-				// check output
-				if(!O || !O.V || !O.V.length==0) return false;
-				var true_joined_list = [];
-				for(var i=0;i<Is.length;i++) {
-					true_joined_list = true_joined_list.concat(Is[i].V);
-				}
-				if(!isSameArray(O.V, true_joined_list)) return false;
-				// OKAY. generate join.
-				var _O = pg.Node.create(O);
-				_O.P = jsonClone(this.proto); 
-				return _O;
-			},
-			execute: function(O) {
-				var I;
-				if(!O || !O.I) return false;
-				var joined_list=[];
-				for(var i=0;i<O.I.length;i++) {
-					I = pg.panel.get_node_by_id(O.I[i],O);
-					if(I.V) joined_list = joined_list.concat(I.V);
-				}
-				O.V = joined_list;
-				return O;
-			}
-		},
 
 
 		substring: {
 			// (list of texts) -> (list of subtexts)  
 			proto: {
-				kind:'pick',
 				type:'substring',
-				icon: 'font', //['font','cut'],
-				param:{from:'',  to:'', include_from:false, include_to:false},
-				description: "Get part of input1 texts, from [from] to [to]."
+				param:{from:'',  to:'', include_from:false, include_to:false}
 			},
 			parameters: {
 				from: {type:'text', label:"Starting pattern", default:'' },
@@ -834,14 +745,11 @@ pg.planner = {
 		// },
 		findTab: {
 			proto: {
-				kind:'pick',
 				type:'findTab',
-				icon:'folder-open',
-				param:{url:"_input1"},
-				description: "Find a currently open [url], and execute the following nodes in the tab."
+				param:{url:"_input1"}
 			},
 			parameters: {
-				url:{type:'text', label:"URL of the tab to find ", default:""}
+				url:{type:'text', label:"URL of the tab to find "}
 			},
 			pre:function(Is) {
 				return true;
@@ -865,15 +773,12 @@ pg.planner = {
 		},
 		loadPage: {
 			proto:{
-				kind:'pick',
 				type:'loadPage',
-				icon:'globe',
-				param:{source:"_input1", mode:"xhttp"},
-				description: "Load pages of URLs in [source] using [mode]."
+				param:{source:"_input1", mode:"iframe"}
 			},
 			parameters:{
 				source:{type:'text', label:"URL of the page to load (e.g. _current, _input1, _input2)", default:"_input1"},
-				mode:{type:'text', label:"How to load page (e.g. xhttp, iframe, tab)", default:"xhttp"}
+				mode:{type:'text', label:"How to load page (e.g. xhttp, iframe, tab)", default:"iframe"}
 			},
 			pre:function(Is) {
 				try{
@@ -936,12 +841,9 @@ pg.planner = {
 			}
 		},
 		compose_text: {
-			proto: {	
-				kind:'transform',
-				type:'compose_text',
-				icon: 'font', //['font','compress'],
-				param:{connector:" ", text_A:"_input1", text_B:"_input2", order: undefined}, 
-				description:"Concatenate each pair of [text_A] and [text_B] with [connector]."
+			proto: {	type:'compose_text',
+						param:{connector:" ", text_A:"_input1", text_B:"_input2", order: undefined}, 
+						description:"Join every pair of input texts with the separator parameter."
 			},
 			parameters: {
 				text_A: {type:'text', label:'First text', default:"_input1"},
@@ -1069,9 +971,7 @@ pg.planner = {
 		// 	}
 		// },
 		create_span: {
-			proto: {	kind:'apply',
-						type:'create_span',
-						icon: 'magic', //['code','magic'],
+			proto: {	type:'create_span',
 						param:{text:"_input1"}, 
 						description: "Create <span> elements using the text input."
 			},
@@ -1111,11 +1011,8 @@ pg.planner = {
 		create_button: {
 			// if I[0] is text or number, then suggest creating button.  
 			// parameters are trigger or links. 
-			proto: {	kind:'apply',
-						type:'create_button', 
-						icon:'magic', //['code','magic'],
-						param:{text:"_input1"},
-						description:"Create buttons with [text]."
+			proto: {	type:'create_button', param:{text:"_input1"},
+						description:"Create button elements using the text input."
 			},
 			parameters: {
 				text: {type:'text', label:"Text", default:"_input1"},
@@ -1151,10 +1048,8 @@ pg.planner = {
 		create_image: {
 			// if I[0] is URL, then suggest creating image element.  
 			// the default parameters are sizes. 
-			proto: {	kind:'apply', type:'create_image', 
-						icon:'magic', //['code','magic'],
-						param:{url:"_input1"},
-						description:"Create images with [src]."
+			proto: {	type:'create_image', param:{url:"_input1"},
+						description:"Create <img> elements using the text input as URL."
 			},
 			parameters: {
 				src: {type:'url', label:"URL of Image source", default:"_input1"},
@@ -1189,11 +1084,10 @@ pg.planner = {
 		},
 		click: {
 			// when I[0] is DOM elements.  
-			proto: {	kind:'apply', type:'click', icon:'hand-o-up', param:{'target':'_input1'}, 
-					description:"Click [target]."
+			proto: {	type:'click', param:{},
+					description:"Click the input elements."
 			},
 			parameters: {
-				'target': {type:'text', label:"Elements to click", default:"_input1"},
 			},
 			pre:function(Is) {
 				if(Is.length==0) return false;
@@ -1225,8 +1119,8 @@ pg.planner = {
 		keyboard: {
 			// when I[0] is input or textarea elements.  I[1] is text.  
 			// parameters are rounding / random / extend the last till the end. 
-			proto: { kind:'apply', type:'keyboard', icon:'keyboard-o', param:{'inputBox':'_input1', 'text':'_input2'},
-					description:"Type [text] at [inputBox]."
+			proto: {type:'keyboard', param:{},
+					description:"Type keys of [text] into [inputBox]."
 			},
 			parameters: {
 				inputBox: {type:'text', label:"Input boxes to type into", default:"_input1"},
@@ -1267,8 +1161,8 @@ pg.planner = {
 		store: {
 			// when I[0] is not DOM element.
 			// parameter is key of the data, and public / private.
-			proto: {	kind:'apply', type:'store', icon:'save', param:{permission:'private', data: "_input1"},
-					description:"Store [data] in [permission] storage."
+			proto: {	type:'store', param:{permission:'private', data: "_input1"},
+					description:"Store the input data in public or private storage."
 			},
 			parameters: {
 				permission: {type:'text', label:"private or public", default:"private"},
@@ -1297,14 +1191,12 @@ pg.planner = {
 		trigger: {
 			// without any condition, it triggers the next tile or connected tiles.  
 			proto: {	
-				kind:'flow',
 				type:'trigger', 
-				icon:'bell',
-				param:{event_source: "_input1"},
-				description:"Trigger the following nodes when [event_source] is loaded or clicked."
+				param:{event_source: "page"},
+				description:"Trigger the following or connected tiles when the predefined event occurs."
 			},
 			parameters: {
-				event_source: {type:'text', label:'Event source (e.g. page, _input1)', default:"_input1"},
+				event_source: {type:'text', label:'Event source (e.g. page, _input1)', default:"page"},
 			},
 			pre:function(Is) {
 				return true;
@@ -1314,8 +1206,7 @@ pg.planner = {
 				return false;
 				//
 
-				var _O = pg.Node.create(O); 
-				_O.I = [O[0]];
+				var _O = pg.Node.create(O);
 				_O.P = jsonClone(this.proto);
 				return _O;	
 			},
@@ -1335,12 +1226,7 @@ pg.planner = {
 							console.log(this.O.ID);
 							this.O.V = [this.el];
 							var following_nodes = pg.panel.get_next_nodes(this.O);
-							if(following_nodes && following_nodes.length>0) {
-								pg.panel.run_triggered_nodes(following_nodes);
-							} else {
-								pg.panel.redraw();
-							}
-
+							pg.panel.run_triggered_nodes(following_nodes);
 						},{O:O, el:el}));
 					});
 				}
@@ -1350,14 +1236,14 @@ pg.planner = {
 			// just copy the previous (or connected) item. 
 			// parameter is the value itself. 
 			proto: {
-				kind:'transform',
 				type:'literal', 
-				icon:'quote-right',
-				param:{source:"_input1"},
-				description:"Directly set the current node data to [source]."
+				param:{value:"_input1", from:'',to:''},
+				description:"Copy data from _input1 or _input2. Or, Data can be the value itself."
 			},
 			parameters: {
-				source: {type:'text', label:"Source", default:"_input1"}
+				value: {type:'text', label:"Value", default:"_input1"},
+				from: {type:'text', label:'from', default:''},
+				to: {type:'text', label:'to', default:''},
 			},
 			pre:function(Is) {
 				// always applicable
@@ -1373,12 +1259,15 @@ pg.planner = {
 			},
 			execute: function(O) {
 				try{
-					var sourceV;
-					if(O.P.param.source.indexOf("_input")==0)  {
-						var nth_input = O.P.param.source[6]; 
-						sourceV = _.clone(pg.panel.get_node_by_id(O.I[nth_input+1],O).V);
-					} else {
-						O.V = O.P.param.value;
+					if(O.P.param.value=="_input1") var sourceV = _.clone(pg.panel.get_node_by_id(O.I[0],O).V);
+					if(O.P.param.value=="_input2") var sourceV = _.clone(pg.panel.get_node_by_id(O.I[1],O).V);
+					if(sourceV && sourceV.length>0) {
+						var startIndex = (O.P.param.from=='')? 0: parseInt(O.P.param.from);
+						var endIndex = (O.P.param.to=='')? sourceV.length: parseInt(O.P.param.to);
+						O.V = _.clone(sourceV.slice(startIndex,endIndex)); 
+					}
+					else {
+						O.V = O.P.param.value;	
 					}
 				} catch(e) {}
 				return O;
@@ -1386,11 +1275,9 @@ pg.planner = {
 		},
 		literal_element: {
 			proto: {
-				kind:'transform',
 				type:'literal_element',
-				icon:'quote-right', //['code','quote-right'],
 				param:{jsonML:"_input"},
-				description: "Create a new element of [jsonML], which was extracted from exiting Web elements."
+				description: "Create DOM element from JsonML text. Usually copied from other web sites."
 			},
 			parameters: {
 				jsonML: {type:'text', label:"JsonML text specifying the DOM elements"},
@@ -1425,11 +1312,9 @@ pg.planner = {
 		},
 		arithmetic: {
 			proto: {
-				kind:'transform',
 				type:'arithmetic',
-				icon:'columns',
 				param:{operator:"+", operand_A:"_input1", operand_B:"_input2"},
-				description: "Calculate [operand_A] [operator] [operand_B]"
+				description: "Calculate numbers."
 			},
 			parameters: {
 				operator: {type:'text', label:'Operation (e.g. +, -, *, /, %', default:"+"},
@@ -1504,15 +1389,11 @@ pg.planner = {
 
 		filter: {
 			proto: {
-				kind:'transform',
 				type:'filter',
-				icon:'filter',
-				param:{ 'items':'_input1', 'in_out':'_input2'},
-				description: "Filter [items] by [in_out]."
+				param:{},
+				description: "Filter _input1 using boolean values of _input2."
 			},
 			parameters: {
-				items: {type:'text', label:'Items to filter', default:"_input1"},
-				in_out: {type:'text', label:'Boolean(true/false) values for filtering', default:"_input2"},
 			},
 			pre:function(Is) {
 				if(!Is || Is.length<2 || !isBooleanList(Is[1].V)) return false;
@@ -1539,10 +1420,8 @@ pg.planner = {
 			},
 			execute: function(O) {
 				try{
-					var nth_item = O.P.param.items[6];
-					var nth_boolean = O.P.param.in_out[6];
-					var input_v = pg.panel.get_node_by_id(O.I[nth_item],O).V;
-					var input_b = pg.panel.get_node_by_id(O.I[nth_boolean],O).V;
+					var input_v = pg.panel.get_node_by_id(O.I[0],O).V;
+					var input_b = pg.panel.get_node_by_id(O.I[1],O).V;
 					var result = []; 
 					for(var i=0; i<Math.min(input_v.length, input_b.length); i++) {
 						if(input_b[i]==true) result.push(input_v[i]);
@@ -1556,11 +1435,9 @@ pg.planner = {
 
 		number_predicate: {
 			proto: {
-				kind:'transform',
 				type:'number_predicate',
-				icon:'columns',
 				param:{operator:"==", operand_A:"_input1", operand_B:"0"},
-				description: "Evaluate [operand_A] [operator] [operand_B]."
+				description: "Find equality (==) / inequality(e.g. >, <, >=, <=) of two operands -> true or false."
 			},
 			parameters: {
 				operator: {type:'text', label:'Operation (e.g. +, -, *, /)', default:"=="},
@@ -1656,11 +1533,9 @@ pg.planner = {
 
 		string_predicate: {
 			proto: {
-				kind:'transform',
 				type:"string_predicate",
-				icon:'columns',
 				param: { source:'_input1', key:'_input2', isIn:'in' },
-				description: "Distinguish whether [source] contains [key]."
+				description: "Distinguish whether the input string contains substring and return true / false."
 			},
 			parameters: {
 				source:{ type:'text', label:"String set to look at", default:'_input1'},
@@ -1756,6 +1631,7 @@ pg.planner = {
 
 
 
+
 	tasks: {
 		page_modified: {
 			pre: function(Is,O) { // I and O must be single Body tags.
@@ -1817,7 +1693,7 @@ pg.planner = {
 						'I':[Is[0].ID],
 						'V':rep_el
 					});
-					n_rep = pg.planner.operations.extract_parent.generate(Is,n_rep); // fill parameters
+					n_rep = pg.planner.operations.select_representative.generate(Is,n_rep); // fill parameters
 
 					var _O = pg.Node.create(O);	// copy O
 					_O.I = [n_rep.ID];
@@ -2050,25 +1926,6 @@ pg.planner = {
 		// 	}
 		// },
 		
-		filter_object: { 
-			// 
-			pre: function(Is, O) {
-				try{
-					if(!Is || Is.length==0 || !Is[0].V || Is[0].V.length==0) return false;
-					if(!O || !O.V || O.V.length==0) return false;	
-					var IV = _.clone(Is[0].V);
-					for(var i in O.V) {
-						var idx = IV.indexOf(O.V[i]);
-						if(idx==-1) return false;
-						else IV.splice(idx,1);
-					}
-					return true;
-				} catch(e) { console.log(e.stack); return false; }
-			},
-			generate: function(Is, O) {
-				return false;
-			}
-		},
 
 		filter_element: {
 			pre: function(Is, O) {
@@ -2162,6 +2019,21 @@ pg.planner = {
 				// }
 				
 				
+			},
+			execute: function(O) {
+				if (O.P.type !== "filter_element") return false;
+				var n_original_els = pg.panel.get_node_by_id(O.I[0], O);
+				var n_extracted_keys = pg.panel.get_node_by_id(O.I[1], O);
+				var temp_node = {I:toArray(n_extracted_keys.ID), V:[], P:pg.planner.get_prototype({type:'filter', param: O.P.param})};
+				var booleans = pg.planner.tasks.filter.execute_helper(temp_node);
+				var filtered = []
+				for (var i = 0; i < booleans.length; i++) {
+					if (booleans[i]) {
+						filtered.push(n_original_els.V[i]);
+					}
+				}
+				O.V = filtered;
+				return O;
 			}
 		},
 

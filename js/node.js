@@ -46,31 +46,12 @@ pg.Node = {
 	},
 	draw: function(node,node_size) {
 		// NODE BASE
-		var html = "<div class='node' id='"+node.ID+"'>\
-			<div class='node_cover'>\
-				<div class='nth-input-text'></div>\
-			</div>\
-			<div class='node_content'></div>\
-			<div class='node_borders'>\
-				<div class='above'>\
-					<i class='fa fa-caret-down fa-lg'></i>\
-				</div>\
-				<div class='below'>\
-					<i class='fa fa-caret-up fa-lg'></i>\
-				</div>\
-				<div class='left'>\
-					<i class='fa fa-caret-right fa-lg'></i>\
-				</div>\
-				<div class='right'>\
-					<i class='fa fa-caret-left fa-lg'></i>\
-				</div>\
-			</div>\
-			<div class='node_bg'></div>\
-		</div>";
-		var n = $(html);
-		if(node.selected) n.attr("selected",true);
-		if(node.P && node.P.kind) $(n).attr("kind",node.P.kind);
-		var n_content = $(n).find(".node_content");
+		var n = $("<div class='node'></div>")
+			.attr('id',node.ID)
+			.attr("selected",node.selected)
+			.addClass("node-"+node.type);
+		if (node.selected) $(n).addClass("node-selected");
+
 		// DRAW INPUT ARROW
 		// if (node.I.indexOf('_left') !== -1) 
 		// 	$(this.getInputTriangle('right',[7,22]))
@@ -82,17 +63,17 @@ pg.Node = {
 		// NODE HEAD: OPERATION
 		var n_head_el; var n_data;
 		if(node_size<NODE_SIZE_MID) {
-			n_head_el = $(this.getNodeIcon(node,node_size)).appendTo(n_content); // show icon of tile type only
+			n_head_el = $(this.getNodeIcon(node,node_size)).appendTo(n); // show icon of tile type only
 		} else if (node_size<NODE_SIZE_HIGH) {  // MID
-			n_head_el = $("<div class='node-head'></div>").appendTo(n_content);
+			n_head_el = $("<div class='node-head'></div>").appendTo(n);
 			$(n_head_el).append(this.getNodeIcon(node,node_size));
 			if(node.P!==undefined)
 				$(n_head_el).append("<div class='node-type'>"+node.P.type.toUpperCase().replace("_","<br>")+"</div>");
 			n_data = $("<div class='node-values-mid'></div>")
 				.append(this.getNodeValueTable(node,node_size))
-				.appendTo(n_content);
+				.appendTo(n);
 		} else {	// HIGH.  FULL_ZOOM
-			n_head_el = $("<div class='node-head'></div>").appendTo(n_content);
+			n_head_el = $("<div class='node-head'></div>").appendTo(n);
 			pg.panel.commandUI.makeOperationInfo(node, n_head_el);
 			// $(n_head_el).append(this.getNodeIcon(node,node_size));
 			// if(node.P!==undefined) {
@@ -103,12 +84,12 @@ pg.Node = {
 			// full description
 			n_data = $("<div class='node-values-high'></div>")
 					.append(this.getNodeValueTable(node,node_size))
-					.appendTo(n_content);
+					.appendTo(n);
 		}
 		// when mouse is over the node, it highlights all the elements in the page 
 		if(node.V && _.isArray(node.V) && _.isElement(node.V[0])) {
 			$(n_data).hover(function() {
-				var id = $(this).parents(".node").attr("id");
+				var id = $(this).parent().attr("id");
 				var node = pg.panel.get_node_by_id(id);
 				pg.inspector.highlight_list(node.V);
 			},function() {
@@ -176,20 +157,6 @@ pg.Node = {
 			$(icon).attr("operation","unknown");
 		} else {
 			$(icon).attr("operation",node.P.type);
-			$(icon).attr("kind",node.P.kind);
-			if(node.P.icon && _.isArray(node.P.icon) && node.P.icon.length==2) {
-				$(icon).append("\
-					<span class='fa-stack fa-lg'>\
-					  <i class='fa fa-"+node.P.icon[0]+" fa-stack-lg'></i>\
-					  <i class='fa fa-"+node.P.icon[1]+"'></i>\
-					</span>\
-				");
-			} else {
-				if(node.P.icon) $(icon).append("<i class='fa fa-"+node.P.icon+" fa-lg'></i>");	
-			}
-			// if(node.P.kind=="pick")	$(icon).append("<i class='fa fa-search fa-2x'></i>");
-			// if(node.P.kind=="transform")	$(icon).append("<i class='fa fa-share fa-2x'></i>");
-			// if(node.P.kind=="apply")	$(icon).append("<i class='fa fa-magic fa-2x'></i>");
 		}
 		
 		// var url = chrome.extension.getURL("js/lib/glyphicons/"+ png_name + ".png");

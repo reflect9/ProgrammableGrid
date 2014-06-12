@@ -44,12 +44,11 @@ pg = {
 		pg.execute_script(pg.panel.nodes);
 		pg.panel.redraw();
 	},
-	new_script: function(_title) {
+	new_script: function() {
 		var triggerNode = pg.Node.create({type:'trigger', P:pg.planner.get_prototype({type:"trigger"}), position:[1,0]});
-		triggerNode.P.param.event_source = "page";
 		var defaultNodes = [triggerNode];
 		var program = {nodes:defaultNodes, active:true};
-		var title = _title || "Rothko-"+makeid();
+		var title = "Rothko-"+makeid();
 		pg.save_script(title, program);
 		pg.load_script(title);
 	},
@@ -135,14 +134,6 @@ pg = {
 	parse: function(data) {
 		try {
 			var programs = JSON.parse(data);
-			_.each(programs, function(prg) {
-				_.each(prg.nodes, function(node) {
-					if(node.P) {
-						node.P.kind = (pg.planner.get_prototype(node.P)).kind;
-						node.P.icon = (pg.planner.get_prototype(node.P)).icon;
-					}
-				});
-			});
 			return programs;
 		} catch(e) {
 			return {};
@@ -195,7 +186,7 @@ pg = {
 
 DEFAULT_PLATE_DIMENSION = 3000
 DEFAULT_NODE_DIMENSION = 100
-NODE_MARGIN = 2
+NODE_MARGIN = 1
 
 NODE_SIZE_LOW = 50
 NODE_SIZE_MID = 100

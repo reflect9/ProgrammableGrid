@@ -18,7 +18,6 @@
       "matches" : ["<all_urls>"],
       "js" : [	"js/lib/jquery-2.0.3.min.js",
             "js/lib/jquery-ui-1.10.3.custom.min.js",
-            "js/lib/jquery.mousewheel.js",
       			"js/lib/underscore-min.js",
             "js/lib/async.js",
             "js/lib/jsonml-dom.js",
@@ -37,8 +36,7 @@
       		],
       "css": [  
            // "js/lib/ui-lightness/jquery-ui-1.10.3.custom.css",
-            "js/style.css",
-            "js/lib/font-awesome/css/font-awesome.css"
+            "js/style.css"
               ],
       "run_at" : "document_idle",
       "all_frames" : false
@@ -74,12 +72,7 @@
     "js/lib/glyphicons/glyphicons_164_iphone_transfer.png",
     "js/lib/glyphicons/glyphicons_280_settings.png",
     "js/lib/glyphicons/glyphicons_205_electricity.png",
-    "js/lib/glyphicons/glyphicons_371_global.png",
-    "js/lib/font-awesome/fonts/fontawesome-webfont.eot",
-    "js/lib/font-awesome/fonts/fontawesome-webfont.svg",
-    "js/lib/font-awesome/fonts/fontawesome-webfont.ttf",
-    "js/lib/font-awesome/fonts/fontawesome-webfont.woff",
-    "js/lib/font-awesome/fonts/fontawesome-webfont.otf"
+    "js/lib/glyphicons/glyphicons_371_global.png"
   ],
   "manifest_version": 2
 }

@@ -291,7 +291,7 @@ pg.panel = {
 	},
 
 	node_select_modal_on: function(i) {
-		$(".node .node_cover").html("INPUT<br>"+(n_th+1));
+		$(".node .node_cover").text(i+1);
 		$(".node .node_cover").show();
 		$(".node .node_cover").click($.proxy(function(e) {
 			var _id = $(e.target).parents(".node").attr("id");
@@ -306,19 +306,7 @@ pg.panel = {
 	node_select_modal_off: function() {
 		$(".node .node_cover").empty().hide().unbind('click');
 	},
-	node_show_inputs: function(node) {
-		_.each(node.I, function(input_node_id, n_th) {
-			var input_node = pg.panel.get_node_by_id(input_node_id, node);
-			if(!input_node) return;
-			if(input_node_id=='_left' || input_node_id=='_right'|| input_node_id=='_above'|| input_node_id=='_below') return;
-			$(".node[id='"+input_node.ID+"'] .node_cover").html((n_th+1)).show();
-			pg.panel.drawConnector_two_nodes(input_node, node);
-		});
-	},
-	node_hide_inputs: function(node) {
-		$(".node .node_cover").empty().hide();
-		pg.panel.clearConnector();
-	},
+
 	// get_left_node:function(node) {
 	// 	try{
 	// 		return node && pg.panel.get_node_by_position([node.position[0], node.position[1]-1]);			
@@ -545,7 +533,7 @@ pg.panel = {
 			pg.panel.deselect();
 			pg.panel.select(n);
 		}
-		pg.panel.drawConnector_node_list();
+		pg.panel.drawConnector_nodes(pg.panel.nodes);
 	},
 	drawPlate: function() {
 		var el_plate = $("#pg_panel > #plate_container > #plate");
@@ -553,24 +541,17 @@ pg.panel = {
 		var canvas = $("<canvas id='plate_canvas' width='3000' height='3000'></canvas>");
 		$(el_plate).append(canvas);
 		var ctx = canvas.get(0).getContext("2d");
-		ctx.strokeStyle = "#ddd";
+		ctx.fillStyle = "#f1f1f1";
 		var num_row = Math.round(DEFAULT_PLATE_DIMENSION / this.node_dimension);
 		var num_col = Math.round(DEFAULT_PLATE_DIMENSION / this.node_dimension);
 		for (r=0;r<num_row;r++) {
 			for(c=0;c<num_col;c++) {
-				ctx.moveTo(c*this.node_dimension, r*this.node_dimension-5);
-				ctx.lineTo(c*this.node_dimension, r*this.node_dimension+5);
-				ctx.stroke();
-				ctx.moveTo(c*this.node_dimension-5, r*this.node_dimension);
-				ctx.lineTo(c*this.node_dimension+5, r*this.node_dimension);
-				ctx.stroke();
-				//ctx.fillRect(	c*this.node_dimension+NODE_MARGIN, r*this.node_dimension+NODE_MARGIN, 
-				//				this.node_dimension-NODE_MARGIN*2, this.node_dimension-NODE_MARGIN*2);		
+				ctx.fillRect(	c*this.node_dimension+NODE_MARGIN, r*this.node_dimension+NODE_MARGIN, 
+								this.node_dimension-NODE_MARGIN*2, this.node_dimension-NODE_MARGIN*2);		
 			}
 		}
 	},
-	drawConnector_node_list: function(_nodes) {
-		var node_list = _nodes || pg.panel.nodes;
+	drawConnector_nodes: function(node_list) {
 		_.each(node_list, function(n) {
 			var n_el = $(".node#"+n.ID); 
 			if(n_el.length==0) return;
@@ -586,38 +567,19 @@ pg.panel = {
 			});
 		});
 	},
-	drawConnector_two_nodes: function(_fromNode, _toNode) {
-		var from_node_el = $(".node#"+_fromNode.ID);
-		var to_node_el = $(".node#"+_toNode.ID);
-		if(from_node_el.length==0 || to_node_el.length==0) return;
-		pg.panel.drawConnector(from_node_el, to_node_el);
-	},
-	drawConnector: function(_fromEl, _toEl) {
+	drawConnector: function(_from, _to) {
 		// draw connecting line at the #pg_panel>#plate_container>#overlay>svg
-		var marginPortion = 0.1;
-		var margin = $(_fromEl).width()*marginPortion;
-		var fromPos = {left: $(_fromEl).position().left+$(_fromEl).width()-margin, top:$(_fromEl).position().top+margin};
-		var toPos = {left: $(_toEl).position().left+margin, top:$(_toEl).position().top+margin};
-
-		// var qPos = {left:fromPos.left+10, top:fromPos.top};
-		// var midPos = {left:(fromPos.left+toPos.left)/2, top:(fromPos.top+toPos.top)/2};
-
 		var svg = $("#pg_panel > #plate_container > #overlay > svg");
-		// var newPath = document.createElementNS('http://www.w3.org/2000/svg','path');
-		// var d = "M"+fromPos.left+","+fromPos.top+" Q "+qPos.left+","+qPos.top+" "+midPos.left+","+midPos.top+" T"+toPos.left+","+toPos.top;
-		// newPath.setAttribute('d',d);
-		// newPath.setAttribute('class','path_connector');
-		// $(svg).append(newPath);
-		var newLine = document.createElementNS('http://www.w3.org/2000/svg','line');
-		newLine.setAttribute('x1',fromPos.left); 	newLine.setAttribute('y1',fromPos.top);
-		newLine.setAttribute('x2',toPos.left); 	newLine.setAttribute('y2',toPos.top);
-		newLine.setAttribute('class','path_connector');
-		$(svg).append(newLine);
-	},
-	clearConnector: function() {
-		$("#pg_panel > #plate_container > #overlay > svg").empty();
-	},
-
+		var newPath = document.createElementNS('http://www.w3.org/2000/svg','path');
+		var _mid = {left:(_from.left+_to.left)/2, top:(_from.top+_to.top)/2};
+		var from = (_from.left+_from.width-20) + "," + (_from.top+20) + " ";
+		var mid = _mid.left + "," + _mid.top + " ";
+		var to = (_to.left+20) + "," + (_to.top+20) + " ";
+		var d = "M"+from+" q10,0 "+mid+" T"+to+"";
+		newPath.setAttribute('d',d);
+		newPath.setAttribute('class','path_connector');
+		$(svg).append(newPath);
+	} ,
 	dataUI: {
 		create: function(el, pos) {
 			if(pg.panel.selected_element && pg.panel.selected_element==el) {
@@ -1381,13 +1343,6 @@ pg.panel = {
 					//if(pg.panel.get_selected_nodes()[0]!=node) pg.panel.select(node);
 					pg.panel.redraw();
 				}
-			})
-			.hover(function(){
-				var node = pg.panel.get_node_by_id($(this).attr('id'));
-				pg.panel.node_show_inputs(node);
-			},function(){
-				var node = pg.panel.get_node_by_id($(this).attr('id'));
-				pg.panel.node_hide_inputs(this);
 			})
 			.dblclick(function(e) {
 				// console.log($(this).attr('id') + " is double clicked");

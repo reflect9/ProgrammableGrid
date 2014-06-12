@@ -165,7 +165,7 @@
 			top:0px; left:0px;
 			pointer-events:none;
 			.path_connector {
-				fill:none; stroke:#222; stroke-width:3;
+				fill:none; stroke:black; stroke-width:2;
 			}
 		}
 	}
@@ -186,9 +186,12 @@
 			display:none;
 			background:rgba(255,0,0,0.1);
 			width:100%; height:100%;
-			font-size:2em;
+			font-size:5em;
 			text-align:center;
-			width:100%; height:100%;
+			border:6px solid #000;
+			border-radius:100000000px;
+			width:70%; height:70%;
+			top:10%;  left:10%;
 		}
 		.node_content {
 			overflow:hidden;
@@ -207,38 +210,34 @@
 			.above{
 				display:none;
 				position:absolute;
-				top:-4px; left:0px;
+				top:-2px; left:2px;
 				width:calc(100%-4px);
 				height:4px;
-				//background:#fff;
-				i.fa { color:white; font-size:20px; position:absolute;  top:-0px; left:47%;   }
+				background:#999;
 			}
 			.below{
 				display:none;
 				position:absolute;
-				bottom:-4px; left:0px;
+				bottom:-2px; left:2px;
 				width:calc(100%-4px);
 				height:4px;
-				//background:#fff;
-				i.fa { color:white; font-size:20px; position:absolute;  bottom:-0px; left:47%;   }
+				background:#999;
 			}
 			.left{
 				display:none;
 				position:absolute;
-				top:0px; left:-0px;
+				top:2px; left:-2px;
 				width:4px;
 				height:calc(100%-4px);;
-				//background:#fff;
-				i.fa { color:white; font-size:20px; position:absolute;  top:47%; left:-0px;   }
+				background:#999;
 			}
 			.right{
 				display:none;
 				position:absolute;
-				top:0px; right:-0px;
+				top:2px; right:-2px;
 				width:4px;
 				height:calc(100%-4px);;
-				//background:#fff;	
-				i.fa { color:white; font-size:20px; position:absolute;  top:47%; right:0px;   }
+				background:#999;	
 			}
 		}
 
@@ -247,7 +246,7 @@
 			z-index:98;
 			top:0px; left:0px;
 			background:#999; 
-			box-shadow: inset 0 0 0 1px #ffffff;
+			box-shadow: inset 0 0 0 2px #ffffff;
 			width:100%; height:100%;
 
 		}
@@ -306,7 +305,6 @@
 	}
 	.node-icon[operation='run'] {	background-position:  -395px -106px;  }
 
-	/*
 	.node-icon[operation='unknown'] {	background-position:  -320px -140px;  }
 	.node-icon[operation='get_attribute'] {	background-position:  -43px -280px;  }
 	.node-icon[operation='extract_element'] {	background-position: -211px -140px;  }
@@ -336,7 +334,6 @@
 	.node-icon[operation='filter'] {	background-position: -608px -213px;  }	
 	.node-icon[operation='number_predicate'] {	background-position: -608px -213px;    }	
 	.node-icon[operation='string_predicate'] {	background-position: -608px -213px;   }	
-	*/
 
 	/* .node-icon[operation='get_attribute'] {	background-position:  -24px -187px;  }
 	.node-icon[operation='extract_element'] {	background-position: -144px -96px;  }

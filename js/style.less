@@ -28,6 +28,12 @@
 	font-size:13px;	
 	line-height:1;
 
+	*, *::after, *::before {
+		-webkit-box-sizing: content-box !important; /* Safari/Chrome, other WebKit */
+		-moz-box-sizing: content-box !important;    /* Firefox, other Gecko */
+		box-sizing: content-box !important;         /* Opera/IE 8+ */
+	}
+
 	select{
 		border:1px solid #ccc;
 		line-height:1;
@@ -55,9 +61,10 @@
 		height: 20px;
 	}
 	input {
-		padding: 0;
+		padding:0;
 		margin:0;
-		border-radius:none;
+		border:1px solid #aaa;
+		border-radius:3px;
 	}
 	button{
 		font-size:13px;
@@ -86,7 +93,9 @@
 	}
 
 
-
+.notClickable {
+	pointer-events: none;
+}
 
 #pg_panel {
 	position:fixed;
@@ -197,10 +206,10 @@
 			width:100%; height:100%;
 			.nth-input-text {
 				position:absolute;
-				top:50%;
+				bottom:5px;
 				margin-top:-0.5em;
 				width:100%;
-				background:rgba(255,255,255,0.2);
+				background:rgba(255,255,255,0.7);
 				text-align:center;
 				font-size:1.5em;
 			}
@@ -571,10 +580,11 @@
 		.input_nodes_container {
 			overflow:auto;
 			height:90%; 
-			margin-top:8px;
 		}
-		.input_node_info {
+		.input_node_info { 
+			padding-bottom:6px;
 			margin-bottom:10px;
+			border-bottom:1px solid #aaa;
 		} 
 		/*.input_selector_icon {
 			width:15px; height:15px;
@@ -585,7 +595,7 @@
 			margin-top:3px;
 		}*/
 		input{
-			width:70%;
+			width:56%;
 		}
 		div.ul_container {
 			height:inherit;

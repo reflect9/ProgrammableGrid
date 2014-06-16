@@ -885,8 +885,24 @@ function get_parameter_value(parameter, node) {
 }
 
 
-
-
+function get_nodes_range(nodes) { 
+	if(!_.every(nodes, function(node) {  return typeof node.position !== 'undefined'; })) {
+		var min_x = _.min(_.map(nodes, function(n){ return (n.position)? n.position[1]:MAX_INT; }));
+		var min_y = _.min(_.map(nodes, function(n){ return (n.position)? n.position[0]:MAX_INT; }));
+		return {'min_x': min_x, 'min_y':min_y, 'rows':1, 'columns':nodes.length};
+	} else {
+		// find appropriate target_position
+		var position_range = [MAX_INT, MIN_INT, MAX_INT, MIN_INT];	// min-y, max-y, min-x, max-x
+		for(var i in nodes) {
+			position_range = [Math.min(position_range[0],nodes[i].position[0]),
+								Math.max(position_range[1],nodes[i].position[0]),
+								Math.min(position_range[2],nodes[i].position[1]),
+								Math.max(position_range[3],nodes[i].position[1])];
+		}
+		return {'min_x':position_range[2], 'min_y':position_range[0],
+				'rows':position_range[3]-position_range[2], 'columns':position_range[1]-position_range[0] };
+	}	
+}
 
 
 

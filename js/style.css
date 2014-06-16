@@ -19,6 +19,19 @@
   /* #pg_panel */
 
 }
+#pg *,
+#pg *::after,
+#pg *::before {
+  -webkit-box-sizing: content-box !important;
+  /* Safari/Chrome, other WebKit */
+
+  -moz-box-sizing: content-box !important;
+  /* Firefox, other Gecko */
+
+  box-sizing: content-box !important;
+  /* Opera/IE 8+ */
+
+}
 #pg select {
   border: 1px solid #ccc;
   line-height: 1;
@@ -49,7 +62,8 @@
 #pg input {
   padding: 0;
   margin: 0;
-  border-radius: none;
+  border: 1px solid #aaa;
+  border-radius: 3px;
 }
 #pg button {
   font-size: 13px;
@@ -74,6 +88,9 @@
 #pg canvas {
   margin: 0;
   padding: 0;
+}
+#pg .notClickable {
+  pointer-events: none;
 }
 #pg #pg_panel {
   position: fixed;
@@ -270,10 +287,10 @@
 }
 #pg #pg_panel .node .node_cover .nth-input-text {
   position: absolute;
-  top: 50%;
+  bottom: 5px;
   margin-top: -0.5em;
   width: 100%;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.7);
   text-align: center;
   font-size: 1.5em;
 }
@@ -594,13 +611,14 @@
 #pg #pg_command_ui .input_data .input_nodes_container {
   overflow: auto;
   height: 90%;
-  margin-top: 8px;
 }
 #pg #pg_command_ui .input_data .input_node_info {
+  padding-bottom: 6px;
   margin-bottom: 10px;
+  border-bottom: 1px solid #aaa;
 }
 #pg #pg_command_ui .input_data input {
-  width: 70%;
+  width: 56%;
 }
 #pg #pg_command_ui .input_data div.ul_container {
   height: inherit;

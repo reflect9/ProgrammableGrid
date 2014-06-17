@@ -108,6 +108,7 @@ pg.panel = {
 		pg.panel.commandUI.remove();
 		pg.panel.commandUI.turn_inspector(false);
 		pg.panel.node_select_modal_off();
+		pg.panel.redraw();
 	},
 	delete: function(target_nodeObj) {
 		console.log("delete start");
@@ -1035,6 +1036,7 @@ pg.panel = {
 			pg.panel.commandUI.updateInputNodeInfo(node);
 			pg.panel.commandUI.updateCurrentOperationInfo(node);
 			pg.panel.commandUI.updateSuggestedOperationInfo(node);
+			pg.panel.commandUI.renderDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
 		},
 		updateInputNodeInfo: function(node) {
 			var input_container = $("#pg_command_ui").find(".input_nodes_container");	 

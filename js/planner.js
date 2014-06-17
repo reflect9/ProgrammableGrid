@@ -571,13 +571,31 @@ pg.planner = {
 			generate: function(Is, O) {
 				if(!Is || !Is[0] || !Is[0].V || !isValueList(Is[0].V)) return false;
 				if(!O || !O.V) return false;
-				var true_sorted_list = _.sortBy(Is[0].V, function(v) { return v; });
-				if (isSameArray(O.V, Is[0].V)) return false; // if it's already sorted
-				if(!isSameArray(O.V, true_sorted_list)) return false;
-				// OKAY. generate sort
-				var _O = pg.Node.create(O);
-				_O.P = jsonClone(this.proto); 
-				return _O;
+				// try sort asc
+				var sorted = _.sortBy(Is[0].V, function(v) { return v; });
+				if (isSameArray(O.V, Is[0].V)) {    } // if it's already sorted 
+				else if(!isSameArray(O.V, sorted))  {   	}
+				else {
+					// OKAY. generate sort
+					var _O = pg.Node.create(O);
+					_O.P = jsonClone(this.proto); 	
+					return _O;
+				}
+
+				// try sort desc
+				sorted = _.sortBy(Is[0].V, function(v) { return v; });
+				sorted.reverse();
+				if (isSameArray(O.V, Is[0].V)) {    } // if it's already sorted 
+				else if(!isSameArray(O.V, sorted))  {   	}
+				else {
+					// OKAY. generate sort
+					var _O = pg.Node.create(O);
+					_O.P = jsonClone(this.proto); 	
+					_O.P.param.direction = 'down';
+					return _O;
+				}
+				return false;
+				
 			},
 			execute: function(O) {
 				if(!O || !O.I || !O.I[0]) return false;
@@ -585,6 +603,7 @@ pg.planner = {
 				if(!I.V) return false;
 				var trimmed_v = _.map(I.V, function(v) { return v.trim(); });
 				O.V = _.sortBy(trimmed_v, function(v){return v;});
+				if(O.P.param.direction=='down') O.V.reverse();
 				return O;
 			}
 		},
@@ -1337,8 +1356,8 @@ pg.planner = {
 				try{
 					var sourceV;
 					if(O.P.param.source.indexOf("_input")==0)  {
-						var nth_input = O.P.param.source[6]; 
-						sourceV = _.clone(pg.panel.get_node_by_id(O.I[nth_input+1],O).V);
+						var nth_input = parseInt(O.P.param.source[6]); 
+						O.V = _.clone(pg.panel.get_node_by_id(O.I[nth_input-1],O).V);
 					} else {
 						O.V = O.P.param.value;
 					}

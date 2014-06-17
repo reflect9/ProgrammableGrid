@@ -93,6 +93,7 @@ pg.panel = {
 		pg.panel.node_show_inputs(node);
 		node.selected = true;
 		console.log("commandUI redraw start");
+		pg.panel.commandUI.create();
 		pg.panel.commandUI.redraw();
 		console.log("commandUI redraw end");
 		pg.panel.commandUI.turn_inspector(true);
@@ -111,6 +112,7 @@ pg.panel = {
 	delete: function(target_nodeObj) {
 		console.log("delete start");
 		pg.inspector.unhighlight_list();
+		pg.inspector.off(pg.panel.dataUI.remove);
 		if(!target_nodeObj) target_nodeObj = pg.panel.get_selected_nodes()[0];
 		this.nodes = _.without(pg.panel.nodes, target_nodeObj);
 		this.commandUI.remove();
@@ -1024,16 +1026,81 @@ pg.panel = {
 		
 		redraw: function() {
 			var node = pg.panel.get_selected_nodes()[0];
+			//pg.panel.commandUI.update(applicable_tasks, applicable_operations, node);	
+			
+			// 0. show current node information and operation detail
+			$("#pg_command_ui").find(".node_info_id").text(node.ID);
+			$("#pg_command_ui").find(".node_info_position").text("@"+ JSON.stringify(node.position));
+			
+			pg.panel.commandUI.updateInputNodeInfo(node);
+			pg.panel.commandUI.updateCurrentOperationInfo(node);
+			pg.panel.commandUI.updateSuggestedOperationInfo(node);
+		},
+		updateInputNodeInfo: function(node) {
+			var input_container = $("#pg_command_ui").find(".input_nodes_container");	 
+			var input_node_info_list = pg.panel.commandUI.renderInputNodeInfo(node);
+			$(input_container).empty().append(input_node_info_list);
+			// ADD MORe INPUT button
+			$("<center><i class='fa fa-plus-square-o' style='font-size:13px; color:#888; cursor:pointer;'> ADD MORE INPUT</i></center>").click($.proxy(function() {
+				this.node.I.push("");
+				pg.panel.redraw();
+			},{node:node})).appendTo(input_container);
+
+		},
+		updateCurrentOperationInfo: function(node) {
+			var operation_info = $("#pg_command_ui").find(".operation_info");	 
+			pg.panel.commandUI.renderOperationInfo(node, operation_info);
+		},
+		updateSuggestedOperationInfo: function(node) {
+			var operation_container = $("#pg_command_ui").find("#operation_container");  	// main command UI
+			var task_container = $("#pg_command_ui").find("#task_container");  	// main command UI
+			$(operation_container).empty();   $(task_container).empty();
+
+			// 0. infer tasks and operations
 			var Is = _.without(_.map(node.I, function(input_id) {
 				return pg.panel.get_node_by_id(input_id, node);
 			}), false, undefined);
-			var applicable_tasks = []; var applicable_operations=[];
+			var taskSuggestions = []; var opSuggestions=[];
 			if(node.V && node.V.length>0) {
-				applicable_tasks = (node.V && node.V.length>0)? pg.planner.plan(Is, node) : [];	
+				taskSuggestions = (node.V && node.V.length>0)? pg.planner.plan(Is, node) : [];	
 			} 
-			applicable_operations = (Is.length>0)? pg.planner.find_applicable_operations(Is) : [];
-			pg.panel.commandUI.update(applicable_tasks, applicable_operations, node);	
+			opSuggestions = (Is.length>0)? pg.planner.find_applicable_operations(Is) : [];
+
+			// 1. show taskSuggestions 
+			if(taskSuggestions.length>0) {
+				_.each(taskSuggestions, function(sn, sni) {
+					var nodeSet = pg.panel.commandUI.makeSuggestedTaskButton(sn);
+					$(task_container).append(nodeSet);
+				});
+			} else {
+				$(task_container).append("<span style='margin-left:20px;'>No task is applicable.</span>");
+			}
+			
+			// show applicable opSuggestions
+			if(opSuggestions.length>0) {
+				_.each(opSuggestions, function(op, opi)  {
+					var commandButton = pg.panel.commandUI.makeSuggestedOperationButton(op);
+					if(node && node.P && node.P.type==c.type) {
+						// if the command is curreltly selected
+						$(commandButton).attr('selected',true);
+					}
+					$(operation_container).append(commandButton);
+				});
+			}
+			//  else {
+			// 	$(operation_container).append("<span style='margin-left:20px;'>No operation is applicable.</span>");
+			// } 
+			// show the rest opSuggestions 
+			var operation_types = _.map(opSuggestions, function(op){return op.type; });
+			var rest_op = _.filter(pg.planner.get_all_operations(), function(op) {
+				return operation_types.indexOf(op.type)==-1;
+			});
+			_.each(rest_op, function(op, opi) {
+				var commandButton = pg.panel.commandUI.makeSuggestedOperationButton(op, true);
+				$(operation_container).append(commandButton);
+			});
 		},
+		// DEPRECATED: update method
 		update: function(solutionNodes, operations, node) {
 			if($("#pg_command_ui").length==0) pg.panel.commandUI.create();	// open if it's closed
 			var operation_container = $("#pg_command_ui").find("#operation_container");  	// main command UI
@@ -1050,11 +1117,12 @@ pg.panel = {
 			$("#pg_command_ui").find(".node_info_position").text("@"+ JSON.stringify(node.position));
 			// show operation detail
 			if(node) {
-				pg.panel.commandUI.makeOperationInfo(node, operation_info);
+				pg.panel.commandUI.renderOperationInfo(node, operation_info);
 				
 			} 
+			
 			// 1. show input nodes
-			var input_node_info_list = pg.panel.commandUI.makeInputNodeInfo(node);
+			var input_node_info_list = pg.panel.commandUI.renderInputNodeInfo(node);
 			$(input_container).append(input_node_info_list);
 			// input node add button
 			$("<center><i class='fa fa-plus-square-o' style='font-size:13px; color:#888; cursor:pointer;'> ADD MORE INPUT</i></center>").click($.proxy(function() {
@@ -1097,28 +1165,26 @@ pg.panel = {
 				$(operation_container).append(commandButton);
 			});
 			// DATATABLE
-			this.makeDataTable(node.V, output_data_ul);
+			this.renderDataTable(node.V, output_data_ul);
 		},
-
-
-		inferOperations: function() {
-			var node = pg.panel.get_selected_nodes()[0]; 
-			var Is = _.without(_.map(node.I, function(input_id) {
-				return pg.panel.get_node_by_id(input_id, node);
-			}), false, undefined);
-			var inferredOperations = pg.planner.find_applicable_operations(Is);
-			pg.panel.commandUI.update([], inferredOperations, node);	
-		},
-		inferTasks: function() {
-			var node = pg.panel.get_selected_nodes()[0]; 
-			var Is = _.without(_.map(node.I, function(input_id) {
-				return pg.panel.get_node_by_id(input_id, node);
-			}), false, undefined);
-			var inferredTasks = pg.planner.plan(Is, O);	
-			pg.panel.commandUI.update(inferredTasks, [], node);	
-			pg.panel.run_single_node(node);
-		},
-		makeInputNodeInfo: function(node) {
+		// inferOperations: function() {
+		// 	var node = pg.panel.get_selected_nodes()[0]; 
+		// 	var Is = _.without(_.map(node.I, function(input_id) {
+		// 		return pg.panel.get_node_by_id(input_id, node);
+		// 	}), false, undefined);
+		// 	var inferredOperations = pg.planner.find_applicable_operations(Is);
+		// 	pg.panel.commandUI.update([], inferredOperations, node);	
+		// },
+		// inferTasks: function() {
+		// 	var node = pg.panel.get_selected_nodes()[0]; 
+		// 	var Is = _.without(_.map(node.I, function(input_id) {
+		// 		return pg.panel.get_node_by_id(input_id, node);
+		// 	}), false, undefined);
+		// 	var inferredTasks = pg.planner.plan(Is, O);	
+		// 	pg.panel.commandUI.update(inferredTasks, [], node);	
+		// 	pg.panel.run_single_node(node);
+		// },
+		renderInputNodeInfo: function(node) {
 			var node_info_list = [];
 			for(var i=0; i<node.I.length; i++) {
 				try{
@@ -1131,7 +1197,7 @@ pg.panel = {
 							<label>I"+(i+1)+" </label><input type='text' inputNodeIdx='"+i+"' value='"+node.I[i]+"'/>\
 								<a class='pick_button' inputNodeIdx='"+i+"' style='color:#888; font-size:12px;'>&nbsp;<i class='fa fa-crosshairs'></i></a>\
 								<a class='delete_button' inputNodeIdx='"+i+"' style='color:#888; font-size:12px;'>&nbsp;<i class='fa fa-trash-o'></i></a>\
-							<div class='input_node_data_container'></div>\
+							<div class='input_node_data_container pg_data_table'></div>\
 						</div>");
 					$(inputNode_el).find("input").change(function() {
 						// update the input node ID 
@@ -1165,10 +1231,10 @@ pg.panel = {
 								$("div.node").removeClass("input_node_hover");
 							}
 						);
-						var n_values_in_the_input = $("<div style='margin-top:3px;'><label>"+inputNode.V.length+" "+getValueType(inputNode.V)+"</label></div>");
+						var n_values_in_the_input = $("<div style='margin-top:3px;'><div class='node_data_brief_info'>"+inputNode.V.length+" "+getValueType(inputNode.V)+"</div></div>");
 						var data_ul = $("<ul class='data_ul'></ul>").appendTo(n_values_in_the_input);
-						$(n_values_in_the_input).find("label").click($.proxy(function() {
-							if($(this.data_ul).html()=="") pg.panel.commandUI.makeDataTable(this.inputNode.V, this.data_ul, true);		
+						$(n_values_in_the_input).find(".node_data_brief_info").click($.proxy(function() {
+							if($(this.data_ul).html()=="") pg.panel.commandUI.renderDataTable(this.inputNode.V, this.data_ul, true);		
 							else $(this.data_ul).empty();
 						},{inputNode:inputNode, data_ul:data_ul}));
 						$(inputNode_el).find(".input_node_data_container").append(n_values_in_the_input);
@@ -1180,7 +1246,7 @@ pg.panel = {
 			}
 			return node_info_list;
 		},
-		makeOperationInfo: function(node, _container_el) {
+		renderOperationInfo: function(node, _container_el) {
 			var container_el = (_container_el)?_container_el:$("<div></div>").get(0);
 			var P = node.P;
 			var op_type = (P && P.type)? P.type:"unknown"; 
@@ -1218,7 +1284,7 @@ pg.panel = {
 			},{node:node})).appendTo(paramEl);
 			return $(container_el).get(0);
 		},
-		makeDataTable: function(V, target_ul, isReadOnly) {
+		renderDataTable: function(V, target_ul, isReadOnly) {
 			var isInputData = ($(target_ul).parents(".input_data").length>0)? true: false;
 			$(target_ul).empty();
 			// if(!isReadOnly && V.length==0) {
@@ -1242,13 +1308,20 @@ pg.panel = {
 				for(i in V) {
 					var v = V[i]; 	var idx_to_show = parseInt(i)+1;
 					var entryEl = $("<li data_index='"+i+"'><label class='data_label'>"+idx_to_show+"</label></li>"); 
+					$(entryEl).find("label.data_label").click($.proxy(function() {
+						pg.panel.commandUI.addData(this.v);
+					},{v:v}));
 					if(isDom(v)) {
 						var attr_dict = get_attr_dict(v);  // get_attr_dict returns simplified attr->value object
 						_.each(attr_dict, function(value,key) {
-							var attr_el = $("	<div class='attr'><span class='attr_key'>"+ key +":</span>\
-												<span class='attr_value' attr_key='"+key+"'>"+value+"</span></div>");
+							var attr_el = $("	<div class='attr'>\
+													<span class='attr_key'>"+ key +":\
+													<i class='fa fa-sign-out hidden'></i></span>\
+													<span class='attr_value' attr_key='"+key+"'>"+value+"</span>\
+												</div>");
 							if(isInputData) {
-								$(attr_el).find(".attr_value").click($.proxy(function() {
+								// when attribute value is clicked, the value adds to the current node data
+								$(attr_el).click($.proxy(function() {
 									// var key = $(this).attr('attr_key');
 									pg.panel.commandUI.addData(this.value);
 								},{value:value}));	
@@ -1281,9 +1354,9 @@ pg.panel = {
 		addData: function(val, targetNode) {
 			var node = pg.panel.get_selected_nodes()[0];
 			if(targetNode) node = targetNode;
-			node.V.push(txt2var(val));
-			pg.panel.commandUI.makeDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
-			pg.panel.redraw();
+			node.V.push(val);
+			pg.panel.commandUI.renderDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
+			pg.panel.commandUI.updateSuggestedOperationInfo(node);
 		},
 		makeSuggestedTaskButton: function(_nodes) {
 			var el = $("<div class='nodes'></div>"); 

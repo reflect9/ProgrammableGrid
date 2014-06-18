@@ -53,15 +53,19 @@ pg.Node = {
 			<div class='node_content'></div>\
 			<div class='node_borders'>\
 				<div class='above'>\
+					<div class='nth-input hidden'>2</div>\
 					<i class='fa fa-caret-down fa-lg'></i>\
 				</div>\
 				<div class='below'>\
+					<div class='nth-input hidden'>2</div>\
 					<i class='fa fa-caret-up fa-lg'></i>\
 				</div>\
 				<div class='left'>\
+					<div class='nth-input hidden'>2</div>\
 					<i class='fa fa-caret-right fa-lg'></i>\
 				</div>\
 				<div class='right'>\
+					<div class='nth-input hidden'>2</div>\
 					<i class='fa fa-caret-left fa-lg'></i>\
 				</div>\
 			</div>\

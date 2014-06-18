@@ -322,10 +322,11 @@ pg.panel = {
 		$(".node .node_cover").hide().unbind('click');
 	},
 	node_show_inputs: function(node) {
+		$("#"+node.ID).find('.nth-input').show();
 		_.each(node.I, function(input_node_id, n_th) {
 			var input_node = pg.panel.get_node_by_id(input_node_id, node);
 			if(!input_node) return;
-			$(".node[id='"+input_node.ID+"'] .node_cover .nth-input-text").text("I"+(n_th+1));
+			//$(".node[id='"+input_node.ID+"'] .node_cover .nth-input-text").text("I"+(n_th+1));
 
 			$(".node[id='"+input_node.ID+"'] .node_cover").addClass('notClickable').show();
 			if(input_node_id=='_left' || input_node_id=='_right'|| input_node_id=='_above'|| input_node_id=='_below') {
@@ -340,6 +341,7 @@ pg.panel = {
 		// })
 	},
 	node_hide_inputs: function(node) {
+		$("#"+node.ID).find('.nth-input').hide();
 		$(".node .node_cover .nth-input-text").empty();
 		$(".node .node_cover").removeClass('notClickable').hide();
 		pg.panel.clearConnector();
@@ -598,9 +600,10 @@ pg.panel = {
 		_.each(node_list, function(n) {
 			var n_el = $(".node#"+n.ID); 
 			if(n_el.length==0) return;
-			_.each(n.I, function(inp_n_id){
+			_.each(n.I, function(inp_n_id,idx){
 				if(pg.panel.get_adjacent_node(inp_n_id, n)!= false) {
 					$(n_el).attr('border'+inp_n_id,true);	
+					$(n_el).find(".node_borders").find("."+inp_n_id.slice(1)).find(".nth-input").text(idx+1);
 				} else {
 					// var from_node_el = $(".node#"+inp_n_id);
 					// var to_node_el = $(".node#"+n.ID);

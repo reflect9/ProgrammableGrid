@@ -315,6 +315,15 @@
   width: 100%;
   height: 100%;
 }
+#pg #pg_panel .node .node_borders .nth-input {
+  position: absolute;
+  width: 10px;
+  height: 12px;
+  background-color: white;
+  text-align: center;
+  font-weight: 500;
+  color: #888;
+}
 #pg #pg_panel .node .node_borders .above {
   display: none;
   position: absolute;
@@ -322,6 +331,11 @@
   left: 0px;
   width: calc(96%);
   height: 4px;
+}
+#pg #pg_panel .node .node_borders .above .nth-input {
+  top: -9px;
+  left: 48%;
+  border-radius: 2px 2px 0 0;
 }
 #pg #pg_panel .node .node_borders .above i.fa {
   color: white;
@@ -338,6 +352,11 @@
   width: calc(96%);
   height: 4px;
 }
+#pg #pg_panel .node .node_borders .below .nth-input {
+  bottom: -9px;
+  left: 48%;
+  border-radius: 0 0 2px 2px;
+}
 #pg #pg_panel .node .node_borders .below i.fa {
   color: white;
   font-size: 20px;
@@ -353,6 +372,11 @@
   width: 4px;
   height: calc(96%);
 }
+#pg #pg_panel .node .node_borders .left .nth-input {
+  top: 48%;
+  left: -9px;
+  border-radius: 2px 0 0 2px;
+}
 #pg #pg_panel .node .node_borders .left i.fa {
   color: white;
   font-size: 20px;
@@ -367,6 +391,11 @@
   right: 0px;
   width: 4px;
   height: calc(96%);
+}
+#pg #pg_panel .node .node_borders .right .nth-input {
+  top: 48%;
+  right: -9px;
+  border-radius: 0 2px 2px 0;
 }
 #pg #pg_panel .node .node_borders .right i.fa {
   color: white;

@@ -924,10 +924,14 @@ pg.panel = {
 					</div>\
 					<div class='output_data'>\
 						<label>Data of the node</label>\
-						<div class='pg_data_table'><ul class='data_ul'>\
-						</ul></div>\
+						<div class='pg_data_table'>\
+							<ul class='data_ul'></ul>\
+							<div class='data_tools'>\
+								<input type='text' class='new_data_input' placeholder='Add new data'></input>\
+								<i class='fa fa-trash-o'></i>\
+							</div>\
+						</div>\
 						<div class='output_data_buttons floating_buttons_at_the_bottom'>\
-							<input type='text' class='new_data_input' placeholder='Add new data'></input><br>\
 						</div>\
 					</div>\
 				</div>\
@@ -1004,6 +1008,9 @@ pg.panel = {
 				pg.panel.commandUI.addData($(this).val());
 				$(this).val("");
 				$("#pg_command_ui").find("input.new_data_input").focus();
+			});
+			$(ui_el).find(".data_tools").find("i.fa-trash-o").click(function() {
+				pg.panel.empty();
 			});
 			$(ui_el).find(".extract_button").click(function() { pg.panel.commandUI.toggleExtract(); });
 			$(ui_el).find(".clear_data_button").click(function(e){pg.panel.empty(pg.panel.el_to_obj(e.target));});
@@ -1239,7 +1246,7 @@ pg.panel = {
 						var n_values_in_the_input = $("<div style='margin-top:3px;'><div class='node_data_brief_info'>"+inputNode.V.length+" "+getValueType(inputNode.V)+"</div></div>");
 						var data_ul = $("<ul class='data_ul'></ul>").appendTo(n_values_in_the_input);
 						$(n_values_in_the_input).find(".node_data_brief_info").click($.proxy(function() {
-							if($(this.data_ul).html()=="") pg.panel.commandUI.renderDataTable(this.inputNode.V, this.data_ul, true);		
+							if($(this.data_ul).html()=="") pg.panel.commandUI.renderInputDataTable(this.inputNode.V, this.data_ul);		
 							else $(this.data_ul).empty();
 						},{inputNode:inputNode, data_ul:data_ul}));
 						$(inputNode_el).find(".input_node_data_container").append(n_values_in_the_input);
@@ -1289,72 +1296,66 @@ pg.panel = {
 			},{node:node})).appendTo(paramEl);
 			return $(container_el).get(0);
 		},
-		renderDataTable: function(V, target_ul, isReadOnly) {
-			var isInputData = ($(target_ul).parents(".input_data").length>0)? true: false;
+		renderInputDataTable: function(V, target_ul) {
 			$(target_ul).empty();
-			// if(!isReadOnly && V.length==0) {
-			// 	var html = "<div class='data_table_instruction_container'>\
-			// 					<div class='dt_inst'>\
-			// 						The node data is empty.<br> You can either<br>\
-			// 						<button class='extract_button'>Extract from page</button>\
-			// 						<div style='width:100%; text-align:center'>or</div>\
-			// 						<input class='input_type_data' placeholder='Type data here'></input>\
-			// 					</div>\
-			// 				</div>";
-			// 	var datable_el = $(html).appendTo(target_ul);
-			// 	$(datable_el).find("input.input_type_data").change(function() {
-			// 		pg.panel.commandUI.addData($(this).val());
-			// 		$(this).val("");
-			// 		$("#pg_command_ui").find(".new_data_input").focus();
-			// 	});
-			// 	$(datable_el).find("button.extract_button").click(function(){ pg.panel.commandUI.toggleExtract(); });
-			// 	$("#pg_command_ui").find(".output_data_buttons").hide();
-			// } else {	// node has some data to display
-				for(i in V) {
-					var v = V[i]; 	var idx_to_show = parseInt(i)+1;
-					var entryEl = $("<li data_index='"+i+"'><label class='data_label'>"+idx_to_show+"</label></li>"); 
-					$(entryEl).find("label.data_label").click($.proxy(function() {
-						pg.panel.commandUI.addData(this.v);
-					},{v:v}));
-					if(isDom(v)) {
-						var attr_dict = get_attr_dict(v);  // get_attr_dict returns simplified attr->value object
-						_.each(attr_dict, function(value,key) {
-							var attr_el = $("	<div class='attr'>\
-													<span class='attr_key'>"+ key +":\
-													<i class='fa fa-sign-out hidden'></i></span>\
-													<span class='attr_value' attr_key='"+key+"'>"+value+"</span>\
-												</div>");
-							if(isInputData) {
-								// when attribute value is clicked, the value adds to the current node data
-								$(attr_el).click($.proxy(function() {
-									// var key = $(this).attr('attr_key');
-									pg.panel.commandUI.addData(this.value);
-								},{value:value}));	
-							}
-							$(attr_el).appendTo(entryEl);
-						});	
-					} else {	// WHEN THE DATA is NOT DOM
-						$(entryEl).append("	<div class='attr'><span class='attr_value'>"+v+"</span></div>");
-					}
-					if(isReadOnly) { }
-					else {	// edit buttons for individual data
-						var data_edit_buttons = $("<div class='data_edit_buttons'></div>")
-							.appendTo(entryEl);
-						$(entryEl).hover(function(){$(this).find(".data_edit_buttons").show();}, function(){$(this).find(".data_edit_buttons").hide();});
-						$("<button class='edit_button'>E</button>").click(function() {
-							// TBD
-						}).appendTo(data_edit_buttons);
-						$("<button class='delete_button'>D</button>").click(function() {
-							var data_index = $(this).parents("li").attr("data_index");
-							var node = pg.panel.get_selected_nodes()[0];
-							node.V.splice(data_index,1);
-							pg.panel.redraw();
-						}).appendTo(data_edit_buttons);
-					}	// end of edit buttons
-					$(target_ul).append(entryEl);
+			for(i in V) {
+				var v = V[i]; 	var idx_to_show = parseInt(i)+1;
+				var entryEl = $("<li data_index='"+i+"'><label class='data_label'>"+idx_to_show+"</label></li>"); 
+				$(entryEl).find("label.data_label").click($.proxy(function() {
+					pg.panel.commandUI.addData(this.v);
+				},{v:v}));
+				if(isDom(v)) {
+					var attr_dict = get_attr_dict(v);  // get_attr_dict returns simplified attr->value object
+					_.each(attr_dict, function(value,key) {
+						var attr_el = $("	<div class='attr'>\
+												<span class='attr_key'>"+ key +":\
+												<i class='fa fa-sign-out hidden'></i></span>\
+												<span class='attr_value' attr_key='"+key+"'>"+value+"</span>\
+											</div>");
+						// when attribute value is clicked, the value adds to the current node data
+						$(attr_el).click($.proxy(function() {
+							// var key = $(this).attr('attr_key');
+							pg.panel.commandUI.addData(this.value);
+						},{value:value}));	
+						$(attr_el).appendTo(entryEl);
+					});	
+				} else {	// WHEN THE DATA is NOT DOM
+					$(entryEl).append("	<div class='attr'><span class='attr_value'>"+v+"</span></div>");
 				}
-				$("#pg_command_ui").find(".output_data_buttons").show();
-			// }
+				$(target_ul).append(entryEl);
+			}
+		},
+		renderDataTable: function(V, target_ul) {
+			$(target_ul).empty();
+			for(i in V) {
+				var v = V[i]; 	var idx_to_show = parseInt(i)+1;
+				var entryEl = $("<li data_index='"+i+"'><label class='data_label'>"+idx_to_show+"</label></li>"); 
+				$(entryEl).find("label.data_label").click($.proxy(function() {
+					pg.panel.commandUI.addData(this.v);
+				},{v:v}));
+				if(isDom(v)) {
+					var attr_dict = get_attr_dict(v);  // get_attr_dict returns simplified attr->value object
+					_.each(attr_dict, function(value,key) {
+						var attr_el = $("	<div class='attr'>\
+												<span class='attr_key'>"+ key +":\
+												<span class='attr_value' attr_key='"+key+"'>"+value+"</span>\
+											</div>").appendTo(entryEl);
+					});	
+				} else {	// WHEN THE DATA is NOT DOM
+					$(entryEl).append("	<div class='attr'><span class='attr_value'>"+v+"</span></div>");
+				}
+				// create trash and other tool buttons
+				var data_edit_buttons = $("<div class='data_edit_buttons'></div>")
+					.appendTo(entryEl);
+				$(entryEl).hover(function(){$(this).find(".data_edit_buttons").show();}, function(){$(this).find(".data_edit_buttons").hide();});
+				$("<a class='delete_button'><i class='fa fa-trash-o'></i></button>").click(function() {
+					var data_index = $(this).parents("li").attr("data_index");
+					var node = pg.panel.get_selected_nodes()[0];
+					node.V.splice(data_index,1);
+					pg.panel.redraw();
+				}).appendTo(data_edit_buttons);
+				$(target_ul).append(entryEl);
+			}
 		},
 		addData: function(val, targetNode) {
 			var node = pg.panel.get_selected_nodes()[0];

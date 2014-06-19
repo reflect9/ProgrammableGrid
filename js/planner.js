@@ -664,12 +664,12 @@ pg.planner = {
 			},
 			generate: function(Is, O) {
 				// check input nodes have multiple values to join
-				if(!Is || !Is.length<2) return false;
+				if(!Is || Is.length<2) return false;
 				for(var i=0;i<Is.length;i++) {
-					if(!Is[i] || !Is[i].V || !Is[i].V.length==0) return false;	
+					if(!Is[i] || !Is[i].V || Is[i].V.length==0) return false;	
 				}
 				// check output
-				if(!O || !O.V || !O.V.length==0) return false;
+				if(!O || !O.V || O.V.length==0) return false;
 				var true_joined_list = [];
 				for(var i=0;i<Is.length;i++) {
 					true_joined_list = true_joined_list.concat(Is[i].V);
@@ -713,14 +713,25 @@ pg.planner = {
 				} catch(e) { console.log(e.stack); return false;} 
 			},
 			generate: function(Is, O) {
+				var connector;
 				try{	// PRECHECLONG
 					if (Is.length<2 ||
 						_.every(Is, function(I){ return isStringList(I.V); }) == false  ||
 						isStringList(O.V) == false) return false;
 					for(i in O.V) {
-						for(j in Is) {
-							if(O.V[i].indexOf(Is[j].V[i])==-1) return false;
+						var concat_str = _.clone(O.V[i]);
+						if(concat_str.indexOf(Is[0].V[i])==0) {
+							concat_str = concat_str.replace(Is[0].V[i],"");
+						} else { return false; }
+						for(var j=1;j<Is.length;j++) {
+							var pos = concat_str.indexOf(Is[j].V[i]);
+							connector_temp = concat_str.substring(0,pos);
+							if(typeof connector!=='undefined' && connector!=connector_temp) return false;
+							else connector = connector_temp;								
+							concat_str = concat_str.replace(connector,"");
+							concat_str = concat_str.replace(Is[j].V[i],"");
 						}
+						if(concat_str!="") return false;
 					}
 				} catch(e) { console.log(e.stack); }
 				// GENERATE
@@ -760,6 +771,7 @@ pg.planner = {
 				// });
 				var _O = pg.Node.create(O);
 				_O.P = pg.planner.get_prototype({type:"compose_text"});
+				_O.P.param.connector=connector;
 				// var node_goal = {V:_O.V, I:toArray(Is), A:null, P:{type:'compose_text',param:{connector:connector, order: order}} };
 				return _O;	
 				
@@ -768,35 +780,12 @@ pg.planner = {
 				// var firstText, firstText_node, secondText, secondText_node, composed_text;
 				// var order = O.P.param.order;
 				try{
-					var connector = O.P.param.connector;
 					var inputStringLists = _.map(O.I, function(i) { return pg.panel.get_node_by_id(i,O).V; });
-					var inList = [];
-					O.V = _.map(_.zip(inputStringLists), function(pair) {
-						for(i in pair) {
-							inList[i] = (pair[i])? pair[i]:inList[i];
-						}
-						return inList.join(connector);
+					O.V = _.map(_.zip.apply(_, inputStringLists), function(pair) {
+						return _.flatten(pair).join(O.P.param.connector);
 					});
+					return O;
 				} catch(e) { console.log(e.stack); }
-				// if(O.P.param.text_A=='_input1' || O.P.param.text_A=='_input2') {
-				// 	firstText_node = pg.panel.get_node_by_id(O.I[0], O);
-				// 	firstText = (firstText_node)? firstText_node.V : [];
-				// } else {
-				// 	firstText = O.P.param.text_A;
-				// }
-				// if(O.P.param.text_B=='_input1' || O.P.param.text_B=='_input2') {
-				// 	secondText_node = pg.panel.get_node_by_id(O.I[0], O);
-				// 	secondText = (secondText_node)? secondText_node.V : [];
-				// } else {
-				// 	secondText = O.P.param.text_B;
-				// }
-				// for(var i=0; i<Math.max(firstText.length, secondText.length); i++) {
-				// 	var i_f = Math.min(firstText.length-1, i);
-				// 	var i_s = Math.min(secondText.length-1, i);
-				// 	composed_text.push(firstText[i_f] + connector + secondText[i_s]);
-				// }
-				// O.V= composed_text;
-				return O;
 			}
 		},
 		arithmetic: {
@@ -821,25 +810,49 @@ pg.planner = {
 			},
 			generate : function(Is, O) {
 				try{
+					var helper = pg.planner.operations.arithmetic.helper_arithmetic;
 					var arithmetic_operators = ["+","-","*","/","%"];
-					if(O.V.length==0 || Is.length<2 || Is[0].V.length==0) return false;
-					var valid_operators = _.filter(arithmetic_operators, function(operator) {
-						for(var v_i=0;v_i<O.V.length;v_i++) {
-							var i_a = Math.min(Is[0].V.length, v_i);
-							var i_b = Math.min(Is[1].V.length, v_i);
-							var operand_a = Is[0].V[i_a];
-							var operand_b = Is[1].V[i_b]; 
-							if(!operand_a || !operand_b) return false;
-							if(this.helper(operand_a, operand_b, operator) != O.V[v_i])
-								return false;
-						}	
-						return true;
-					},{helper:this.helper_arithmetic});
-					if(valid_operators.length==0) return false;
-					else {
-						var _O = pg.Node.create(O);
-						_O.P = jsonClone(this.proto);
-						_O.P.param.operator = valid_operators[0];
+					if(O.V.length==0 || !Is[0] || Is[0].V.length==0) return false;
+					if(Is.length<2) {
+						// single input case.  operand_B should be found. 
+						var valid_operator_operand = [];
+						_.each(arithmetic_operators, function(operator) {
+							var valid_operands = [];
+							for(var v_i=0;v_i<O.V.length;v_i++) {
+								var operand_a = Is[0].V[v_i];
+								if(typeof operand_a === 'undefined') return false;
+								valid_operands.push(helper[operator].inverse(operand_a, O.V[v_i]));
+							}
+							if(_.unique(valid_operands).length==1) {
+								valid_operator_operand.push({'operator':operator, 'operand':valid_operands[0]});
+							} else return false;
+						});
+						if(valid_operator_operand.length>0) {
+							var _O = pg.Node.create(O);
+							_O.P = jsonClone(this.proto);
+							_O.P.param.operator = valid_operator_operand[0].operator;
+							_O.P.param.operand_B = valid_operator_operand[0].operand;
+						} else return false;
+					} else {
+						// when two inputs were available
+						var valid_operators = _.filter(arithmetic_operators, function(operator) {
+							for(var v_i=0;v_i<O.V.length;v_i++) {
+								var i_a = Math.min(Is[0].V.length, v_i);
+								var i_b = Math.min(Is[1].V.length, v_i);
+								var operand_a = Is[0].V[i_a];
+								var operand_b = Is[1].V[i_b]; 
+								if(typeof operand_a==='undefined' || typeof operand_b==='undefined') return false;
+								if(this.helper[operator].execute(operand_a, operand_b) != O.V[v_i])
+									return false;
+							}	
+							return true;
+						},{helper:helper});
+						if(valid_operators.length==0) return false;
+						else {
+							var _O = pg.Node.create(O);
+							_O.P = jsonClone(this.proto);
+							_O.P.param.operator = valid_operators[0];
+						}
 					}
 				} catch(e) { console.log(e.stack); }
 				return _O;
@@ -863,19 +876,35 @@ pg.planner = {
 					for(var i=0;i<Math.max(I1.length, I2.length);i++) {
 						var op1 = (i<I1.length)? I1[i] : I1[I1.length-1];
 						var op2 = (i<I2.length)? I2[i] : I2[I2.length-1];
-						result.push(helper_arithmetic(op1, op2, operator));
+						result.push(helper_arithmetic[operator].execute(parseFloat(op1), parseFloat(op2)));
 					}
 					O.V = result;
 					return O;
 				} catch(e) { return false; }
 			},
-			helper_arithmetic: function(op1, op2, operand) {
-				if(operand=="+") return op1+op2;
-				if(operand=="-") return op1-op2;
-				if(operand=="*") return op1*op2;
-				if(operand=="/") return op1/op2;
-				if(operand=="%") return op1%op2;
+			helper_arithmetic: {
+				"+": {		
+					execute:function(op1, op2) { return op1+op2; },
+					inverse:function(op1, output) { return output-op1; }
+				},
+				"-": {		
+					execute:function(op1, op2) { return op1-op2; },
+					inverse:function(op1, output) { return op1-output; }
+				},
+				"*": {		
+					execute:function(op1, op2) { return op1*op2; },
+					inverse:function(op1, output) { return output/op1; }
+				},
+				"/": {		
+					execute:function(op1, op2) { return op1/op2; },
+					inverse:function(op1, output) { return op1/output; }
+				},
+				"%": {		
+					execute:function(op1, op2) { return op1%op2; },
+					inverse:function(op1, output) { return op1-output; }
+				}
 			}
+
 		},
 		filter: {
 			proto: {

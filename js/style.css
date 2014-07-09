@@ -478,6 +478,9 @@
   width: 30px;
   height: 30px;
   padding: 4px;
+  color: #fff;
+  font-size: 15px;
+  text-shadow: -1px -1px 0px rgba(0, 0, 0, 0.5);
 }
 #pg #pg_panel .node-icon[operation='run'] {
   background-position: -395px -106px;

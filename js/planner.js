@@ -1,15 +1,18 @@
 pg.planner = {
 	plan: function(Is, O){
-		var multiple_nodes_solutions = _.map(pg.planner.tasks, function(task, tname) {
+		var multiple_nodes_solutions = _.flatten(_.union(_.map(pg.planner.tasks, function(task, tname) {
 			if (task.pre(Is, O)) {
-				var newNodes = task.generate(Is,_.clone(O));
-				if (newNodes && (!_.isArray(newNodes) || newNodes.indexOf(false)==-1)) {
-					return $.makeArray(newNodes);
-				} else return false;
+				var solutions = task.generate(Is,_.clone(O));
+				solutions = _.filter(solutions, function(node_list) {
+					if (node_list && (!_.isArray(node_list) || node_list.indexOf(false)==-1)) {
+						return $.makeArray(node_list);
+					} else return false;
+				});
+				return solutions;
 			}
-		});
+		})),1);
 		multiple_nodes_solutions= _.filter(multiple_nodes_solutions, function(listofnodes) {
-			return listofnodes && (listofnodes.indexOf(false)==-1);
+			return listofnodes && listofnodes.length>0 && (listofnodes.indexOf(false)==-1);
 		});
 		var single_node_solutions = _.without(_.map(pg.planner.operations, function(op, opkey) {
 			var single_node = op.generate(Is, O);
@@ -599,9 +602,11 @@ pg.planner = {
 			},
 			execute: function(O) {
 				if(!O || !O.I || !O.I[0]) return false;
+				var trimmed_v;
 				var I = pg.panel.get_node_by_id(O.I[0],O);
 				if(!I.V) return false;
-				var trimmed_v = _.map(I.V, function(v) { return v.trim(); });
+				if(isStringList(I.V)) trimmed_v = _.map(I.V, function(v) { return v.trim(); });
+				else trimmed_v = I.V;
 				O.V = _.sortBy(trimmed_v, function(v){return v;});
 				if(O.P.param.direction=='down') O.V.reverse();
 				return O;
@@ -943,8 +948,8 @@ pg.planner = {
 			},
 			execute: function(O) {
 				try{
-					var nth_item = O.P.param.items[6];
-					var nth_boolean = O.P.param.in_out[6];
+					var nth_item = parseInt(O.P.param.items[6])-1;
+					var nth_boolean = parseInt(O.P.param.in_out[6])-1;
 					var input_v = pg.panel.get_node_by_id(O.I[nth_item],O).V;
 					var input_b = pg.panel.get_node_by_id(O.I[nth_boolean],O).V;
 					var result = []; 
@@ -1378,7 +1383,7 @@ pg.planner = {
 				var _O = pg.Node.create(O);
 				_O.P = jsonClone(this.proto);
 				// _O.P.param.value=JSON.stringify(O.V);
-				_O.P.param.value=O.V;
+				_O.P.param.source=JSON.stringify(O.V);
 				return _O;	
 			},
 			execute: function(O) {
@@ -1388,7 +1393,7 @@ pg.planner = {
 						var nth_input = parseInt(O.P.param.source[6]); 
 						O.V = _.clone(pg.panel.get_node_by_id(O.I[nth_input-1],O).V);
 					} else {
-						O.V = O.P.param.value;
+						O.V = JSON.parse(O.P.param.source);
 					}
 				} catch(e) {}
 				return O;
@@ -1773,6 +1778,7 @@ pg.planner = {
 			generate: function(Is, O) {
 				try {
 					// Is[0]-(select_representative)-> n_rep -(select_element)-> O
+					var solutions=[];
 					var rep_el = findRepElements(Is[0].V);
 					if(!rep_el || rep_el.length==0) return false;
 					
@@ -1783,11 +1789,14 @@ pg.planner = {
 					n_rep = pg.planner.operations.extract_parent.generate(Is,n_rep); // fill parameters
 
 					var _O = pg.Node.create(O);	// copy O
-					_O.I = [n_rep.ID];
+					_O.position = undefined;
 					_O = pg.planner.operations.extract_element.generate([n_rep],_O); // fill parameter of extraction query
 					if(!_O) return false;
 					
-					return _.union(n_rep, _O);
+					n_rep.position=[0,0]; 
+					_O.position = [0,1]; _O.I = ['_left'];
+					solutions.push(_.union(n_rep, _O));
+					return solutions;
 				} catch(e) {
 					console.log(e.stack);
 					return false;
@@ -1817,6 +1826,7 @@ pg.planner = {
 			generate: function(Is, O) {	//  I -> elements -> text (O)
 				// extract text from the first OR every element. 
 				try{
+					var solutions=[];
 					var isNtoN, el_containing_O;
 					if (Is[0].V.length > 1) {
 						el_containing_O = _.map(O.V, function(o_t,index) {
@@ -1839,8 +1849,9 @@ pg.planner = {
 					//			C. (text' list) --[string-transform]--> (text list)
 					var result_C = pg.planner.operations.substring.generate([n_inter_2], O);
 
-					if(result_A &&result_B &&result_C) return _.union(result_A,result_B,result_C);
+					if(result_A &&result_B &&result_C) solutions.push(_.union(result_A,result_B,result_C));
 					else return false;
+					return solutions;
 				} catch(e) {
 					console.log(e.stack);
 					return false;
@@ -1970,49 +1981,7 @@ pg.planner = {
 				}
 			}
 			// no need for execution
-		},
-		// set_attribute: { // takes two input nodes (original el and new values) and returns modified elements
-		// 	pre: function(Is, O) {	// Is[0] and O must be DOM[] with the same fingerprints. 
-		// 		if(!_.isArray(Is) || Is.length<2) return false;
-		// 		if(!isDomList(Is[0].V)) return false;
-		// 		var original_el = Is[0].V;
-		// 		var new_attribute = Is[1].V;
-		// 		var modified_el = O.V;
-		// 		if (	original_el.length != modified_el.length) return false; 
-		// 		if ( new_attribute.length != 1 || new_attribute.length == original_el.length) return false;
-		// 		for(var i=0; i<original_el.length; i++) {
-		// 			if($(original_el[i]).fingerprint() != $(modified_el[i]).fingerprint()) return false;
-		// 			// if (new_attribute[i] != $(modified_el[i]).text()) return false;
-		// 		}
-		// 		return true;
-		// 	}, 
-		// 	generate: function(Is, O) {
-		// 		if(!_.isArray(Is) || Is.length<2) return false;
-		// 		var original_el = Is[0].V;
-		// 		var new_values = Is[1].V;
-		// 		var attr_func = _.filter(pg.planner.attr_func_list, function(func) {
-		// 			if (new_values[0] == func.getter(O.V[0])) return true;
-		// 			else return false;
-		// 		},this)[0];
-		// 		if (!attr_func) return false;
-		// 		O.I=toArray(Is[0].ID, Is[1].ID);  O.P=pg.panel.operations.set_attribute.proto; 
-		// 		O.P.param.key = attr_func.attr_key;
-		// 		return O;
-		// 	},
-		// 	execute: function(O) {
-		// 		// copy = $(O.I[0].V).clone();
-		// 		var I_original_el = pg.panel.get_node_by_id(O.I[0].ID);
-		// 		var I_new_value = pg.panel.get_node_by_id(O.I[1].ID);
-		// 		var attr_func = _.filter(pg.planner.attr_func_list, function(f){ return f.attr_key==O.P.param; },this)[0];
-		// 		for(var i in I_original_el.V) {
-		// 			var newVal = (I_new_value.V.length==1)? I_new_value.V[0]: I_new_value.V[i];
-		// 			attr_func.setter.call(undefined, I_original_el.V[i], newVal);
-		// 		};
-		// 		O.V = I_original_el.V;
-		// 		return O;
-		// 	}
-		// },
-		
+		},		
 		filter_object: { 
 			// 
 			pre: function(Is, O) {
@@ -2029,7 +1998,53 @@ pg.planner = {
 				} catch(e) { console.log(e.stack); return false; }
 			},
 			generate: function(Is, O) {
-				return false;
+				var valid_solutions = [];
+				var _O = pg.Node.create(O);
+				var I = Is[0];
+				var true_booleans = get_true_booleans(I.V, O.V);
+				// get correct extractor
+				if(isDomList(I.V)) {
+					// try different features
+					var attr_table = get_attr_table(I.V);
+					for(var key in attr_table) {
+						var p_node_feature = pg.planner.get_prototype({type:'get_attribute',parem:{key:key}})
+						var node_feature = pg.Node.create({I:toArray(I.ID), P:p_node_feature, V:_.clone(attr_table[key]), position:[0,0]});
+						var node_predicate = pg.Node.create({I:toArray(node_feature.ID), V:_.clone(true_booleans)});
+						node_predicate = pg.planner.operations.string_predicate.generate([node_feature], node_predicate);
+						if(node_predicate) {
+							node_predicate.position=[0,1];
+							var p_node_filtered = pg.planner.get_prototype({type:'filter'});
+							var node_filtered = pg.Node.create({I:[I.ID, node_predicate.ID], P:p_node_filtered, V:_O.V, position:[0,2]}); 
+							var solution = _.union(node_feature, node_predicate, node_filtered); 
+							valid_solutions.push(solution);
+						}
+					}
+
+				} else if(isStringList(I.V)) {
+					var node_predicate = pg.Node.create({I:toArray(I.ID), V:_.clone(true_booleans)});
+					node_predicate = pg.planner.operations.string_predicate.generate([I], node_predicate);
+					if(node_predicate) {
+						node_predicate.position=[0,0];
+						var p_node_filtered = pg.planner.get_prototype({type:'filter'});
+						var node_filtered = pg.Node.create({I:[I.ID, node_predicate.ID], P:p_node_filtered, V:_O.V, position:[0,1]}); 
+						var solution = _.union(node_predicate, node_filtered); 
+						valid_solutions.push(solution);
+					}
+				} else if(isNumberList(I.V)) {
+					var node_predicate = pg.Node.create({I:toArray(I.ID), V:_.clone(true_booleans)});
+					node_predicate = pg.planner.operations.number_predicate.generate([I], node_predicate);
+					if(node_predicate) {
+						node_predicate.position=[0,0];
+						var p_node_filtered = pg.planner.get_prototype({type:'filter'});
+						var node_filtered = pg.Node.create({I:[I.ID, node_predicate.ID], P:p_node_filtered, V:_O.V, position:[0,1]}); 
+						var solution = _.union(node_predicate, node_filtered); 
+						valid_solutions.push(solution);
+					}
+				} else if(isBooleanList(I.V)) {
+					return false;
+				}
+				if(valid_solutions.length>0) return valid_solutions;
+				else return false; 
 			}
 		},
 

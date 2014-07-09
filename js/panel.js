@@ -937,15 +937,6 @@ pg.panel = {
 				</div>\
 				</div>");
 			
-			// $(ui_el).find("button.infer_op_button").click(function() { pg.panel.commandUI.inferOperations(); });
-			// $(ui_el).find("button.infer_task_button").click(function() {  pg.panel.commandUI.inferTasks(); });
-
-			// add node tools
-			// $("<button>Execute operation</button>").click(function(e){
-			// 	pg.panel.run_single_node(pg.panel.get_selected_nodes()[0]);
-			// }).appendTo($(ui_el).find("#node_tools"));
-			// $("<button>Delete node</button>").click(function(e){pg.panel.delete(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
-			// $("<button>Clear data</button>").click(function(e){pg.panel.empty(pg.panel.el_to_obj(e.target));}).appendTo($(ui_el).find("#node_tools"));
 			$(ui_el).find(".header_panel_tools_burger").click(function() {
 				console.log("burger");
 				$("#pg_command_ui").find(".header_panel_tools").toggle("fast");
@@ -1360,7 +1351,7 @@ pg.panel = {
 		addData: function(val, targetNode) {
 			var node = pg.panel.get_selected_nodes()[0];
 			if(targetNode) node = targetNode;
-			node.V.push(val);
+			node.V.push(txt2var(val));
 			pg.panel.commandUI.renderDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
 			pg.panel.commandUI.updateSuggestedOperationInfo(node);
 		},
@@ -1568,9 +1559,17 @@ pg.panel = {
 
 		$(this.el).find("#resize_handle_panel").draggable({
 			axis: "y",
-			stop: function(event, ui) {
-
-				
+			start: function() {
+				if(pg.inspector.flag_inspect) {
+					pg.panel.commandUI.turn_inspector(false);
+					pg.panel.inspector_suspended = "yes";
+				}
+			},
+			stop: function(event, ui) {				
+				if(pg.panel.inspector_suspended=="yes") {
+					pg.panel.commandUI.turn_inspector(true);
+					pg.panel.inspector_suspended = undefined;
+				}
 				var top = ui.offset.top - $(window).scrollTop();;
 				var left = ui.offset.left - $(window).scrollLeft();;
 				console.log(left + " , " + top);

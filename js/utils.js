@@ -311,7 +311,9 @@ var isNumberString = function(str) {
 var isBooleanList = function(list) {
 	var toCheck = (_.isArray(list))? list: [list];
 	return _.filter(toCheck, function(e) {
-		return e!==null && _.isBoolean(e)===false;
+		return e!==null && _.isBoolean(e)===false 
+			&& (_.isString(e) && (e.toLowerCase()!=="true" && e.toLowerCase()!=="false")) 
+			&& e!==1 && e!==0;
 	}).length===0;
 };
 var isURLList = function(list) {
@@ -399,14 +401,12 @@ var getArithmeticFunc = function(oper) {
 var txt2var = function(txt) {
 	try{
 		if(isDom(txt)) return txt;
-		else return JSON.parse(txt);
+		if(!isNaN(parseFloat(txt))) return parseFloat(txt);
+		if(_.isString(txt) && txt.toLowerCase()=="true") return true;
+		if(_.isString(txt) && txt.toLowerCase()=="false") return false;
+		return txt;
 	}catch(er) {
-		try {
-			return JSON.parse('"'+txt+'"');
-		}
-		catch(err) {
-			return null;
-		}
+		console.log(er.stack);
 	}
 };
 // convert list or single string/integer to string without quotation
@@ -767,6 +767,20 @@ function jsonClone(obj) {
 	return JSON.parse(JSON.stringify(obj));
 }
 
+function get_attr_table(elements) {
+	var list_of_dict = _.map($.makeArray(elements), function(el) {
+		return get_attr_dict(el);
+	});
+	var keys = _.uniq(_.flatten(_.map(list_of_dict, function(d) { return _.keys(d); })));
+	var table = {};
+	_.each(keys, function(k) {
+		table[k]= _.map(list_of_dict, function(d) { 
+			return d[k]; 
+		});
+	});
+	return table;
+}
+
 function get_attr_dict(elements) {
 	var dict = {};
 	if (!isDom(elements) && !isDomList(elements)) return false;
@@ -904,9 +918,18 @@ function get_nodes_range(nodes) {
 	}	
 }
 
-
-
-
+function get_true_booleans(org_list, filtered_list){
+	var idx_filtered = 0;
+	var correct_boolean_list = [];
+	for(var i=0; i<org_list.length; i++) {
+		if(typeof filtered_list[idx_filtered]==='undefined') correct_boolean_list.push(false);
+		else if(org_list[i] == filtered_list[idx_filtered]) {
+			correct_boolean_list.push(true);
+			idx_filtered += 1;
+		} else correct_boolean_list.push(false);
+	}
+	return correct_boolean_list;
+}
 
 
 

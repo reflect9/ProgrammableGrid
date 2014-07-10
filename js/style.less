@@ -550,7 +550,7 @@
 	max-height:500px;
 	overflow:hidden;
 	background: rgba(255,255,255,1);
-	border:2px solid @purple;
+	border:2px solid #aaa;
 	box-shadow: 3px 3px 3px 1px rgba(0,0,0,0.2);
 	z-index:10006;
 	label {
@@ -561,15 +561,40 @@
 		color:#444;
 	}
 	.header_panel{
-		height:22px;
+		position:relative;
+		height:50px;
 		width:auto;
-		padding:5px;
+		padding:7px;
 		background:white;
 		border-bottom:1px solid #aaa;
-		label.node_info_id { 
-			text-transform: none !important; 
+		.operation_info {
+			.operation_title {
+				width:auto;
+				font-size:16px;
+				font-weight:800;
+				.node-icon{  display:inline-block; margin-top:-4px; margin-right:5px; }
+				margin-bottom:6px;
+			}
+			.operation_description {
+				width:auto;
+				font-size:24px;
+				padding-left:10px;
+				.param {
+					color:red;
+				}
+			}
+			.operation_execute {
+				position:absolute;
+				right:5px; bottom:5px;
+				font-size:25px;
+			}
+		}
+		.header_panel_tools_burger { 
+			position:absolute; top:5px; right:5px;
 		}
 		.header_panel_tools {
+			position:absolute; top:5px; right:25px;
+			display:none;
 			label {
 				text-transform:none;
 				font-weight:700;
@@ -586,200 +611,346 @@
 			}
 		}
 	}
-	.upper_panel{
+	.data_panel{
+		position:relative;
 		height:275px;
 		width:auto;
-		padding:5px;
-	}
-	.lower_panel{
-		clear:both;
-		background:white;
-		padding:5px;
-		height:22px;
-		border-top:1px solid #aaa;
-		width:auto;
-	}
-
-	.input_data{
-		vertical-align:top;
-		display:inline-block;
-		width:165px;
-		height:100%;
 		overflow:hidden;
-		border-right:1px solid #aaa;
-		.input_nodes_container {
-			overflow:auto;
-			height:90%; 
-		}
-		.input_node_info { 
-			padding-bottom:6px;
-			margin-bottom:10px;
-			border-bottom:1px solid #aaa;
-		} 
-		/*.input_selector_icon {
-			width:15px; height:15px;
-			background-image: url('chrome-extension://__MSG_@@extension_id__/js/lib/glyphicons/glyphicons-halflings.png');
-			background-repeat:no-repeat;
-			background-position: -143px -95px; 
-			border:none;
-			margin-top:3px;
-		}*/
-		input{
-			width:56%;
-		}
-		.node_data_brief_info {
-			width:100%; 
-			text-align:center;
-			font-style:italic;
-			color:@palered;
-			font-size:15px;
-			margin-top:5px; margin-bottom:5px; 
-
-		}
-		div.ul_container {
-			height:inherit;
-	    	overflow:auto;
-		}
-		ul{
-			margin: 0px 5px 10px 5px;
-			padding:0;
-		}
-		li {
-			position:relative;
-			list-style: none outside none;
-			border-bottom:1px dotted #ccc;
-	    	padding:0;
-	    	min-height:21px;
-	    	.data_label {
-	    		cursor:pointer;
-	    	}
-	    }
-		div.attr{ 
-			position:relative;
-			font-size:12px;
-			padding-top:3px;
-			margin-left:22px;
-			max-height:60px;
-			cursor:pointer;
+		.input_data{
+			float:left;
+			width:64%;
+			height:100%;
 			overflow:hidden;
-			span.attr_key {
-				color:red;
-			}
-			span.attr_value {
-				color:#555;
-				padding-left:5px;
+			.input_nodes_container {
+				float:left;
+				overflow-x:auto;
+				overflow-y:hidden;
+				height:100%; 
+				width:calc(~'100% - 26px');
+				white-space: nowrap;
+				background-color:#ddd;
+				//box-shadow:inset 2px 2px 2px 2px rgba(0,0,0,0.2);
+				.input_node_info { 
+					position:relative;
+					width:235px; height:100%;
+					border-right:1px solid #aaa;
+					display:inline-block;
+					background-color:white;
+					box-shadow:2px 0px 2px 0px rgba(0,0,0,0.2);
+					.input_node_header {
+						position: absolute;
+						width:100%;
+						height:40px;
+						top:0px;
+						background:white;
+						//border-bottom:1px solid #ddd;
+						box-shadow:0px 2px 2px 0px rgba(0,0,0,0.2);
+						z-index:999999;
+						label {   }
+						input { min-width:20px; }
+						.input_node_index_and_id {
+							float:left;
+							margin:5px;
+						}
+						.wrapper_tools {
+							float:right;
+							margin-right:3px;
+							a.pick_button {  }
+							a.delete_button {   }
+						}
+						label.data_length_type {
+						}
+						i { font-size: 16px; margin:5px 3px 0 0;}
+						.input_node_data_type_and_number {
+							clear:both;
+							margin-top:5px;
+							width:100%;
+							text-align:center;
+							font-size:12px;
+						}
+					}
+
+					.input_node_data_container {
+						height:inherit;
+						margin-top:40px;
+						height:calc(~'100% - 40px');
+						overflow:auto;
+						//box-shadow:inset 0px 2px 4px 0px rgba(0,0,0,0.2);
+						ul{
+							list-style: none outside none;
+					    	margin:0;  
+					    	padding:4px;
+					    	li {
+					    		padding:3px 0px 3px 0px;
+					    		margin-bottom:3px;
+					    		border-bottom:1px dotted #bbb;
+					    		min-height:9px;
+					    	}
+					    }
+						div.attr{ 
+							font-size:12px;
+							margin-left:5px;
+							max-height:90px;
+							overflow:hidden;
+							margin-bottom:3px;
+							span.attr_key {
+								color:red;
+							}
+							span.attr_value {
+								color:#555;
+								padding-left:5px;
+							}
+						}
+						div.dt_inst{
+							margin:10px;
+							padding:5px;
+							font-size:14px;
+							background: rgb(221, 221, 221);
+							border: 1px solid rgb(34, 34, 34);
+							border-radius:3px;
+							button, input, label { 
+								width:80%;
+								margin-left: 10px; 
+								margin-top:5px;
+							}
+						}
+
+					}
+				} 
+			}  // END OF input_nodes_container
+			.input_nodes_tools {
+				float:right;
+				position:relative;	
+				width:25px;
+				height:100%;
+				border-left:1px solid #aaa;
+				box-shadow: -2px 2px 2px 0px rgba(0,0,0,0.1);
+				i {  font-size:17px; margin:9px;}
+				.wrapper_tools {
+					display:none;
+					
+				}
+				
 			}
 
-		}
-		div.attr:hover {
-			i.fa { display:inline-block; 
-				color:red;
-				margin-left:3px; margin-right:3px;
+			ul{
+				margin: 0px 5px 10px 5px;
+				padding:0;
 			}
-			//i.fa:after { 
-			//	content: " Copy to node data";
-			//}
-		}
-	}
-
-	.operation_menu{
-		vertical-align:top;
-		display:inline-block;
-		width: 450px;
-		height:100%;
-		overflow:auto;
-		border-right:1px solid #aaa;
-
-		.operation_info {
-			position:relative;
-			margin:5px;
-			padding:6px;
-			background: #ccc;
-			border:1px solid #222;
-			border-radius: 3px;
-			.op_type_and_description {
-				margin-bottom:5px;
-			}
-			.op_parameters {
+			li {
 				position:relative;
-				margin-top:5px;
-				border:1px solid #888;
-				min-height:30px;
-				border-radius:3px;
-				padding-right:25px;
-				background-color:rgba(255,255,255,0.3);
-				.op_param {  display:block; margin:3px 3px 3px 7px; }
-				input { width:100px; margin-left:5px;	 	}
-				.op_execute_button {  
-					position:absolute;
-					bottom:5px; right:5px; width:25px; height:25px;
-					background-repeat:no-repeat;
-					background-position: center center;
-					background-image: url('chrome-extension://__MSG_@@extension_id__/js/lib/glyphicons/glyphicons-halflings-150.png');
-					background-position:  -395px -106px;
+				list-style: none outside none;
+				border-bottom:1px dotted #ccc;
+		    	padding:0;
+		    	min-height:21px;
+		    	.data_label {
+		    		cursor:pointer;
+		    	}
+		    }
+			div.attr{ 
+				position:relative;
+				font-size:12px;
+				padding-top:3px;
+				margin-left:22px;
+				max-height:60px;
+				cursor:pointer;
+				overflow:hidden;
+				span.attr_key {
+					color:red;
+				}
+				span.attr_value {
+					color:#555;
+					padding-left:5px;
+				}
+
+			}
+			div.attr:hover {
+				i.fa { display:inline-block; 
+					color:red;
+					margin-left:3px; margin-right:3px;
+				}
+				//i.fa:after { 
+				//	content: " Copy to node data";
+				//}
+			}
+		}  // end of input_data
+
+		.output_data{
+			position:relative;
+			float:right;
+			width: 35%;
+			border-left:1px solid #aaa;
+			height:100%;
+			overflow:hidden;
+			.output_data_table {
+				height:calc(~'100% - 40px');
+				margin-top:40px;
+				overflow:auto;
+				ul{
+					list-style: none outside none;
+			    	margin:0;  
+			    	padding:4px;
+			    	li {
+			    		padding:3px 0px 3px 0px;
+			    		margin-bottom:3px;
+			    		position:relative;
+			    		border-bottom:1px dotted #bbb;
+			    		min-height:9px;
+			    		.data_edit_buttons {
+							display:none;
+							position:absolute;
+							right:2px;
+							top:2px;
+							button {
+								font-size:12px;
+								padding:1px 3px 1px 3px;
+
+							}
+						}
+						label.data_label {
+							position:absolute;
+							top:0px;  left:0px;
+							height:auto !important;
+							font-weight:400	  	!important;
+							font-size:12px  	!important;
+							border-radius:3px;
+							background-color:#999;
+							color:white  	!important;
+						}
+			    	}
+			    }
+			    .data_tools {
+			    	margin:3px;
+			    	input {
+			    		padding:3px;
+			    		font-size:13px;
+			    		width:85%;
+			    	}
+
+			    }
+				div.attr{ 
+					font-size:12px;
+					margin-left:5px;
+					max-height:90px;
+					overflow:hidden;
+					margin-bottom:3px;
+					span.attr_key {
+						color:red;
+					}
+					span.attr_value {
+						color:#555;
+						padding-left:5px;
+					}
+				}
+
+				div.dt_inst{
+					margin:10px;
+					padding:5px;
+					font-size:14px;
+					background: rgb(221, 221, 221);
+					border: 1px solid rgb(34, 34, 34);
+					border-radius:3px;
+					button, input, label { 
+						width:80%;
+						margin-left: 10px; 
+						margin-top:5px;
+					}
+				}
+			}
+			.output_data_tools {
+				position:absolute;
+				top:0px; left:0px;
+				height: 40px;
+				width: 100%;
+				background-color: white;
+				box-shadow:0px 2px 2px 0px rgba(0,0,0,0.2);
+				.output_data_info {
+					float:left;
+					margin:6px 0 0 2px;
+				}
+				.wrapper_tools {
+					float:right;
+					i { font-size:16px; margin:5px; }
+				}
+				.output_type_and_number {
+					clear:both;
+					margin-top:5px;
+					width:100%;
+					text-align:center;
+					font-size:12px;
+
+				}
+				input { font-size:14px; width:80px; }
+
+
+			}
+		}
+
+
+	}  // end of data_panel
+	
+	.operations_panel {
+		height:275px;
+		width:auto;
+		padding:5px;		
+		.operation_menu{
+			vertical-align:top;
+			display:inline-block;
+			width: 450px;
+			height:100%;
+			overflow:auto;
+			border-right:1px solid #aaa;
+
+			#command_container {
+				position:relative;
+				width:100%;
+			}
+			.command{
+				display:inline-block;
+				margin:5px;
+				/*height:70px; width:70px;*/
+				padding:2px 4px 2px 4px;
+				overflow:hidden;
+				background: #dadada;
+				border:1px solid #222;
+				border-radius: 3px;
+				.com_title{
+					font-size:13px;
+					font-weight:600;
+					word-wrap: break-word;
+					font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+				}
+			}
+			.command[dimmed=yes] {
+				border:none !important;
+				color:white !important; 
+			}
+			.command[selected=selected] {
+				background: rgb(155, 70, 129);
+			}
+			.nodes {
+				display:inline-block;
+				margin:5px;
+				background: #ccc;
+				border:2px solid #222;
+				border-radius: 3px;
+				.node_title{
+					font-size:13px;
+					font-weight:600;
+					word-wrap: break-word;
+					font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+				}
+			}
+			#command_parameters {
+				width:100%;
+				margin:10px;
+				.parameters {
 				}
 			}
 		}
-		.suggestion_container {
-			padding:5px;
-		}
 
-		#command_container {
-			position:relative;
-			width:100%;
-		}
-		.command{
-			display:inline-block;
-			margin:5px;
-			/*height:70px; width:70px;*/
-			padding:2px 4px 2px 4px;
-			overflow:hidden;
-			background: #dadada;
-			border:1px solid #222;
-			border-radius: 3px;
-			.com_title{
-				font-size:13px;
-				font-weight:600;
-				word-wrap: break-word;
-				font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-			}
-		}
-		.command[dimmed=yes] {
-			border:none !important;
-			color:white !important; 
-		}
-		.command[selected=selected] {
-			background: rgb(155, 70, 129);
-		}
-		.nodes {
-			display:inline-block;
-			margin:5px;
-			background: #ccc;
-			border:2px solid #222;
-			border-radius: 3px;
-			.node_title{
-				font-size:13px;
-				font-weight:600;
-				word-wrap: break-word;
-				font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-			}
-		}
-		#command_parameters {
-			width:100%;
-			margin:10px;
-			.parameters {
-			}
-		}
 	}
-
-	.output_data{
-		vertical-align:top;
-		display:inline-block;
-		position:relative;
-		width: 165px;
-		height:100%;
-		overflow:hidden;
-	}
+	
 
 }
 
@@ -937,7 +1108,7 @@ div.pg_data_table {
     }
 	div.attr{ 
 		font-size:12px;
-		margin-left:18px;
+		margin-left:5px;
 		max-height:90px;
 		overflow:hidden;
 		margin-bottom:3px;

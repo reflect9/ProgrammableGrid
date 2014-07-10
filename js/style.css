@@ -578,7 +578,7 @@
   max-height: 500px;
   overflow: hidden;
   background: #ffffff;
-  border: 2px solid #9b4681;
+  border: 2px solid #aaa;
   box-shadow: 3px 3px 3px 1px rgba(0, 0, 0, 0.2);
   z-index: 10006;
 }
@@ -590,14 +590,48 @@
   color: #444;
 }
 #pg #pg_command_ui .header_panel {
-  height: 22px;
+  position: relative;
+  height: 50px;
   width: auto;
-  padding: 5px;
+  padding: 7px;
   background: white;
   border-bottom: 1px solid #aaa;
 }
-#pg #pg_command_ui .header_panel label.node_info_id {
-  text-transform: none !important;
+#pg #pg_command_ui .header_panel .operation_info .operation_title {
+  width: auto;
+  font-size: 16px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+#pg #pg_command_ui .header_panel .operation_info .operation_title .node-icon {
+  display: inline-block;
+  margin-top: -4px;
+  margin-right: 5px;
+}
+#pg #pg_command_ui .header_panel .operation_info .operation_description {
+  width: auto;
+  font-size: 24px;
+  padding-left: 10px;
+}
+#pg #pg_command_ui .header_panel .operation_info .operation_description .param {
+  color: red;
+}
+#pg #pg_command_ui .header_panel .operation_info .operation_execute {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  font-size: 25px;
+}
+#pg #pg_command_ui .header_panel .header_panel_tools_burger {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+#pg #pg_command_ui .header_panel .header_panel_tools {
+  position: absolute;
+  top: 5px;
+  right: 25px;
+  display: none;
 }
 #pg #pg_command_ui .header_panel .header_panel_tools label {
   text-transform: none;
@@ -613,76 +647,143 @@
   border: 1px solid #aaa;
   border-radius: 6px;
 }
-#pg #pg_command_ui .upper_panel {
+#pg #pg_command_ui .data_panel {
+  position: relative;
   height: 275px;
   width: auto;
-  padding: 5px;
+  overflow: hidden;
 }
-#pg #pg_command_ui .lower_panel {
-  clear: both;
-  background: white;
-  padding: 5px;
-  height: 22px;
-  border-top: 1px solid #aaa;
-  width: auto;
-}
-#pg #pg_command_ui .input_data {
-  vertical-align: top;
-  display: inline-block;
-  width: 165px;
+#pg #pg_command_ui .data_panel .input_data {
+  float: left;
+  width: 64%;
   height: 100%;
   overflow: hidden;
+}
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container {
+  float: left;
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 100%;
+  width: calc(100% - 26px);
+  white-space: nowrap;
+  background-color: #ddd;
+}
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info {
+  position: relative;
+  width: 235px;
+  height: 100%;
   border-right: 1px solid #aaa;
-  /*.input_selector_icon {
-			width:15px; height:15px;
-			background-image: url('chrome-extension://__MSG_@@extension_id__/js/lib/glyphicons/glyphicons-halflings.png');
-			background-repeat:no-repeat;
-			background-position: -143px -95px; 
-			border:none;
-			margin-top:3px;
-		}*/
-
+  display: inline-block;
+  background-color: white;
+  box-shadow: 2px 0px 2px 0px rgba(0, 0, 0, 0.2);
 }
-#pg #pg_command_ui .input_data .input_nodes_container {
-  overflow: auto;
-  height: 90%;
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_header {
+  position: absolute;
+  width: 100%;
+  height: 40px;
+  top: 0px;
+  background: white;
+  box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.2);
+  z-index: 999999;
 }
-#pg #pg_command_ui .input_data .input_node_info {
-  padding-bottom: 6px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #aaa;
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_header input {
+  min-width: 20px;
 }
-#pg #pg_command_ui .input_data input {
-  width: 56%;
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_header .input_node_index_and_id {
+  float: left;
+  margin: 5px;
 }
-#pg #pg_command_ui .input_data .node_data_brief_info {
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_header .wrapper_tools {
+  float: right;
+  margin-right: 3px;
+}
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_header i {
+  font-size: 16px;
+  margin: 5px 3px 0 0;
+}
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_header .input_node_data_type_and_number {
+  clear: both;
+  margin-top: 5px;
   width: 100%;
   text-align: center;
-  font-style: italic;
-  color: #c96b6b;
-  font-size: 15px;
-  margin-top: 5px;
-  margin-bottom: 5px;
+  font-size: 12px;
 }
-#pg #pg_command_ui .input_data div.ul_container {
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_data_container {
   height: inherit;
+  margin-top: 40px;
+  height: calc(100% - 40px);
   overflow: auto;
 }
-#pg #pg_command_ui .input_data ul {
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_data_container ul {
+  list-style: none outside none;
+  margin: 0;
+  padding: 4px;
+}
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_data_container ul li {
+  padding: 3px 0px 3px 0px;
+  margin-bottom: 3px;
+  border-bottom: 1px dotted #bbb;
+  min-height: 9px;
+}
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_data_container div.attr {
+  font-size: 12px;
+  margin-left: 5px;
+  max-height: 90px;
+  overflow: hidden;
+  margin-bottom: 3px;
+}
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_data_container div.attr span.attr_key {
+  color: red;
+}
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_data_container div.attr span.attr_value {
+  color: #555;
+  padding-left: 5px;
+}
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_data_container div.dt_inst {
+  margin: 10px;
+  padding: 5px;
+  font-size: 14px;
+  background: #dddddd;
+  border: 1px solid #222222;
+  border-radius: 3px;
+}
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_data_container div.dt_inst button,
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_data_container div.dt_inst input,
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_data_container div.dt_inst label {
+  width: 80%;
+  margin-left: 10px;
+  margin-top: 5px;
+}
+#pg #pg_command_ui .data_panel .input_data .input_nodes_tools {
+  float: right;
+  position: relative;
+  width: 25px;
+  height: 100%;
+  border-left: 1px solid #aaa;
+  box-shadow: -2px 2px 2px 0px rgba(0, 0, 0, 0.1);
+}
+#pg #pg_command_ui .data_panel .input_data .input_nodes_tools i {
+  font-size: 17px;
+  margin: 9px;
+}
+#pg #pg_command_ui .data_panel .input_data .input_nodes_tools .wrapper_tools {
+  display: none;
+}
+#pg #pg_command_ui .data_panel .input_data ul {
   margin: 0px 5px 10px 5px;
   padding: 0;
 }
-#pg #pg_command_ui .input_data li {
+#pg #pg_command_ui .data_panel .input_data li {
   position: relative;
   list-style: none outside none;
   border-bottom: 1px dotted #ccc;
   padding: 0;
   min-height: 21px;
 }
-#pg #pg_command_ui .input_data li .data_label {
+#pg #pg_command_ui .data_panel .input_data li .data_label {
   cursor: pointer;
 }
-#pg #pg_command_ui .input_data div.attr {
+#pg #pg_command_ui .data_panel .input_data div.attr {
   position: relative;
   font-size: 12px;
   padding-top: 3px;
@@ -691,20 +792,139 @@
   cursor: pointer;
   overflow: hidden;
 }
-#pg #pg_command_ui .input_data div.attr span.attr_key {
+#pg #pg_command_ui .data_panel .input_data div.attr span.attr_key {
   color: red;
 }
-#pg #pg_command_ui .input_data div.attr span.attr_value {
+#pg #pg_command_ui .data_panel .input_data div.attr span.attr_value {
   color: #555;
   padding-left: 5px;
 }
-#pg #pg_command_ui .input_data div.attr:hover i.fa {
+#pg #pg_command_ui .data_panel .input_data div.attr:hover i.fa {
   display: inline-block;
   color: red;
   margin-left: 3px;
   margin-right: 3px;
 }
-#pg #pg_command_ui .operation_menu {
+#pg #pg_command_ui .data_panel .output_data {
+  position: relative;
+  float: right;
+  width: 35%;
+  border-left: 1px solid #aaa;
+  height: 100%;
+  overflow: hidden;
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_table {
+  height: calc(100% - 40px);
+  margin-top: 40px;
+  overflow: auto;
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_table ul {
+  list-style: none outside none;
+  margin: 0;
+  padding: 4px;
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_table ul li {
+  padding: 3px 0px 3px 0px;
+  margin-bottom: 3px;
+  position: relative;
+  border-bottom: 1px dotted #bbb;
+  min-height: 9px;
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_table ul li .data_edit_buttons {
+  display: none;
+  position: absolute;
+  right: 2px;
+  top: 2px;
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_table ul li .data_edit_buttons button {
+  font-size: 12px;
+  padding: 1px 3px 1px 3px;
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_table ul li label.data_label {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  height: auto !important;
+  font-weight: 400	  	!important;
+  font-size: 12px  	!important;
+  border-radius: 3px;
+  background-color: #999;
+  color: white  	!important;
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_table .data_tools {
+  margin: 3px;
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_table .data_tools input {
+  padding: 3px;
+  font-size: 13px;
+  width: 85%;
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_table div.attr {
+  font-size: 12px;
+  margin-left: 5px;
+  max-height: 90px;
+  overflow: hidden;
+  margin-bottom: 3px;
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_table div.attr span.attr_key {
+  color: red;
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_table div.attr span.attr_value {
+  color: #555;
+  padding-left: 5px;
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_table div.dt_inst {
+  margin: 10px;
+  padding: 5px;
+  font-size: 14px;
+  background: #dddddd;
+  border: 1px solid #222222;
+  border-radius: 3px;
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_table div.dt_inst button,
+#pg #pg_command_ui .data_panel .output_data .output_data_table div.dt_inst input,
+#pg #pg_command_ui .data_panel .output_data .output_data_table div.dt_inst label {
+  width: 80%;
+  margin-left: 10px;
+  margin-top: 5px;
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_tools {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  height: 40px;
+  width: 100%;
+  background-color: white;
+  box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.2);
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_tools .output_data_info {
+  float: left;
+  margin: 6px 0 0 2px;
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_tools .wrapper_tools {
+  float: right;
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_tools .wrapper_tools i {
+  font-size: 16px;
+  margin: 5px;
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_tools .output_type_and_number {
+  clear: both;
+  margin-top: 5px;
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+}
+#pg #pg_command_ui .data_panel .output_data .output_data_tools input {
+  font-size: 14px;
+  width: 80px;
+}
+#pg #pg_command_ui .operations_panel {
+  height: 275px;
+  width: auto;
+  padding: 5px;
+}
+#pg #pg_command_ui .operations_panel .operation_menu {
   vertical-align: top;
   display: inline-block;
   width: 450px;
@@ -712,53 +932,11 @@
   overflow: auto;
   border-right: 1px solid #aaa;
 }
-#pg #pg_command_ui .operation_menu .operation_info {
-  position: relative;
-  margin: 5px;
-  padding: 6px;
-  background: #ccc;
-  border: 1px solid #222;
-  border-radius: 3px;
-}
-#pg #pg_command_ui .operation_menu .operation_info .op_type_and_description {
-  margin-bottom: 5px;
-}
-#pg #pg_command_ui .operation_menu .operation_info .op_parameters {
-  position: relative;
-  margin-top: 5px;
-  border: 1px solid #888;
-  min-height: 30px;
-  border-radius: 3px;
-  padding-right: 25px;
-  background-color: rgba(255, 255, 255, 0.3);
-}
-#pg #pg_command_ui .operation_menu .operation_info .op_parameters .op_param {
-  display: block;
-  margin: 3px 3px 3px 7px;
-}
-#pg #pg_command_ui .operation_menu .operation_info .op_parameters input {
-  width: 100px;
-  margin-left: 5px;
-}
-#pg #pg_command_ui .operation_menu .operation_info .op_parameters .op_execute_button {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-  width: 25px;
-  height: 25px;
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-image: url('chrome-extension://__MSG_@@extension_id__/js/lib/glyphicons/glyphicons-halflings-150.png');
-  background-position: -395px -106px;
-}
-#pg #pg_command_ui .operation_menu .suggestion_container {
-  padding: 5px;
-}
-#pg #pg_command_ui .operation_menu #command_container {
+#pg #pg_command_ui .operations_panel .operation_menu #command_container {
   position: relative;
   width: 100%;
 }
-#pg #pg_command_ui .operation_menu .command {
+#pg #pg_command_ui .operations_panel .operation_menu .command {
   display: inline-block;
   margin: 5px;
   /*height:70px; width:70px;*/
@@ -769,43 +947,35 @@
   border: 1px solid #222;
   border-radius: 3px;
 }
-#pg #pg_command_ui .operation_menu .command .com_title {
+#pg #pg_command_ui .operations_panel .operation_menu .command .com_title {
   font-size: 13px;
   font-weight: 600;
   word-wrap: break-word;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
-#pg #pg_command_ui .operation_menu .command[dimmed=yes] {
+#pg #pg_command_ui .operations_panel .operation_menu .command[dimmed=yes] {
   border: none !important;
   color: white !important;
 }
-#pg #pg_command_ui .operation_menu .command[selected=selected] {
+#pg #pg_command_ui .operations_panel .operation_menu .command[selected=selected] {
   background: #9b4681;
 }
-#pg #pg_command_ui .operation_menu .nodes {
+#pg #pg_command_ui .operations_panel .operation_menu .nodes {
   display: inline-block;
   margin: 5px;
   background: #ccc;
   border: 2px solid #222;
   border-radius: 3px;
 }
-#pg #pg_command_ui .operation_menu .nodes .node_title {
+#pg #pg_command_ui .operations_panel .operation_menu .nodes .node_title {
   font-size: 13px;
   font-weight: 600;
   word-wrap: break-word;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
-#pg #pg_command_ui .operation_menu #command_parameters {
+#pg #pg_command_ui .operations_panel .operation_menu #command_parameters {
   width: 100%;
   margin: 10px;
-}
-#pg #pg_command_ui .output_data {
-  vertical-align: top;
-  display: inline-block;
-  position: relative;
-  width: 165px;
-  height: 100%;
-  overflow: hidden;
 }
 #pg .pg_dialog {
   position: fixed;
@@ -947,7 +1117,7 @@ div.pg_data_table .data_tools input {
 }
 div.pg_data_table div.attr {
   font-size: 12px;
-  margin-left: 18px;
+  margin-left: 5px;
   max-height: 90px;
   overflow: hidden;
   margin-bottom: 3px;

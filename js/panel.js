@@ -726,13 +726,6 @@ pg.panel = {
 			$(pg.body).append(ui_el).show('fast');
 			return ui_el;
 		},
-		// loadData: function(data) {
-		// 	var datatable = $("#pg_data_ui > div > table").empty();
-		// 	if(datatable.length==0) return;
-		// 	_.each(data, function(v) {
-		// 		$(datatable).append($("<tr><td>"+v+"</td></tr>"));
-		// 	});
-		// },
 		remove: function() {
 			if(pg.panel.parent_selection_box) {
 				pg.panel.parent_selection_box.hide();  
@@ -755,149 +748,21 @@ pg.panel = {
 			// pg.panel.get_node_by_id(node_id).V = data_list;
 		}
 	},
-	// editUI: {
-	// 	create: function() {
-	// 		var ui_el = $("<div id='pg_edit_ui'>  \
-	// 			<div>\
-	// 				<button class='select_button'>Select</button>\
-	// 			</div>\
-	// 			<div id='inspector_all_sel'>\
-	// 				<div class='buttons_inspector'>\
-	// 					<button class='release_button'>Release</button>\
-	// 					<button class='extract_button'>Extract</button>\
-	// 					<button class='copy_button'>Share</button>\
-	// 				</div>\
-	// 				<div class='label_selected_elements'>no selection</div>\
-	// 				<div class='table_inspector'>\
-	// 					<ul></ul>\
-	// 				</div>\
-	// 			</div>\
-	// 		</div>");
-	// 		$(ui_el).find(".select_button").click(function(event) {
-	// 			pg.panel.editUI.toggle_select();
-	// 		});
-	// 		// $(ui_el).find(".load_page_button").click(function() {
-	// 		// 	var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
-	// 		// 	if(currently_selected_nodes.length>0) {
-	// 		// 		var n = currently_selected_nodes[0];
-	// 		// 		n.V = $(pg.body).toArray();
-	// 		// 		n.P = pg.planner.get_prototype({type:"loadPage"});
-	// 		// 	} else {
-	// 		// 		console.log("no node is selected now.");
-	// 		// 	}
-	// 		// 	pg.panel.redraw();
-	// 		// });
-	// 		// $(ui_el).find(".snapshot_button").click(function() {
-	// 		// 	var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
-	// 		// 	if(currently_selected_nodes.length>0) {
-	// 		// 		var n = currently_selected_nodes[0];
-	// 		// 		var body = $("body").clone();
-	// 		// 		$(body).find("#pg_panel").remove();
-	// 		// 		$(body).find("#pg_edit_ui").remove();
-	// 		// 		$(body).find("#pg_command_ui").remove();
-	// 		// 		n.V = $(body).toArray();
-	// 		// 	} else {
-	// 		// 		console.log("no node is selected now.");
-	// 		// 	}
-	// 		// 	pg.panel.redraw();
-	// 		// });
-	// 		$(ui_el).find(".release_button").click(function() {
-	// 			pg.panel.editUI.deselect_elements();
-	// 			pg.panel.editUI.toggle_select("off");
-	// 		});
-	// 		$(ui_el).find(".extract_button").click(function() {
-	// 			pg.panel.editUI.extract_selected_elements(pg.panel.selected_elements);
-	// 			pg.panel.editUI.deselect_elements();
-	// 			pg.panel.editUI.toggle_select("off");
-	// 		});
-	// 		$(ui_el).find(".copy_button").click(function() {
-	// 			pg.panel.share_elements(pg.panel.selected_elements);
-	// 			pg.panel.editUI.deselect_elements();
-	// 			pg.panel.editUI.toggle_select("off");
-	// 		});
-
-			
-	// 		$("#pg").append(ui_el);
-	// 		$(ui_el).draggable();
-	// 	},
-	// 	toggle_select: function(mode) {
-	// 		var select_button = $("#pg_edit_ui").find(".select_button");
-	// 		if(mode && mode=='on') {
-	// 			$(select_button).addClass("selected");
-	// 			pg.inspector.on(pg.panel.editUI.callback_select_element);	
-	// 		} else if(mode && mode=='off') {
-	// 			pg.inspector.off(pg.panel.dataUI.remove);
-	// 			$(select_button).removeClass("selected");
-	// 		} else {
-	// 			// when mode is not defined 
-	// 			if($(select_button).hasClass("selected")) {
-	// 				$(select_button).removeClass("selected");
-	// 				pg.inspector.off(pg.panel.dataUI.remove);
-	// 			} else {
-	// 				$(select_button).addClass("selected");
-	// 				pg.inspector.on(pg.panel.editUI.callback_select_element);	
-	// 			}
-	// 		}
-	// 	},
-	// 	callback_select_element: function(el) {	// called by Inpector when a page element is selected
-	// 		if(!(el in pg.panel.selected_elements)) 
-	// 			pg.panel.selected_elements.push(el);
-	// 		var attr_table_el = $("#pg_edit_ui").find(".table_inspector").find("ul");
-	// 		pg.inspector.unhighlight_list();
-	// 		pg.inspector.highlight_list(pg.panel.selected_elements);
-	// 		pg.panel.editUI.updateInspector(pg.panel.selected_elements, $(attr_table_el).get(0));
-	// 	},
-	// 	deselect_elements: function() {
-	// 		pg.panel.selected_elements = [];
-	// 		pg.inspector.unhighlight_list();		
-	// 		$("#pg_edit_ui").find(".table_inspector").find("ul").empty();
-	// 		var num_label = $("#inspector_all_sel > .label_selected_elements");
-	// 		$(num_label).text("Nothing selected.");
-	// 	},
-	// 	extract_selected_elements: function(els) {
-	// 		// add selected elements to the V of the current node
-	// 		var currently_selected_nodes = _.filter(pg.panel.nodes, function(n) { return n.selected==true; });
-	// 		if(currently_selected_nodes.length>0) {
-	// 			var n = currently_selected_nodes[0];
-	// 			if(n.V==undefined) n.V=[];
-	// 			n.V = _.union(n.V, els);
-	// 		} else {
-	// 			console.log("no tile is selected now.");
-	// 		}
-	// 		pg.panel.redraw();
-	// 	},
-		
-	// 	updateInspector: function(els, target_ul) {
-	// 		$(target_ul).empty();
-	// 		var attr_dict = get_attr_dict(els);
-	// 		var num_label = $("#inspector_all_sel > .label_selected_elements");
-	// 		if(els.length>0) {
-	// 			$(num_label).text(els.length+" selected.");
-	// 			_.each(attr_dict, function(value,key) {
-	// 				$(target_ul).append("	<li class='attr'><span class='attr_key'>"+ key +":</span>   \
-	// 										<span class='attr_value'>"+value+"</span></li>	\
-	// 					");
-	// 			});	
-	// 		} else { // when nothing is selected
-	// 			$(num_label).text("Nothing selected.");
-	// 		}
-			
-	// 		// 
-	// 		// get all the property keys of els 
-
-	// 	}
-	// },
 	commandUI: {
 		top:100,
 		left:100,
 		create: function() {
 			$("#pg_command_ui").remove();
 			
-			var ui_el = $("<div id='pg_command_ui' title='commands'>\
+			var ui_el = $("<div id='pg_command_ui'>\
 				<div class='header_panel'>\
-					<div style='float:left; margin-top:4px'><label class='node_info_id'></label><span class='node_info_position'></span></div>\
-					<div class='header_panel_tools_burger' style='float:right;'><i class='fa fa-bars' style='font-size:14px; margin:5px;'></i></div>\
-					<div class='header_panel_tools' style='float:right; display:none;'>\
+					<div class='operation_info'>\
+						<div class='operation_title'></div>\
+						<div class='operation_description'></div>\
+						<div class='operation_execute'><i class='fa fa-play-circle-o operation_execute_button'></i></div>\
+					</div>\
+					<div class='header_panel_tools_burger'><i class='fa fa-bars' style='font-size:14px; margin:5px;'></i></div>\
+					<div class='header_panel_tools'>\
 						<button class='duplicate_button'>duplicate</button> <button class='copy_button'>copy</button>\
 						<button class='share_button'>share_across_tabs</button>\
 						<button class='clear_data_button'>clear data</button>\
@@ -907,45 +772,45 @@ pg.panel = {
 						<button class='delete_column_button'>column</button> \
 					</div>\
 				</div>\
-				<div class='upper_panel'>\
+				<div class='data_panel'>\
 					<div class='input_data'>\
 						<div class='input_nodes_container'></div>\
-					</div>\
-					<div class='operation_menu'>\
-						<label>Current Operation</label>\
-						<div class='operation_info'>\
-						</div>\
-						<label>Tasks matching with Input and Data </label>\
-						<div class='suggestion_container' id='task_container'>\
-						</div>\
-						<label>Other operations</label>\
-						<div class='suggestion_container' id='operation_container'>\
+						<div class='input_nodes_tools'>\
+							<i class='fa fa-plus add_input_node_button'></i>\
 						</div>\
 					</div>\
 					<div class='output_data'>\
-						<label>Data of the node</label>\
-						<div class='pg_data_table'>\
+						<div class='output_data_table'>\
 							<ul class='data_ul'></ul>\
-							<div class='data_tools'>\
-								<input type='text' class='new_data_input' placeholder='Add new data'></input>\
+						</div>\
+						<div class='output_data_tools' floating_buttons_at_the_bottom'>\
+							<div class='output_data_info'><label>OUTPUT</label></div>\
+							<div class='wrapper_tools'>\
+								<i class='fa fa-repeat operation_execute_button'></i>\
 								<i class='fa fa-trash-o'></i>\
 							</div>\
+							<div class='output_type_and_number'>\
+							</div>\
 						</div>\
-						<div class='output_data_buttons floating_buttons_at_the_bottom'>\
+					</div>\
+				</div>\
+				<div class='operation_panel'>\
+					<div class='operation_menu'>\
+						<div class='task_container'>\
+						</div>\
+						<div class='operation_container'>\
 						</div>\
 					</div>\
 				</div>\
 				</div>");
-			
 			$(ui_el).find(".header_panel_tools_burger").click(function() {
 				console.log("burger");
 				$("#pg_command_ui").find(".header_panel_tools").toggle("fast");
 			});
-			$(ui_el).find(".operation_menu").scroll(function(e) {
-				e.stopPropagation();
-				return false;
-			});			
-
+			$(ui_el).find(".operation_execute_button").click(function() {
+				var node = pg.panel.get_selected_nodes()[0];
+				pg.panel.run_node(node);
+			});
 			$(ui_el).find(".duplicate_button").click(function() {
 				pg.panel.duplicate_node();
 			});
@@ -993,17 +858,18 @@ pg.panel = {
 				});
 				pg.panel.redraw();
 			});
-
+			$(ui_el).find(".add_input_node_button").click(function() {
+				var node = pg.panel.get_selected_nodes()[0];
+				node.I.push("");
+				pg.panel.redraw();
+			});
 			// add data tools
 			$(ui_el).find("input.new_data_input").change(function(){
 				pg.panel.commandUI.addData($(this).val());
 				$(this).val("");
 				$("#pg_command_ui").find("input.new_data_input").focus();
 			});
-			$(ui_el).find(".data_tools").find("i.fa-trash-o").click(function() {
-				pg.panel.empty();
-			});
-			$(ui_el).find(".extract_button").click(function() { pg.panel.commandUI.toggleExtract(); });
+			$(ui_el).find(".data_tools").find("i.fa-trash-o").click(function() {	pg.panel.empty();	});
 			$(ui_el).find(".clear_data_button").click(function(e){pg.panel.empty(pg.panel.el_to_obj(e.target));});
 
 			/////
@@ -1012,6 +878,11 @@ pg.panel = {
 				'visibility':"visible",
 				"top":pg.panel.commandUI.top + "px",
 				"left":pg.panel.commandUI.left + "px"
+			});
+			$(ui_el).hover(function() {
+				$("body").css("overflow","hidden");
+			},function() {
+				$("body").css("overflow","auto");
 			});
 			$(ui_el).draggable({handle: ".header_panel",
 				start: function() {
@@ -1028,26 +899,24 @@ pg.panel = {
 		
 		redraw: function() {
 			var node = pg.panel.get_selected_nodes()[0];
-			//pg.panel.commandUI.update(applicable_tasks, applicable_operations, node);	
-			
 			// 0. show current node information and operation detail
-			$("#pg_command_ui").find(".node_info_id").text(node.ID);
-			$("#pg_command_ui").find(".node_info_position").text("@"+ JSON.stringify(node.position));
+			// $("#pg_command_ui").find(".node_info_id").text(node.ID);
+			// $("#pg_command_ui").find(".node_info_position").text("@"+ JSON.stringify(node.position));
 			
-			pg.panel.commandUI.updateInputNodeInfo(node);
 			pg.panel.commandUI.updateCurrentOperationInfo(node);
 			pg.panel.commandUI.updateSuggestedOperationInfo(node);
+			pg.panel.commandUI.updateInputNodes(node);
 			pg.panel.commandUI.renderDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
 		},
-		updateInputNodeInfo: function(node) {
+		updateInputNodes: function(node) {
 			var input_container = $("#pg_command_ui").find(".input_nodes_container");	 
-			var input_node_info_list = pg.panel.commandUI.renderInputNodeInfo(node);
-			$(input_container).empty().append(input_node_info_list);
+			var input_el_list = pg.panel.commandUI.renderInputNodes(node);
+			$(input_container).empty().append(input_el_list);
 			// ADD MORe INPUT button
-			$("<center><i class='fa fa-plus-square-o' style='font-size:13px; color:#888; cursor:pointer;'> ADD MORE INPUT</i></center>").click($.proxy(function() {
-				this.node.I.push("");
-				pg.panel.redraw();
-			},{node:node})).appendTo(input_container);
+			// $("<center><i class='fa fa-plus-square-o' style='font-size:13px; color:#888; cursor:pointer;'> ADD MORE INPUT</i></center>").click($.proxy(function() {
+			// 	this.node.I.push("");
+			// 	pg.panel.redraw();
+			// },{node:node})).appendTo(input_container);
 
 		},
 		updateCurrentOperationInfo: function(node) {
@@ -1103,118 +972,35 @@ pg.panel = {
 				$(operation_container).append(commandButton);
 			});
 		},
-		// DEPRECATED: update method
-		update: function(solutionNodes, operations, node) {
-			if($("#pg_command_ui").length==0) pg.panel.commandUI.create();	// open if it's closed
-			var operation_container = $("#pg_command_ui").find("#operation_container");  	// main command UI
-			var task_container = $("#pg_command_ui").find("#task_container");  	// main command UI
-			var operation_info = $("#pg_command_ui").find(".operation_info");	 
-			var input_container = $("#pg_command_ui").find(".input_nodes_container");	 
-			// var node_info = $("#pg_command_ui").find(".node_info");	 
-			var output_data_ul = $("#pg_command_ui").find(".output_data").find("ul.data_ul");	 
-			$(operation_container).empty();	$(operation_info).empty(); $(input_container).empty(); 
-			$(task_container).empty();
-
-			// 0. show current node information and operation detail
-			$("#pg_command_ui").find(".node_info_id").text(node.ID);
-			$("#pg_command_ui").find(".node_info_position").text("@"+ JSON.stringify(node.position));
-			// show operation detail
-			if(node) {
-				pg.panel.commandUI.renderOperationInfo(node, operation_info);
-				
-			} 
-			
-			// 1. show input nodes
-			var input_node_info_list = pg.panel.commandUI.renderInputNodeInfo(node);
-			$(input_container).append(input_node_info_list);
-			// input node add button
-			$("<center><i class='fa fa-plus-square-o' style='font-size:13px; color:#888; cursor:pointer;'> ADD MORE INPUT</i></center>").click($.proxy(function() {
-				this.node.I.push("");
-				pg.panel.redraw();
-			},{node:node})).appendTo(input_container);
-
-			// 1. show solutionNodes 
-			if(solutionNodes.length>0) {
-				_.each(solutionNodes, function(sn, sni) {
-					var nodeSet = pg.panel.commandUI.makeSuggestedTaskButton(sn);
-					$(task_container).append(nodeSet);
-				});
-			} else {
-				$(task_container).append("<span style='margin-left:20px;'>No task is applicable.</span>");
-			}
-			
-			// show applicable operations
-			if(operations.length>0) {
-				_.each(operations, function(op, opi)  {
-					var commandButton = pg.panel.commandUI.makeSuggestedOperationButton(op);
-					if(node && node.P && node.P.type==c.type) {
-						// if the command is curreltly selected
-						$(commandButton).attr('selected',true);
-					}
-					$(operation_container).append(commandButton);
-				});
-			}
-			//  else {
-			// 	$(operation_container).append("<span style='margin-left:20px;'>No operation is applicable.</span>");
-			// } 
-			
-			// show the rest operations 
-			var operation_types = _.map(operations, function(op){return op.type; });
-			var rest_op = _.filter(pg.planner.get_all_operations(), function(op) {
-				return operation_types.indexOf(op.type)==-1;
-			});
-			_.each(rest_op, function(op, opi) {
-				var commandButton = pg.panel.commandUI.makeSuggestedOperationButton(op, true);
-				$(operation_container).append(commandButton);
-			});
-			// DATATABLE
-			this.renderDataTable(node.V, output_data_ul);
-		},
-		// inferOperations: function() {
-		// 	var node = pg.panel.get_selected_nodes()[0]; 
-		// 	var Is = _.without(_.map(node.I, function(input_id) {
-		// 		return pg.panel.get_node_by_id(input_id, node);
-		// 	}), false, undefined);
-		// 	var inferredOperations = pg.planner.find_applicable_operations(Is);
-		// 	pg.panel.commandUI.update([], inferredOperations, node);	
-		// },
-		// inferTasks: function() {
-		// 	var node = pg.panel.get_selected_nodes()[0]; 
-		// 	var Is = _.without(_.map(node.I, function(input_id) {
-		// 		return pg.panel.get_node_by_id(input_id, node);
-		// 	}), false, undefined);
-		// 	var inferredTasks = pg.planner.plan(Is, O);	
-		// 	pg.panel.commandUI.update(inferredTasks, [], node);	
-		// 	pg.panel.run_single_node(node);
-		// },
-		renderInputNodeInfo: function(node) {
-			var node_info_list = [];
+		renderInputNodes: function(node) {
+			var input_nodes_el = [];
+			//var width_per_node = Math.floor(100/Math.max(node.I.length, 2))-1;
 			for(var i=0; i<node.I.length; i++) {
 				try{
 					var inputNode = pg.panel.get_node_by_id(node.I[i], node);
-					// var inputNode_el = $("<div>\
-					// 		<span>"+(i+1)+" </span><input type='text' inputNodeIdx='"+i+"' value='"+node.I[i]+"'>\
-					// 		<div class='pg_data_table'><ul class='data_ul'></ul></div>\
-					// 	</div>");
 					var inputNode_el = $("<div class='input_node_info'>\
-							<label>I"+(i+1)+" </label><input type='text' inputNodeIdx='"+i+"' value='"+node.I[i]+"'/>\
-								<a class='pick_button' inputNodeIdx='"+i+"' style='color:#888; font-size:12px;'>&nbsp;<i class='fa fa-crosshairs'></i></a>\
-								<a class='delete_button' inputNodeIdx='"+i+"' style='color:#888; font-size:12px;'>&nbsp;<i class='fa fa-trash-o'></i></a>\
-							<div class='input_node_data_container pg_data_table'></div>\
+							<div class='input_node_header'>\
+								<div class='input_node_index_and_id'>\
+									<label>I"+(i+1)+" </label><input type='text' class='input_node_id' inputNodeIdx='"+i+"' value='"+node.I[i]+"'/>\
+								</div>\
+								<div class='wrapper_tools'>\
+									<a class='pick_button' inputNodeIdx='"+i+"'><i class='fa fa-crosshairs'></i></a>\
+									<a class='delete_button' inputNodeIdx='"+i+"'><i class='fa fa-trash-o'></i></a>\
+								</div>\
+								<div class='input_node_data_type_and_number'>\
+									<span><b>"+((inputNode.V)?inputNode.V.length:0)+"</b> "+getValueType(inputNode.V)+"\
+								</div>\
+							</div>\
+							<div class='input_node_data_container'>\
+								<ul class='data_ul'></ul>\
+							</div>\
 						</div>");
-					$(inputNode_el).find("input").change(function() {
-						// update the input node ID 
-						console.log("change");
+					$(inputNode_el).find("input.input_node_id").change(function() {
 						var i = $(this).attr('inputNodeIdx');
 						var newInputID = $(this).val();
 						(pg.panel.get_selected_nodes()[0]).I[i]=newInputID;
 						pg.panel.redraw();
 					});
-					// $(inputNode_el).find("input").bind("mouseup keyup" ,function() {  // UPDATE INPUT NODE ID
-					// 	var i = $(this).attr('inputNodeIdx');
-					// 	var newInputID = $(this).val();
-					// 	(pg.panel.get_selected_nodes()[0]).I[i]=newInputID;
-					// });
 					$(inputNode_el).find("a.pick_button").click($.proxy(function() {
 						pg.panel.node_select_modal_on(this.i);
 					},{i:i}));
@@ -1222,79 +1008,99 @@ pg.panel = {
 						this.node.I.splice(this.i,1);
 						pg.panel.redraw();
 					},{node:node, i:i}));
+					// render data in V
+					var data_ul_el = $(inputNode_el).find("ul.data_ul").empty(); 
 					if(inputNode.V) {
-						$(inputNode_el).find("input").hover(
-							function() {	// 
-								var input_node_id = $(this).val();
-								var inputNode = pg.panel.get_node_by_id(input_node_id, pg.panel.get_selected_nodes()[0]);
-								if(inputNode) {
-									$("div.node#"+inputNode.ID).addClass("input_node_hover");
-								} 
-							}, function() {	//
-								$("div.node").removeClass("input_node_hover");
-							}
-						);
-						var n_values_in_the_input = $("<div style='margin-top:3px;'><div class='node_data_brief_info'>"+inputNode.V.length+" "+getValueType(inputNode.V)+"</div></div>");
-						var data_ul = $("<ul class='data_ul'></ul>").appendTo(n_values_in_the_input);
-						$(n_values_in_the_input).find(".node_data_brief_info").click($.proxy(function() {
-							if($(this.data_ul).html()=="") pg.panel.commandUI.renderInputDataTable(this.inputNode.V, this.data_ul);		
-							else $(this.data_ul).empty();
-						},{inputNode:inputNode, data_ul:data_ul}));
-						$(inputNode_el).find(".input_node_data_container").append(n_values_in_the_input);
-					} else {
-						//$(inputNode_el).find(".input_node_data_container").append("<div style='margin-top:3px;'></div>");
-					}
-					node_info_list.push(inputNode_el);
+						pg.panel.commandUI.renderInputDataTable(inputNode.V, data_ul_el);		
+					} 
+					// $(inputNode_el).css("width",width_per_node+"px");
+					input_nodes_el.push(inputNode_el);
 				} catch(e) {	console.error(e.stack); 	continue;	}
 			}
-			return node_info_list;
+			return input_nodes_el;
 		},
 		renderOperationInfo: function(node, _container_el) {
 			var container_el = (_container_el)?_container_el:$("<div></div>").get(0);
 			var P = node.P;
-			var op_type = (P && P.type)? P.type:"unknown"; 
-			var icon = $("<div class='node-icon node-icon-mid' operation='"+op_type+"'></div>").appendTo(container_el);	
-
-			$(container_el).append("<div class='op_type'><b>"+op_type.toUpperCase().replace("_"," ")+"</b></div>");
-			if (P && P.description) $(container_el).append("<div class='op_description'>"+P.description+"</div>");
-			
-			if (!P) return;
-
-			// operation's parameter decriptions and default values from DSL
-			var paramEl = $("<div class='op_parameters'></div>").appendTo(container_el);
-			var parameters = pg.planner.operations[node.P.type].parameters;
-			if(parameters) {
-				_.each(parameters, function(p, p_key) {
-					// var current_value = (node.P.param[p_key])? node.P.param[p_key]: p.default; 
-					var current_value = node.P.param[p_key]; 
-					var param_div = $("<div class='op_param'><span>"+p.label+":</span></div>");
-					var func_update = $.proxy(function() {  // when user updates the parameter value
-						var param_key = $(event.target).attr('param_key');
-						var newParamValue = txt2var($(event.target).val());
-						this.P.param[param_key]=newParamValue;
-					},{P:P});
-					var param_input = $("<input type='text' param_key='"+p_key+"' value='"+current_value+"'>, ");
-					param_input.change(func_update);
-					// param_input.focusout(function() { console.log("focuseout!");});
-					// param_input.blur(function() { console.log("blur!");});
-					param_input.keyup(func_update);
-					param_input.appendTo(param_div);
-					$(param_div).appendTo(paramEl);
-				});	
+			var title, description;
+			if(typeof P==='undefined') {
+				title="No operation is chosen";
+				description="Select operation in the list or set output data that you want.";
+			} else {
+				title = (P.type)? P.type.toUpperCase().replace("_"," "): "Unknown";
+				description= pg.panel.commandUI.renderDescription(node);
 			}
-			$("<div class='op_execute_button node-icon' operation='run'></div>").click($.proxy(function() {
-				pg.panel.run_node(this.node);
-			},{node:node})).appendTo(paramEl);
+			$(container_el).find(".operation_title").empty()
+				.append(pg.Node.getNodeIcon(node))
+				.append(title);
+			$(container_el).find(".operation_description").empty()	
+				.append(description);
+			
 			return $(container_el).get(0);
+			// operation's parameter decriptions and default values from DSL
+			// var paramEl = $("<div class='op_parameters'></div>").appendTo(container_el);
+			// var parameters = pg.planner.operations[node.P.type].parameters;
+			// if(parameters) {
+			// 	_.each(parameters, function(p, p_key) {
+			// 		// var current_value = (node.P.param[p_key])? node.P.param[p_key]: p.default; 
+			// 		var current_value = node.P.param[p_key]; 
+			// 		var param_div = $("<div class='op_param'><span>"+p.label+":</span></div>");
+			// 		var func_update = $.proxy(function() {  // when user updates the parameter value
+			// 			var param_key = $(event.target).attr('param_key');
+			// 			var newParamValue = txt2var($(event.target).val());
+			// 			this.P.param[param_key]=newParamValue;
+			// 		},{P:P});
+			// 		var param_input = $("<input type='text' param_key='"+p_key+"' value='"+current_value+"'>, ");
+			// 		param_input.change(func_update);
+			// 		// param_input.focusout(function() { console.log("focuseout!");});
+			// 		// param_input.blur(function() { console.log("blur!");});
+			// 		param_input.keyup(func_update);
+			// 		param_input.appendTo(param_div);
+			// 		$(param_div).appendTo(paramEl);
+			// 	});	
+			// }
+			
+			
+		},
+		renderDescription: function(node) {
+			if(!node || typeof node.P==='undefined' || typeof node.P.description==='undefined') 
+				return "No Description is available"
+			var desc = node.P.description;
+			var params_raw = desc.match(/\[\w+\]/g);
+			var params_formated = _.map(params_raw, function(p) {
+				var key = p.replace(/\[|\]/g,'');
+				if(typeof node.param==='undefined' || !(key in node.param)) return "missing parameter!";
+				else {
+					var value = node.param[key];
+					var param_el = $("<span paramKey='"+key+"'>"+value+"</span>")
+						.click(function() {
+							if($(this).find("input").length>0) return; // ignore click if input box is already there
+							var value = $(this).text();
+							var input_for_edit = $("<input type='text' value='"+value+"'></input>")
+								.change(function() {
+									var param_key = $(this).parent().attr("paramKey");
+									var new_value = $(this).val();
+									var node = pg.panel.get_selected_nodes()[0];
+									node.P.param[param_key] = new_value;
+								});
+						});
+					return param_el;
+				}
+			});
+			for(var i=0;i<params_raw.length;i++) {
+				desc.replace(params_raw[i], params_formated[i]);
+			}
+			return desc_el;
 		},
 		renderInputDataTable: function(V, target_ul) {
 			$(target_ul).empty();
 			for(i in V) {
 				var v = V[i]; 	var idx_to_show = parseInt(i)+1;
-				var entryEl = $("<li data_index='"+i+"'><label class='data_label'>"+idx_to_show+"</label></li>"); 
-				$(entryEl).find("label.data_label").click($.proxy(function() {
-					pg.panel.commandUI.addData(this.v);
-				},{v:v}));
+				var entryEl = $("<li data_index='"+i+"'></li>"); 
+				// $(entryEl).append("<label class='data_label'>"+idx_to_show+"</label>");
+				// $(entryEl).find("label.data_label").click($.proxy(function() {
+				// 	pg.panel.commandUI.addData(this.v);
+				// },{v:v}));
 				if(isDom(v)) {
 					var attr_dict = get_attr_dict(v);  // get_attr_dict returns simplified attr->value object
 					_.each(attr_dict, function(value,key) {
@@ -1318,12 +1124,15 @@ pg.panel = {
 		},
 		renderDataTable: function(V, target_ul) {
 			$(target_ul).empty();
+			$(target_ul).parents(".output_data").find(".output_type_and_number")
+				.empty()
+				.append("<span><b>"+((V)?V.length:0)+"</b> "+getValueType(V)+"</span>");
 			for(i in V) {
 				var v = V[i]; 	var idx_to_show = parseInt(i)+1;
-				var entryEl = $("<li data_index='"+i+"'><label class='data_label'>"+idx_to_show+"</label></li>"); 
-				$(entryEl).find("label.data_label").click($.proxy(function() {
-					pg.panel.commandUI.addData(this.v);
-				},{v:v}));
+				var entryEl = $("<li data_index='"+i+"'></li>"); 
+				// $(entryEl).find("label.data_label").click($.proxy(function() {
+				// 	pg.panel.commandUI.addData(this.v);
+				// },{v:v}));
 				if(isDom(v)) {
 					var attr_dict = get_attr_dict(v);  // get_attr_dict returns simplified attr->value object
 					_.each(attr_dict, function(value,key) {
@@ -1582,6 +1391,11 @@ pg.panel = {
 			}
 		});
 
+		$("#pg_panel").hover(function() {
+			$("body").css("overflow","hidden");
+		},function() {
+			$("body").css("overflow","auto");
+		});
 
 		// $('body').unbind('click').on('click',':not(#pg)',function(e) {
 		// 	e.stopPropagation();

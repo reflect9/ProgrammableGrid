@@ -310,7 +310,7 @@ var isNumberString = function(str) {
 };
 var isBooleanList = function(list) {
 	var toCheck = (_.isArray(list))? list: [list];
-	return _.filter(toCheck, function(e) {
+	return typeof list!=='undefined' && list.length>0 && _.filter(toCheck, function(e) {
 		return e!==null && _.isBoolean(e)===false 
 			&& (_.isString(e) && (e.toLowerCase()!=="true" && e.toLowerCase()!=="false")) 
 			&& e!==1 && e!==0;
@@ -820,7 +820,7 @@ function getValueType(V) {
 	if(isStringList(V)) return "string values";
 	if(isNumberList(V)) return "numbers";
 	if(isBooleanList(V)) return "boolean values";
-	return "unknowns";
+	return undefined;
 }
 
 function dom2jsonML(el) {

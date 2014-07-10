@@ -547,10 +547,10 @@
 	position:fixed;
 	visibility:hidden;
 	width:800px;
-	max-height:500px;
+	//max-height:500px;
 	overflow:hidden;
 	background: rgba(255,255,255,1);
-	border:2px solid #aaa;
+	border:2px solid #555;
 	box-shadow: 3px 3px 3px 1px rgba(0,0,0,0.2);
 	z-index:10006;
 	label {
@@ -562,7 +562,6 @@
 	}
 	.header_panel{
 		position:relative;
-		height:50px;
 		width:auto;
 		padding:7px;
 		background:white;
@@ -579,8 +578,22 @@
 				width:auto;
 				font-size:24px;
 				padding-left:10px;
+				font-weight:300;
 				.param {
-					color:red;
+					display:inline-box;
+					width:50px;
+					border-radius:5px;
+					border:1px solid orange;
+					padding:0 2px 0 2px;
+					background:white;
+					min-width:10px;
+					max-width:100px;
+					overflow:hidden;
+					color:orange;
+					font-size:22px;
+					input {
+						font-size:18px;
+					}
 				}
 			}
 			.operation_execute {
@@ -613,9 +626,10 @@
 	}
 	.data_panel{
 		position:relative;
-		height:275px;
+		height:200px;
 		width:auto;
 		overflow:hidden;
+		border-bottom:1px solid #aaa;
 		.input_data{
 			float:left;
 			width:64%;
@@ -817,6 +831,12 @@
 							background-color:#999;
 							color:white  	!important;
 						}
+						input {
+							width:98%;
+							font-size:14px;
+							padding:2px;
+							border:1px solid #ddd;
+						}
 			    	}
 			    }
 			    .data_tools {
@@ -889,18 +909,14 @@
 
 	}  // end of data_panel
 	
-	.operations_panel {
-		height:275px;
+	.operation_panel {
+		max-height:200px;
 		width:auto;
-		padding:5px;		
+		padding:5px;
+		border-bottom:1px solid #aaa;	
 		.operation_menu{
-			vertical-align:top;
-			display:inline-block;
-			width: 450px;
 			height:100%;
 			overflow:auto;
-			border-right:1px solid #aaa;
-
 			#command_container {
 				position:relative;
 				width:100%;

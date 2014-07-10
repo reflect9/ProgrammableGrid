@@ -772,6 +772,14 @@ pg.panel = {
 						<button class='delete_column_button'>column</button> \
 					</div>\
 				</div>\
+				<div class='operation_panel'>\
+					<div class='operation_menu'>\
+						<div id='task_container'>\
+						</div>\
+						<div id='operation_container'>\
+						</div>\
+					</div>\
+				</div>\
 				<div class='data_panel'>\
 					<div class='input_data'>\
 						<div class='input_nodes_container'></div>\
@@ -791,14 +799,6 @@ pg.panel = {
 							</div>\
 							<div class='output_type_and_number'>\
 							</div>\
-						</div>\
-					</div>\
-				</div>\
-				<div class='operation_panel'>\
-					<div class='operation_menu'>\
-						<div class='task_container'>\
-						</div>\
-						<div class='operation_container'>\
 						</div>\
 					</div>\
 				</div>\
@@ -885,6 +885,7 @@ pg.panel = {
 				$("body").css("overflow","auto");
 			});
 			$(ui_el).draggable({handle: ".header_panel",
+				cancel: "span.param",
 				start: function() {
 					pg.panel.commandUI.turn_inspector(false);
 				},
@@ -903,8 +904,8 @@ pg.panel = {
 			// $("#pg_command_ui").find(".node_info_id").text(node.ID);
 			// $("#pg_command_ui").find(".node_info_position").text("@"+ JSON.stringify(node.position));
 			
-			pg.panel.commandUI.updateCurrentOperationInfo(node);
-			pg.panel.commandUI.updateSuggestedOperationInfo(node);
+			pg.panel.commandUI.updateCurrentOperation(node);
+			pg.panel.commandUI.updateSuggestedOperation(node);
 			pg.panel.commandUI.updateInputNodes(node);
 			pg.panel.commandUI.renderDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
 		},
@@ -919,11 +920,11 @@ pg.panel = {
 			// },{node:node})).appendTo(input_container);
 
 		},
-		updateCurrentOperationInfo: function(node) {
+		updateCurrentOperation: function(node) {
 			var operation_info = $("#pg_command_ui").find(".operation_info");	 
 			pg.panel.commandUI.renderOperationInfo(node, operation_info);
 		},
-		updateSuggestedOperationInfo: function(node) {
+		updateSuggestedOperation: function(node) {
 			var operation_container = $("#pg_command_ui").find("#operation_container");  	// main command UI
 			var task_container = $("#pg_command_ui").find("#task_container");  	// main command UI
 			$(operation_container).empty();   $(task_container).empty();
@@ -944,10 +945,7 @@ pg.panel = {
 					var nodeSet = pg.panel.commandUI.makeSuggestedTaskButton(sn);
 					$(task_container).append(nodeSet);
 				});
-			} else {
-				$(task_container).append("<span style='margin-left:20px;'>No task is applicable.</span>");
-			}
-			
+			} 
 			// show applicable opSuggestions
 			if(opSuggestions.length>0) {
 				_.each(opSuggestions, function(op, opi)  {
@@ -959,10 +957,6 @@ pg.panel = {
 					$(operation_container).append(commandButton);
 				});
 			}
-			//  else {
-			// 	$(operation_container).append("<span style='margin-left:20px;'>No operation is applicable.</span>");
-			// } 
-			// show the rest opSuggestions 
 			var operation_types = _.map(opSuggestions, function(op){return op.type; });
 			var rest_op = _.filter(pg.planner.get_all_operations(), function(op) {
 				return operation_types.indexOf(op.type)==-1;
@@ -1025,7 +1019,7 @@ pg.panel = {
 			var title, description;
 			if(typeof P==='undefined') {
 				title="No operation is chosen";
-				description="Select operation in the list or set output data that you want.";
+				description="Select an operation in the list or set output data that you want.";
 			} else {
 				title = (P.type)? P.type.toUpperCase().replace("_"," "): "Unknown";
 				description= pg.panel.commandUI.renderDescription(node);
@@ -1066,30 +1060,40 @@ pg.panel = {
 			if(!node || typeof node.P==='undefined' || typeof node.P.description==='undefined') 
 				return "No Description is available"
 			var desc = node.P.description;
+			var desc_el = desc;
 			var params_raw = desc.match(/\[\w+\]/g);
-			var params_formated = _.map(params_raw, function(p) {
-				var key = p.replace(/\[|\]/g,'');
-				if(typeof node.param==='undefined' || !(key in node.param)) return "missing parameter!";
-				else {
-					var value = node.param[key];
-					var param_el = $("<span paramKey='"+key+"'>"+value+"</span>")
-						.click(function() {
-							if($(this).find("input").length>0) return; // ignore click if input box is already there
-							var value = $(this).text();
-							var input_for_edit = $("<input type='text' value='"+value+"'></input>")
-								.change(function() {
-									var param_key = $(this).parent().attr("paramKey");
-									var new_value = $(this).val();
-									var node = pg.panel.get_selected_nodes()[0];
-									node.P.param[param_key] = new_value;
-								});
-						});
-					return param_el;
-				}
+			if (params_raw===null) return desc;
+			_.each(params_raw, function(praw) { // replace [key] to span element text
+				var key = praw.replace(/\[|\]/g,'');
+				if(typeof node.P.param==='undefined' || !(key in node.P.param)) return;
+				var value = node.P.param[key];
+				if(value=="") value="___";
+				desc_el = desc_el.replace(praw,"<span contenteditable='true' class='param' paramKey='"+key+"'>"+value+"</span>");
 			});
-			for(var i=0;i<params_raw.length;i++) {
-				desc.replace(params_raw[i], params_formated[i]);
-			}
+			desc_el = $("<span>"+desc_el+"</span>");	// convert to jQuery element
+
+			$(desc_el).find("span.param")
+				.focus(function() {
+					// when parameter is focused
+					$(this).attr("previousValue",$(this).text());
+				})
+				.blur(function() {
+					if($(this).attr("previousValue") != $(this).text() && $(this).text()!=="___") {
+						var node = pg.panel.get_selected_nodes()[0];
+						node.P.param[$(this).attr('paramKey')]=$(this).text();
+					}
+				});
+			// 	.click(function() {
+			// 		if($(this).find("input").length>0) return; // ignore click if input box is already there
+			// 		var value = $(this).text();
+			// 		var input_for_edit = $("<input type='text' value='"+value+"'></input>")
+			// 			.change(function() {
+			// 				var param_key = $(this).parent().attr("paramKey");
+			// 				var new_value = $(this).val();
+			// 				var node = pg.panel.get_selected_nodes()[0];
+			// 				node.P.param[param_key] = new_value;
+			// 			}).appendTo(this);
+			// 	});
 			return desc_el;
 		},
 		renderInputDataTable: function(V, target_ul) {
@@ -1127,7 +1131,7 @@ pg.panel = {
 			$(target_ul).parents(".output_data").find(".output_type_and_number")
 				.empty()
 				.append("<span><b>"+((V)?V.length:0)+"</b> "+getValueType(V)+"</span>");
-			for(i in V) {
+			for(i in V) {	// render every data
 				var v = V[i]; 	var idx_to_show = parseInt(i)+1;
 				var entryEl = $("<li data_index='"+i+"'></li>"); 
 				// $(entryEl).find("label.data_label").click($.proxy(function() {
@@ -1156,6 +1160,7 @@ pg.panel = {
 				}).appendTo(data_edit_buttons);
 				$(target_ul).append(entryEl);
 			}
+			$(target_ul).append("<li><input type='text' placeholder='Type to add a new value.'/></li>");
 		},
 		addData: function(val, targetNode) {
 			var node = pg.panel.get_selected_nodes()[0];

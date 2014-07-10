@@ -31,6 +31,7 @@ pg = {
             var element = e.target.nodeName.toLowerCase();
             if ((element != 'input' && element != 'textarea') || $(e.target).attr("readonly")) {
                 if (e.keyCode === 8 || e.keyCode === 46) {
+                	if(document.activeElement.tagName==='SPAN') return;
                     pg.panel.delete();
                     return false;
                 }

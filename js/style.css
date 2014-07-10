@@ -575,10 +575,9 @@
   position: fixed;
   visibility: hidden;
   width: 800px;
-  max-height: 500px;
   overflow: hidden;
   background: #ffffff;
-  border: 2px solid #aaa;
+  border: 2px solid #555;
   box-shadow: 3px 3px 3px 1px rgba(0, 0, 0, 0.2);
   z-index: 10006;
 }
@@ -591,7 +590,6 @@
 }
 #pg #pg_command_ui .header_panel {
   position: relative;
-  height: 50px;
   width: auto;
   padding: 7px;
   background: white;
@@ -612,9 +610,23 @@
   width: auto;
   font-size: 24px;
   padding-left: 10px;
+  font-weight: 300;
 }
 #pg #pg_command_ui .header_panel .operation_info .operation_description .param {
-  color: red;
+  display: inline-box;
+  width: 50px;
+  border-radius: 5px;
+  border: 1px solid orange;
+  padding: 0 2px 0 2px;
+  background: white;
+  min-width: 10px;
+  max-width: 100px;
+  overflow: hidden;
+  color: orange;
+  font-size: 22px;
+}
+#pg #pg_command_ui .header_panel .operation_info .operation_description .param input {
+  font-size: 18px;
 }
 #pg #pg_command_ui .header_panel .operation_info .operation_execute {
   position: absolute;
@@ -649,9 +661,10 @@
 }
 #pg #pg_command_ui .data_panel {
   position: relative;
-  height: 275px;
+  height: 200px;
   width: auto;
   overflow: hidden;
+  border-bottom: 1px solid #aaa;
 }
 #pg #pg_command_ui .data_panel .input_data {
   float: left;
@@ -851,6 +864,12 @@
   background-color: #999;
   color: white  	!important;
 }
+#pg #pg_command_ui .data_panel .output_data .output_data_table ul li input {
+  width: 98%;
+  font-size: 14px;
+  padding: 2px;
+  border: 1px solid #ddd;
+}
 #pg #pg_command_ui .data_panel .output_data .output_data_table .data_tools {
   margin: 3px;
 }
@@ -919,24 +938,21 @@
   font-size: 14px;
   width: 80px;
 }
-#pg #pg_command_ui .operations_panel {
-  height: 275px;
+#pg #pg_command_ui .operation_panel {
+  max-height: 200px;
   width: auto;
   padding: 5px;
+  border-bottom: 1px solid #aaa;
 }
-#pg #pg_command_ui .operations_panel .operation_menu {
-  vertical-align: top;
-  display: inline-block;
-  width: 450px;
+#pg #pg_command_ui .operation_panel .operation_menu {
   height: 100%;
   overflow: auto;
-  border-right: 1px solid #aaa;
 }
-#pg #pg_command_ui .operations_panel .operation_menu #command_container {
+#pg #pg_command_ui .operation_panel .operation_menu #command_container {
   position: relative;
   width: 100%;
 }
-#pg #pg_command_ui .operations_panel .operation_menu .command {
+#pg #pg_command_ui .operation_panel .operation_menu .command {
   display: inline-block;
   margin: 5px;
   /*height:70px; width:70px;*/
@@ -947,33 +963,33 @@
   border: 1px solid #222;
   border-radius: 3px;
 }
-#pg #pg_command_ui .operations_panel .operation_menu .command .com_title {
+#pg #pg_command_ui .operation_panel .operation_menu .command .com_title {
   font-size: 13px;
   font-weight: 600;
   word-wrap: break-word;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
-#pg #pg_command_ui .operations_panel .operation_menu .command[dimmed=yes] {
+#pg #pg_command_ui .operation_panel .operation_menu .command[dimmed=yes] {
   border: none !important;
   color: white !important;
 }
-#pg #pg_command_ui .operations_panel .operation_menu .command[selected=selected] {
+#pg #pg_command_ui .operation_panel .operation_menu .command[selected=selected] {
   background: #9b4681;
 }
-#pg #pg_command_ui .operations_panel .operation_menu .nodes {
+#pg #pg_command_ui .operation_panel .operation_menu .nodes {
   display: inline-block;
   margin: 5px;
   background: #ccc;
   border: 2px solid #222;
   border-radius: 3px;
 }
-#pg #pg_command_ui .operations_panel .operation_menu .nodes .node_title {
+#pg #pg_command_ui .operation_panel .operation_menu .nodes .node_title {
   font-size: 13px;
   font-weight: 600;
   word-wrap: break-word;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
-#pg #pg_command_ui .operations_panel .operation_menu #command_parameters {
+#pg #pg_command_ui .operation_panel .operation_menu #command_parameters {
   width: 100%;
   margin: 10px;
 }

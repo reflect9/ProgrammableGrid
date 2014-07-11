@@ -579,15 +579,15 @@
 				font-size:24px;
 				padding-left:10px;
 				font-weight:300;
+				line-height:1.3em;
 				.param {
-					display:inline-box;
-					width:50px;
+					display:inline;
+					word-wrap: break-word;
 					border-radius:5px;
 					border:1px solid orange;
 					padding:0 2px 0 2px;
 					background:white;
 					min-width:10px;
-					max-width:100px;
 					overflow:hidden;
 					color:orange;
 					font-size:22px;
@@ -632,7 +632,8 @@
 		border-bottom:1px solid #aaa;
 		.input_data{
 			float:left;
-			width:64%;
+			position:relative;
+			width:519px;
 			height:100%;
 			overflow:hidden;
 			.input_nodes_container {
@@ -640,7 +641,7 @@
 				overflow-x:auto;
 				overflow-y:hidden;
 				height:100%; 
-				width:calc(~'100% - 26px');
+				width:calc(~'100% - 35px');
 				white-space: nowrap;
 				background-color:#ddd;
 				//box-shadow:inset 2px 2px 2px 2px rgba(0,0,0,0.2);
@@ -654,14 +655,17 @@
 					.input_node_header {
 						position: absolute;
 						width:100%;
-						height:40px;
+						height:25px;
 						top:0px;
 						background:white;
 						//border-bottom:1px solid #ddd;
 						box-shadow:0px 2px 2px 0px rgba(0,0,0,0.2);
-						z-index:999999;
+						z-index:200;
 						label {   }
-						input { min-width:20px; }
+						input { 
+							min-width:20px; 
+							border:1px solid #ddd;
+						}
 						.input_node_index_and_id {
 							float:left;
 							margin:5px;
@@ -674,20 +678,13 @@
 						}
 						label.data_length_type {
 						}
-						i { font-size: 16px; margin:5px 3px 0 0;}
-						.input_node_data_type_and_number {
-							clear:both;
-							margin-top:5px;
-							width:100%;
-							text-align:center;
-							font-size:12px;
-						}
+						i { font-size: 16px; margin:5px 3px 0 0; color:#bbb;}
+						i:hover { color:#333;}
 					}
-
 					.input_node_data_container {
 						height:inherit;
-						margin-top:40px;
-						height:calc(~'100% - 40px');
+						margin-top:25px;
+						height:calc(~'100% - 25px');
 						overflow:auto;
 						//box-shadow:inset 0px 2px 4px 0px rgba(0,0,0,0.2);
 						ul{
@@ -708,10 +705,12 @@
 							overflow:hidden;
 							margin-bottom:3px;
 							span.attr_key {
-								color:red;
+								color:black;
+								font-weight:700;
 							}
 							span.attr_value {
 								color:#555;
+								font-weight:400;
 								padding-left:5px;
 							}
 						}
@@ -728,22 +727,34 @@
 								margin-top:5px;
 							}
 						}
-
+					}
+					.input_node_data_type_and_number {
+						position:absolute;
+						bottom:5px; right: 5px;
+						padding:3px;
+						font-size:14px;
+						background:white;
+						color:red;
+						border-radius:4px;
 					}
 				} 
 			}  // END OF input_nodes_container
 			.input_nodes_tools {
-				float:right;
-				position:relative;	
-				width:25px;
+				position:absolute;
+				top:0px; right:0px;	
+				z-index:201;
+				width:35px;
 				height:100%;
+				background:white;
 				border-left:1px solid #aaa;
 				box-shadow: -2px 2px 2px 0px rgba(0,0,0,0.1);
-				i {  font-size:17px; margin:9px;}
-				.wrapper_tools {
-					display:none;
-					
+				i {  font-size:16px; color:#aaa; margin:7px 12px;}
+				i.operation_execute_button {  
+					font-size:26px; 
+					color:black; 
+					margin:50px 7px; 
 				}
+
 				
 			}
 
@@ -770,10 +781,12 @@
 				cursor:pointer;
 				overflow:hidden;
 				span.attr_key {
-					color:red;
+					color:black;
+					font-weight:700;
 				}
 				span.attr_value {
 					color:#555;
+					font-weight:400;
 					padding-left:5px;
 				}
 
@@ -797,8 +810,8 @@
 			height:100%;
 			overflow:hidden;
 			.output_data_table {
-				height:calc(~'100% - 40px');
-				margin-top:40px;
+				height:calc(~'100% - 25px');
+				margin-top:25px;
 				overflow:auto;
 				ul{
 					list-style: none outside none;
@@ -853,12 +866,14 @@
 					margin-left:5px;
 					max-height:90px;
 					overflow:hidden;
-					margin-bottom:3px;
+					margin-bottom:5px;
 					span.attr_key {
-						color:red;
+						color:black;
+						font-weight:700;
 					}
 					span.attr_value {
 						color:#555;
+						font-weight:400;
 						padding-left:5px;
 					}
 				}
@@ -880,7 +895,7 @@
 			.output_data_tools {
 				position:absolute;
 				top:0px; left:0px;
-				height: 40px;
+				height: 25px;
 				width: 100%;
 				background-color: white;
 				box-shadow:0px 2px 2px 0px rgba(0,0,0,0.2);
@@ -892,17 +907,16 @@
 					float:right;
 					i { font-size:16px; margin:5px; }
 				}
-				.output_type_and_number {
-					clear:both;
-					margin-top:5px;
-					width:100%;
-					text-align:center;
-					font-size:12px;
-
-				}
 				input { font-size:14px; width:80px; }
-
-
+			}
+			.output_type_and_number {
+				position:absolute;
+				bottom:5px; right:5px;
+				background-color:white;
+				border-radius:4px;
+				padding:3px;
+				color:red;
+				font-size:14px;
 			}
 		}
 
@@ -1057,11 +1071,14 @@
 			max-height:80px;
 			overflow:hidden;
 			span.attr_key {
-				color:red;
+				color:black;
+				font-weight:700;
+
 			}
 			span.attr_value {
 				color:#555;
 				padding-left:5px;
+				font-weight:400;
 			}
 		}
 
@@ -1129,10 +1146,12 @@ div.pg_data_table {
 		overflow:hidden;
 		margin-bottom:3px;
 		span.attr_key {
-			color:red;
+			color:black;
+			font-weight:700;
 		}
 		span.attr_value {
 			color:#555;
+			font-weight:400;
 			padding-left:5px;
 		}
 	}

@@ -785,6 +785,7 @@ pg.panel = {
 						<div class='input_nodes_container'></div>\
 						<div class='input_nodes_tools'>\
 							<i class='fa fa-plus add_input_node_button'></i>\
+							<i class='fa fa-play-circle-o operation_execute_button'></i>\
 						</div>\
 					</div>\
 					<div class='output_data'>\
@@ -794,12 +795,10 @@ pg.panel = {
 						<div class='output_data_tools' floating_buttons_at_the_bottom'>\
 							<div class='output_data_info'><label>OUTPUT</label></div>\
 							<div class='wrapper_tools'>\
-								<i class='fa fa-repeat operation_execute_button'></i>\
-								<i class='fa fa-trash-o'></i>\
-							</div>\
-							<div class='output_type_and_number'>\
+								<i class='fa fa-trash-o clear_data_button'></i>\
 							</div>\
 						</div>\
+						<div class='output_type_and_number'></div>\
 					</div>\
 				</div>\
 				</div>");
@@ -862,12 +861,6 @@ pg.panel = {
 				var node = pg.panel.get_selected_nodes()[0];
 				node.I.push("");
 				pg.panel.redraw();
-			});
-			// add data tools
-			$(ui_el).find("input.new_data_input").change(function(){
-				pg.panel.commandUI.addData($(this).val());
-				$(this).val("");
-				$("#pg_command_ui").find("input.new_data_input").focus();
 			});
 			$(ui_el).find(".data_tools").find("i.fa-trash-o").click(function() {	pg.panel.empty();	});
 			$(ui_el).find(".clear_data_button").click(function(e){pg.panel.empty(pg.panel.el_to_obj(e.target));});
@@ -981,12 +974,12 @@ pg.panel = {
 									<a class='pick_button' inputNodeIdx='"+i+"'><i class='fa fa-crosshairs'></i></a>\
 									<a class='delete_button' inputNodeIdx='"+i+"'><i class='fa fa-trash-o'></i></a>\
 								</div>\
-								<div class='input_node_data_type_and_number'>\
-									<span><b>"+((inputNode.V)?inputNode.V.length:0)+"</b> "+getValueType(inputNode.V)+"\
-								</div>\
 							</div>\
 							<div class='input_node_data_container'>\
 								<ul class='data_ul'></ul>\
+							</div>\
+							<div class='input_node_data_type_and_number'>\
+								<span><b>"+((inputNode.V)?inputNode.V.length:0)+"</b> "+getValueType(inputNode.V)+"\
 							</div>\
 						</div>");
 					$(inputNode_el).find("input.input_node_id").change(function() {
@@ -1100,7 +1093,7 @@ pg.panel = {
 			$(target_ul).empty();
 			for(i in V) {
 				var v = V[i]; 	var idx_to_show = parseInt(i)+1;
-				var entryEl = $("<li data_index='"+i+"'></li>"); 
+				var entryEl = $("<li data_index='"+i+"'></li>");
 				// $(entryEl).append("<label class='data_label'>"+idx_to_show+"</label>");
 				// $(entryEl).find("label.data_label").click($.proxy(function() {
 				// 	pg.panel.commandUI.addData(this.v);
@@ -1123,6 +1116,16 @@ pg.panel = {
 				} else {	// WHEN THE DATA is NOT DOM
 					$(entryEl).append("	<div class='attr'><span class='attr_value'>"+v+"</span></div>");
 				}
+				// ADD COPY BUTTON
+				$("<i class='fa fa-sign-out copy_value hidden'></i>").click($.proxy(function() {
+					pg.panel.commandUI.addData(this.v);
+				},{v:v})).appendTo(entryEl);
+				$(entryEl).hover(function() {
+					$(this).find(".copy_value").show();
+				},function() {
+					$(this).find(".copy_value").hide();
+				});
+				//
 				$(target_ul).append(entryEl);
 			}
 		},
@@ -1142,16 +1145,37 @@ pg.panel = {
 					_.each(attr_dict, function(value,key) {
 						var attr_el = $("	<div class='attr'>\
 												<span class='attr_key'>"+ key +":\
-												<span class='attr_value' attr_key='"+key+"'>"+value+"</span>\
+												<span class='attr_value' contenteditable='true' attr_key='"+key+"'>"+value+"</span>\
 											</div>").appendTo(entryEl);
 					});	
-				} else {	// WHEN THE DATA is NOT DOM
-					$(entryEl).append("	<div class='attr'><span class='attr_value'>"+v+"</span></div>");
-				}
+				} else 	// WHEN THE DATA is NOT DOM
+					$(entryEl).append("	<div class='attr'><span class='attr_value' contenteditable='true'>"+v+"</span></div>");
+				$(entryEl).find("span.attr_value").focus(function() {
+					$(this).attr("previousValue",$(this).text());
+				})
+				.blur(function() {
+					if($(this).attr("previousValue") != $(this).text()) {
+						var node = pg.panel.get_selected_nodes()[0];
+						var new_value = $(this).text();
+						var pos = parseInt($(this).closest("li").attr("data_index"));
+						if($(this).attr('attr_key')) {  // when edited value is element attribute
+							var attr_key = $(this).attr('attr_key');
+							var attr_func = pg.planner.attr_func(attr_key);
+							if(attr_func==false) return;
+							var attr_setter = attr_func['setter'];
+							attr_setter(node.V[pos], new_value); 
+						} else { // when edited object is just value
+							node.V[pos] = txt2var(new_value);
+						}
+						pg.panel.commandUI.renderDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
+						pg.panel.commandUI.updateSuggestedOperation(node);
+					}
+				});
+
 				// create trash and other tool buttons
 				var data_edit_buttons = $("<div class='data_edit_buttons'></div>")
 					.appendTo(entryEl);
-				$(entryEl).hover(function(){$(this).find(".data_edit_buttons").show();}, function(){$(this).find(".data_edit_buttons").hide();});
+				$(entryEl).hover(function(){$(this).find(".data_edit_buttons").show();}, function(){$(this).find(".data_edit_buttons").hide();});			
 				$("<a class='delete_button'><i class='fa fa-trash-o'></i></button>").click(function() {
 					var data_index = $(this).parents("li").attr("data_index");
 					var node = pg.panel.get_selected_nodes()[0];
@@ -1160,14 +1184,32 @@ pg.panel = {
 				}).appendTo(data_edit_buttons);
 				$(target_ul).append(entryEl);
 			}
-			$(target_ul).append("<li><input type='text' placeholder='Type to add a new value.'/></li>");
+			var li_new_data = $("<li></li>");
+			$("<input type='text' class='new_data_input' placeholder='Type to add a new value.'/>")
+			.change(function(){
+				pg.panel.commandUI.addData($(this).val());
+				$(this).val("");
+				$("#pg_command_ui").find("input.new_data_input").focus();
+			}).appendTo(li_new_data);
+			$(target_ul).append(li_new_data);
 		},
-		addData: function(val, targetNode) {
-			var node = pg.panel.get_selected_nodes()[0];
-			if(targetNode) node = targetNode;
-			node.V.push(txt2var(val));
+		addData: function(val, _pos, _node) {
+			var node = (_node)? _node: pg.panel.get_selected_nodes()[0];
+			var pos = (typeof _pos!=='undefined')? pos: node.V.length;  
+			node.V.splice(pos, 0, txt2var(val));
 			pg.panel.commandUI.renderDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
-			pg.panel.commandUI.updateSuggestedOperationInfo(node);
+			pg.panel.commandUI.updateSuggestedOperation(node);
+		},
+		removeData: function(pos, _node) {
+			var node = (_node)? _node: pg.panel.get_selected_nodes()[0];
+			node.V.splice(pos, 1);
+			pg.panel.commandUI.renderDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
+			pg.panel.commandUI.updateSuggestedOperation(node);
+		},
+		replaceData: function(val, pos, _node) {
+			var node = (_node)? _node: pg.panel.get_selected_nodes()[0];
+			pg.panel.commandUI.removeData(pos, node);
+			pg.panel.commandUI.addData(val, pos, node);
 		},
 		makeSuggestedTaskButton: function(_nodes) {
 			var el = $("<div class='nodes'></div>"); 

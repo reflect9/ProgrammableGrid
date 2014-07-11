@@ -611,16 +611,16 @@
   font-size: 24px;
   padding-left: 10px;
   font-weight: 300;
+  line-height: 1.3em;
 }
 #pg #pg_command_ui .header_panel .operation_info .operation_description .param {
-  display: inline-box;
-  width: 50px;
+  display: inline;
+  word-wrap: break-word;
   border-radius: 5px;
   border: 1px solid orange;
   padding: 0 2px 0 2px;
   background: white;
   min-width: 10px;
-  max-width: 100px;
   overflow: hidden;
   color: orange;
   font-size: 22px;
@@ -668,7 +668,8 @@
 }
 #pg #pg_command_ui .data_panel .input_data {
   float: left;
-  width: 64%;
+  position: relative;
+  width: 519px;
   height: 100%;
   overflow: hidden;
 }
@@ -677,7 +678,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   height: 100%;
-  width: calc(100% - 26px);
+  width: calc(100% - 35px);
   white-space: nowrap;
   background-color: #ddd;
 }
@@ -693,14 +694,15 @@
 #pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_header {
   position: absolute;
   width: 100%;
-  height: 40px;
+  height: 25px;
   top: 0px;
   background: white;
   box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.2);
-  z-index: 999999;
+  z-index: 200;
 }
 #pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_header input {
   min-width: 20px;
+  border: 1px solid #ddd;
 }
 #pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_header .input_node_index_and_id {
   float: left;
@@ -713,18 +715,15 @@
 #pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_header i {
   font-size: 16px;
   margin: 5px 3px 0 0;
+  color: #bbb;
 }
-#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_header .input_node_data_type_and_number {
-  clear: both;
-  margin-top: 5px;
-  width: 100%;
-  text-align: center;
-  font-size: 12px;
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_header i:hover {
+  color: #333;
 }
 #pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_data_container {
   height: inherit;
-  margin-top: 40px;
-  height: calc(100% - 40px);
+  margin-top: 25px;
+  height: calc(100% - 25px);
   overflow: auto;
 }
 #pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_data_container ul {
@@ -746,10 +745,12 @@
   margin-bottom: 3px;
 }
 #pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_data_container div.attr span.attr_key {
-  color: red;
+  color: black;
+  font-weight: 700;
 }
 #pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_data_container div.attr span.attr_value {
   color: #555;
+  font-weight: 400;
   padding-left: 5px;
 }
 #pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_data_container div.dt_inst {
@@ -767,20 +768,36 @@
   margin-left: 10px;
   margin-top: 5px;
 }
+#pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_data_type_and_number {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  padding: 3px;
+  font-size: 14px;
+  background: white;
+  color: red;
+  border-radius: 4px;
+}
 #pg #pg_command_ui .data_panel .input_data .input_nodes_tools {
-  float: right;
-  position: relative;
-  width: 25px;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  z-index: 201;
+  width: 35px;
   height: 100%;
+  background: white;
   border-left: 1px solid #aaa;
   box-shadow: -2px 2px 2px 0px rgba(0, 0, 0, 0.1);
 }
 #pg #pg_command_ui .data_panel .input_data .input_nodes_tools i {
-  font-size: 17px;
-  margin: 9px;
+  font-size: 16px;
+  color: #aaa;
+  margin: 7px 12px;
 }
-#pg #pg_command_ui .data_panel .input_data .input_nodes_tools .wrapper_tools {
-  display: none;
+#pg #pg_command_ui .data_panel .input_data .input_nodes_tools i.operation_execute_button {
+  font-size: 26px;
+  color: black;
+  margin: 50px 7px;
 }
 #pg #pg_command_ui .data_panel .input_data ul {
   margin: 0px 5px 10px 5px;
@@ -806,10 +823,12 @@
   overflow: hidden;
 }
 #pg #pg_command_ui .data_panel .input_data div.attr span.attr_key {
-  color: red;
+  color: black;
+  font-weight: 700;
 }
 #pg #pg_command_ui .data_panel .input_data div.attr span.attr_value {
   color: #555;
+  font-weight: 400;
   padding-left: 5px;
 }
 #pg #pg_command_ui .data_panel .input_data div.attr:hover i.fa {
@@ -827,8 +846,8 @@
   overflow: hidden;
 }
 #pg #pg_command_ui .data_panel .output_data .output_data_table {
-  height: calc(100% - 40px);
-  margin-top: 40px;
+  height: calc(100% - 25px);
+  margin-top: 25px;
   overflow: auto;
 }
 #pg #pg_command_ui .data_panel .output_data .output_data_table ul {
@@ -883,13 +902,15 @@
   margin-left: 5px;
   max-height: 90px;
   overflow: hidden;
-  margin-bottom: 3px;
+  margin-bottom: 5px;
 }
 #pg #pg_command_ui .data_panel .output_data .output_data_table div.attr span.attr_key {
-  color: red;
+  color: black;
+  font-weight: 700;
 }
 #pg #pg_command_ui .data_panel .output_data .output_data_table div.attr span.attr_value {
   color: #555;
+  font-weight: 400;
   padding-left: 5px;
 }
 #pg #pg_command_ui .data_panel .output_data .output_data_table div.dt_inst {
@@ -911,7 +932,7 @@
   position: absolute;
   top: 0px;
   left: 0px;
-  height: 40px;
+  height: 25px;
   width: 100%;
   background-color: white;
   box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.2);
@@ -927,16 +948,19 @@
   font-size: 16px;
   margin: 5px;
 }
-#pg #pg_command_ui .data_panel .output_data .output_data_tools .output_type_and_number {
-  clear: both;
-  margin-top: 5px;
-  width: 100%;
-  text-align: center;
-  font-size: 12px;
-}
 #pg #pg_command_ui .data_panel .output_data .output_data_tools input {
   font-size: 14px;
   width: 80px;
+}
+#pg #pg_command_ui .data_panel .output_data .output_type_and_number {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background-color: white;
+  border-radius: 4px;
+  padding: 3px;
+  color: red;
+  font-size: 14px;
 }
 #pg #pg_command_ui .operation_panel {
   max-height: 200px;
@@ -1079,11 +1103,13 @@
   overflow: hidden;
 }
 #pg #pg_edit_ui .table_inspector li.attr span.attr_key {
-  color: red;
+  color: black;
+  font-weight: 700;
 }
 #pg #pg_edit_ui .table_inspector li.attr span.attr_value {
   color: #555;
   padding-left: 5px;
+  font-weight: 400;
 }
 /* pg */
 div.pg_data_table {
@@ -1139,10 +1165,12 @@ div.pg_data_table div.attr {
   margin-bottom: 3px;
 }
 div.pg_data_table div.attr span.attr_key {
-  color: red;
+  color: black;
+  font-weight: 700;
 }
 div.pg_data_table div.attr span.attr_value {
   color: #555;
+  font-weight: 400;
   padding-left: 5px;
 }
 div.pg_data_table div.dt_inst {

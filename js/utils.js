@@ -820,7 +820,7 @@ function getValueType(V) {
 	if(isStringList(V)) return "string values";
 	if(isNumberList(V)) return "numbers";
 	if(isBooleanList(V)) return "boolean values";
-	return undefined;
+	return "mixed";
 }
 
 function dom2jsonML(el) {

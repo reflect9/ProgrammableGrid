@@ -1066,7 +1066,7 @@ pg.planner = {
 				type:"string_predicate",
 				icon:'columns',
 				param: { source:'_input1', key:'_input2', isIn:'in' },
-				description: "Distinguish whether [source] contains [key]."
+				description: "Distinguish whether [key] is [isIn] [source] ."
 			},
 			parameters: {
 				source:{ type:'text', label:"String set to look at", default:'_input1'},
@@ -1292,7 +1292,7 @@ pg.planner = {
 				type:'set_attribute', 
 				icon:'pencil-square-o',
 				param:{key:"text", target:"_input1", new_value:"_input2"},
-				description:"Set attribute values from the input elements."
+				description:"Set [key] attributes of [target] to [new_value]."
 			},
 			parameters: {
 				'key': {type:'text', label:"Attribute to set", default:"text"},
@@ -1988,6 +1988,7 @@ pg.planner = {
 				try{
 					if(!Is || Is.length==0 || !Is[0].V || Is[0].V.length==0) return false;
 					if(!O || !O.V || O.V.length==0) return false;	
+					if(Is[0].V.length<=O.V.length) return false;
 					var IV = _.clone(Is[0].V);
 					for(var i in O.V) {
 						var idx = IV.indexOf(O.V[i]);

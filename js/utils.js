@@ -933,5 +933,32 @@ function get_true_booleans(org_list, filtered_list){
 
 
 
+jQuery.fn.makeEditable = function(onChange_callback) {	
+	$(this).attr("contenteditable","true");
+	$(this).focus(function() {
+		$(this).attr("old-background-color",$(this).css("background-color"));
+		$(this).css("background-color","rgba(255,255,0,0.3)");
+		$(this).attr("previousValue",$(this).text());
+	}).blur(function() {
+		if($(this).attr("previousValue") != $(this).text()) {
+			onChange_callback($(this).text());
+		}
+		$(this).css("background-color",$(this).attr("old-background-color"));
+		$(this).removeAttr("previousValue");
+	});
+}
+
+jQuery.fn.makeNonEditable = function() {
+	$(this).unbind("click");
+	$(this).unbind("focus");
+	$(this).unbind("blur");
+};
+
+
+
+
+
+
+
 
 

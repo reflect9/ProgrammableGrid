@@ -1,4 +1,6 @@
 #pg {
+  height: 100%;
+  width: 600px;
   /* DEFAULT STYLE */
 
   margin: 0;
@@ -95,13 +97,108 @@
 #pg .hidden {
   display: none;
 }
-#pg #pg_panel {
-  position: fixed;
+#pg .pg_nav {
+  position: absolute;
+  width: 300px;
+  height: 100%;
+  top: 0px;
+  left: 0px;
   z-index: 999;
+  background: #ddd;
+  overflow: auto;
+}
+#pg .pg_nav *,
+#pg .pg_nav *:before,
+#pg .pg_nav *:after {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+#pg .pg_nav #pg_browser {
+  position: relative;
+  height: 50%;
+  overflow: hidden;
+}
+#pg .pg_nav #pg_browser .toolbar {
+  position: absolute;
+  z-index: 1000;
+  height: 40px;
   width: 100%;
-  height: 300px;
-  bottom: 0px;
-  background: white;
+  top: 0px;
+  background: #ddd;
+  box-shadow: 0px 2px 2px 2px rgba(0, 0, 0, 0.1);
+  color: white;
+  font-size: 20px;
+}
+#pg .pg_nav #pg_browser .toolbar .nav-icon {
+  position: absolute;
+  top: 11px;
+  left: 15px;
+}
+#pg .pg_nav #pg_browser .toolbar .title {
+  position: absolute;
+  top: 11px;
+  left: 40px;
+}
+#pg .pg_nav #pg_browser .toolbar .menus {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+}
+#pg .pg_nav #pg_browser .toolbar .menus i {
+  margin: 11px;
+}
+#pg .pg_nav #pg_browser .enhancements_container {
+  color: #666;
+  padding-top: 40px;
+  width: 100%;
+  height: calc(100% - 40px);
+  overflow: auto;
+}
+#pg .pg_nav #pg_browser .enhancements_container ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+#pg .pg_nav #pg_browser .enhancements_container ul li {
+  border-bottom: 1px solid #aaa;
+  padding: 12px 12px 12px 40px;
+}
+#pg .pg_nav #pg_browser .enhancements_container ul li .enh_title {
+  font-size: 18px;
+  width: 100%;
+  margin-bottom: 5px;
+}
+#pg .pg_nav #pg_browser .enhancements_container ul li .enh_description {
+  font-size: 13px;
+  color: #555;
+}
+#pg .pg_nav #pg_browser .enhancements_container ul li .enh_date {
+  font-size: 13px;
+  padding-left: 1px;
+  color: #999;
+  margin-bottom: 5px;
+}
+#pg .pg_nav #pg_browser .enhancements_container ul li .enh_settings {
+  width: 100%;
+  text-align: right;
+}
+#pg .pg_nav #pg_browser .enhancements_container ul li .enh_settings i {
+  font-size: 20px;
+  margin: 5px;
+}
+#pg .pg_nav #pg_toolbox {
+  height: 50%;
+  background-color: #faa;
+}
+#pg .pg_panel {
+  position: absolute;
+  width: 300px;
+  height: 100%;
+  z-index: 999;
+  top: 0px;
+  left: 300px;
+  background: #eee;
   overflow: hidden;
   font-size: 13px;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -195,13 +292,13 @@
 	}*/
 
 }
-#pg #pg_panel ol,
-#pg #pg_panel ul {
+#pg .pg_panel ol,
+#pg .pg_panel ul {
   list-style: none outside none;
   margin: 0;
   padding: 0;
 }
-#pg #pg_panel #resize_handle_panel {
+#pg .pg_panel #resize_handle_panel {
   position: absolute;
   z-index: 10000;
   top: 0px;
@@ -211,9 +308,10 @@
   cursor: pointer;
   background-color: #aaaabb;
 }
-#pg #pg_panel #control_ui {
+#pg .pg_panel #control_ui {
   position: fixed;
-  bottom: 0px;
+  top: 0px;
+  left: 0px;
   background: white;
   vertical-align: middle;
   padding-left: 10px;
@@ -224,10 +322,10 @@
   z-index: 102;
   overflow: hidden;
 }
-#pg #pg_panel #node_size_slider {
+#pg .pg_panel #node_size_slider {
   display: inline-block;
 }
-#pg #pg_panel #tiles {
+#pg .pg_panel #tiles {
   position: absolute;
   z-index: 101;
   top: 0px;
@@ -235,17 +333,17 @@
   width: 3000px;
   height: 3000px;
 }
-#pg #pg_panel #plate {
+#pg .pg_panel #plate {
   /*background:#ddd;*/
 
   width: 3000px;
   height: 3000px;
   z-index: 100;
 }
-#pg #pg_panel #script_selector {
+#pg .pg_panel #script_selector {
   width: 200px;
 }
-#pg #pg_panel #plate_container {
+#pg .pg_panel #plate_container {
   position: relative;
   width: 100%;
   height: 900px;
@@ -253,7 +351,7 @@
   border: 1px solid #dcc;
   overflow: auto;
 }
-#pg #pg_panel #plate_container #overlay {
+#pg .pg_panel #plate_container #overlay {
   position: absolute;
   z-index: 102;
   width: 100%;
@@ -262,24 +360,24 @@
   left: 0px;
   pointer-events: none;
 }
-#pg #pg_panel #plate_container #overlay .path_connector {
+#pg .pg_panel #plate_container #overlay .path_connector {
   fill: none;
   stroke: #222;
   stroke-width: 1;
 }
-#pg #pg_panel #plate_container #overlay circle {
+#pg .pg_panel #plate_container #overlay circle {
   fill: white;
   stroke: #222;
   stroke-width: 2;
 }
-#pg #pg_panel #node_size_slider {
+#pg .pg_panel #node_size_slider {
   margin: 5px;
   width: 200px;
 }
-#pg #pg_panel .node {
+#pg .pg_panel .node {
   position: absolute;
 }
-#pg #pg_panel .node .node_cover {
+#pg .pg_panel .node .node_cover {
   position: absolute;
   top: 0px;
   left: 0px;
@@ -288,7 +386,7 @@
   width: 100%;
   height: 100%;
 }
-#pg #pg_panel .node .node_cover .nth-input-text {
+#pg .pg_panel .node .node_cover .nth-input-text {
   position: absolute;
   bottom: 5px;
   margin-top: -0.5em;
@@ -297,7 +395,7 @@
   text-align: center;
   font-size: 1.5em;
 }
-#pg #pg_panel .node .node_content {
+#pg .pg_panel .node .node_content {
   overflow: hidden;
   position: absolute;
   z-index: 100;
@@ -307,7 +405,7 @@
   width: calc(96%);
   height: calc(96%);
 }
-#pg #pg_panel .node .node_borders {
+#pg .pg_panel .node .node_borders {
   position: absolute;
   z-index: 99;
   top: 0px;
@@ -315,7 +413,7 @@
   width: 100%;
   height: 100%;
 }
-#pg #pg_panel .node .node_borders .nth-input {
+#pg .pg_panel .node .node_borders .nth-input {
   position: absolute;
   width: 10px;
   height: 12px;
@@ -324,7 +422,7 @@
   font-weight: 500;
   color: #888;
 }
-#pg #pg_panel .node .node_borders .above {
+#pg .pg_panel .node .node_borders .above {
   display: none;
   position: absolute;
   top: -4px;
@@ -332,19 +430,19 @@
   width: calc(96%);
   height: 4px;
 }
-#pg #pg_panel .node .node_borders .above .nth-input {
+#pg .pg_panel .node .node_borders .above .nth-input {
   top: -9px;
   left: 48%;
   border-radius: 2px 2px 0 0;
 }
-#pg #pg_panel .node .node_borders .above i.fa {
+#pg .pg_panel .node .node_borders .above i.fa {
   color: white;
   font-size: 20px;
   position: absolute;
   top: 0px;
   left: 47%;
 }
-#pg #pg_panel .node .node_borders .below {
+#pg .pg_panel .node .node_borders .below {
   display: none;
   position: absolute;
   bottom: -4px;
@@ -352,19 +450,19 @@
   width: calc(96%);
   height: 4px;
 }
-#pg #pg_panel .node .node_borders .below .nth-input {
+#pg .pg_panel .node .node_borders .below .nth-input {
   bottom: -9px;
   left: 48%;
   border-radius: 0 0 2px 2px;
 }
-#pg #pg_panel .node .node_borders .below i.fa {
+#pg .pg_panel .node .node_borders .below i.fa {
   color: white;
   font-size: 20px;
   position: absolute;
   bottom: 0px;
   left: 47%;
 }
-#pg #pg_panel .node .node_borders .left {
+#pg .pg_panel .node .node_borders .left {
   display: none;
   position: absolute;
   top: 0px;
@@ -372,19 +470,19 @@
   width: 4px;
   height: calc(96%);
 }
-#pg #pg_panel .node .node_borders .left .nth-input {
+#pg .pg_panel .node .node_borders .left .nth-input {
   top: 48%;
   left: -9px;
   border-radius: 2px 0 0 2px;
 }
-#pg #pg_panel .node .node_borders .left i.fa {
+#pg .pg_panel .node .node_borders .left i.fa {
   color: white;
   font-size: 20px;
   position: absolute;
   top: 47%;
   left: 0px;
 }
-#pg #pg_panel .node .node_borders .right {
+#pg .pg_panel .node .node_borders .right {
   display: none;
   position: absolute;
   top: 0px;
@@ -392,19 +490,19 @@
   width: 4px;
   height: calc(96%);
 }
-#pg #pg_panel .node .node_borders .right .nth-input {
+#pg .pg_panel .node .node_borders .right .nth-input {
   top: 48%;
   right: -9px;
   border-radius: 0 2px 2px 0;
 }
-#pg #pg_panel .node .node_borders .right i.fa {
+#pg .pg_panel .node .node_borders .right i.fa {
   color: white;
   font-size: 20px;
   position: absolute;
   top: 47%;
   right: 0px;
 }
-#pg #pg_panel .node .node_bg {
+#pg .pg_panel .node .node_bg {
   position: absolute;
   z-index: 98;
   top: 0px;
@@ -414,40 +512,40 @@
   width: 100%;
   height: 100%;
 }
-#pg #pg_panel .node[border_left] .node_borders .left {
+#pg .pg_panel .node[border_left] .node_borders .left {
   display: block;
 }
-#pg #pg_panel .node[border_right] .node_borders .right {
+#pg .pg_panel .node[border_right] .node_borders .right {
   display: block;
 }
-#pg #pg_panel .node[border_above] .node_borders .above {
+#pg .pg_panel .node[border_above] .node_borders .above {
   display: block;
 }
-#pg #pg_panel .node[border_below] .node_borders .below {
+#pg .pg_panel .node[border_below] .node_borders .below {
   display: block;
 }
-#pg #pg_panel .node:hover .node_bg {
+#pg .pg_panel .node:hover .node_bg {
   box-shadow: inset 0px 0px 2px 2px rgba(0, 0, 0, 0.2);
 }
-#pg #pg_panel .node[kind='pick'] .node_bg {
+#pg .pg_panel .node[kind='pick'] .node_bg {
   background-color: #54a6ad;
 }
-#pg #pg_panel .node[kind='transform'] .node_bg {
+#pg .pg_panel .node[kind='transform'] .node_bg {
   background-color: #92ba67;
 }
-#pg #pg_panel .node[kind='apply'] .node_bg {
+#pg .pg_panel .node[kind='apply'] .node_bg {
   background-color: #c96b6b;
 }
-#pg #pg_panel .node[selected] .node_bg {
+#pg .pg_panel .node[selected] .node_bg {
   box-shadow: inset 0px 0px 3px 3px rgba(0, 0, 0, 0.6);
 }
-#pg #pg_panel .node-head {
+#pg .pg_panel .node-head {
   /*height:30px;*/
 
   margin: 3px;
   position: relative;
 }
-#pg #pg_panel .node-head .op_parameters {
+#pg .pg_panel .node-head .op_parameters {
   position: relative;
   margin: 5px 5px 5px 30px;
   border: 1px solid #888;
@@ -456,25 +554,25 @@
   padding-right: 25px;
   background-color: rgba(255, 255, 255, 0.3);
 }
-#pg #pg_panel .node-head .op_parameters .op_param {
+#pg .pg_panel .node-head .op_parameters .op_param {
   display: block;
   margin: 3px 3px 3px 7px;
 }
-#pg #pg_panel .node-head .op_parameters input {
+#pg .pg_panel .node-head .op_parameters input {
   width: 60px;
   margin-left: 5px;
 }
-#pg #pg_panel .node-head .op_parameters .op_execute_button {
+#pg .pg_panel .node-head .op_parameters .op_execute_button {
   position: absolute;
   bottom: 5px;
   right: 5px;
   width: 25px;
   height: 25px;
 }
-#pg #pg_panel .input_node_hover {
+#pg .pg_panel .input_node_hover {
   box-shadow: 0px 0px 12px 6px #9b4681 inset;
 }
-#pg #pg_panel .node-icon {
+#pg .pg_panel .node-icon {
   width: 30px;
   height: 30px;
   padding: 4px;
@@ -482,20 +580,20 @@
   font-size: 15px;
   text-shadow: -1px -1px 0px rgba(0, 0, 0, 0.5);
 }
-#pg #pg_panel .node-icon[operation='run'] {
+#pg .pg_panel .node-icon[operation='run'] {
   background-position: -395px -106px;
 }
-#pg #pg_panel .node-icon-low {
+#pg .pg_panel .node-icon-low {
   position: absolute;
   top: 50%;
   left: 50%;
   margin-top: -15px;
   margin-left: -15px;
 }
-#pg #pg_panel .node-icon-mid {
+#pg .pg_panel .node-icon-mid {
   float: left;
 }
-#pg #pg_panel .node-number-of-values {
+#pg .pg_panel .node-number-of-values {
   position: absolute;
   top: 10px;
   left: 40px;
@@ -505,7 +603,7 @@
   font-size: 16px;
   line-height: 1.428571429;
 }
-#pg #pg_panel .node-values-mid {
+#pg .pg_panel .node-values-mid {
   width: 100%;
   padding: 0px;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -513,7 +611,7 @@
   color: white;
   overflow: hidden;
 }
-#pg #pg_panel .node-type {
+#pg .pg_panel .node-type {
   /* mid-level detail when there's no value in the node */
 
   position: absolute;
@@ -525,7 +623,7 @@
   white-space: nowrap;
   color: white;
 }
-#pg #pg_panel .node-description-high {
+#pg .pg_panel .node-description-high {
   clear: both;
   width: 100%;
   /*	height:25px;*/
@@ -535,7 +633,7 @@
   font-size: 13px;
   white-space: nowrap;
 }
-#pg #pg_panel .node-values-high {
+#pg .pg_panel .node-values-high {
   width: 100%;
   padding: 5px;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -543,7 +641,7 @@
   color: white;
   overflow: hidden;
 }
-#pg #pg_panel .node-table {
+#pg .pg_panel .node-table {
   /* general node table css*/
 
   overflow: hidden;
@@ -553,22 +651,22 @@
   font-weight: 400;
   font-size: 12px;
 }
-#pg #pg_panel .node-table-mid {
+#pg .pg_panel .node-table-mid {
   /* mid detail value table style */
 
 }
-#pg #pg_panel .node-table-high {
+#pg .pg_panel .node-table-high {
   /* high detail value table style */
 
 }
-#pg #pg_panel .node-table li {
+#pg .pg_panel .node-table li {
   padding: 0px 6px 0px 6px;
   white-space: nowrap;
 }
-#pg #pg_panel .node-table li:nth-child(even) {
+#pg .pg_panel .node-table li:nth-child(even) {
   background-color: none;
 }
-#pg #pg_panel .node-table li:nth-child(odd) {
+#pg .pg_panel .node-table li:nth-child(odd) {
   background-color: rgba(0, 0, 0, 0.1);
 }
 #pg #pg_command_ui {

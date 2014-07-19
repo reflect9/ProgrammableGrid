@@ -1,128 +1,121 @@
 pg = {
 	body: undefined,
 	init: function() {
-		if($("body").length==0) {
+		pg.enhancements = pg.load_all_enhancements();
+		// get documentBody
+		if($("body").length==0) { // WHEN BODY IS IN IFRAME
 			var frame= $("frame");
 			if(frame.length>0) {
 				for (var i in frame) {
 					var body_cand = $($(frame)[0].contentDocument).find("body");
-					if(body_cand.length>0) pg.body= body_cand[0];
+					if(body_cand.length>0) pg.documentBody= body_cand[0];
 				}
 			} else {
 				console.log("cant find body");
 				return;
 			}
-		} else {
-			pg.body = $("body")[0];
-		}
-
-		if($("#pg").length>0) {
-			$("#pg").remove();
-			pg.inspector.off();
-			return;
-		}
-		$("<div id='pg'></div>").appendTo(pg.body);
-		// this.new_script("untitled "+makeid());
-		
-		// this.load_script("_latest");
-
-		// ATTACH EVENT HANDLERS
-		$(document).keydown(function (e) {
-            var element = e.target.nodeName.toLowerCase();
-            if ((element != 'input' && element != 'textarea') || $(e.target).attr("readonly")) {
-                if (e.keyCode === 8 || e.keyCode === 46) {
-                	if(document.activeElement.tagName==='SPAN') return;
-                    pg.panel.delete();
-                    return false;
-                }
-            }
-		});
+		} else pg.documentBody = $("body")[0];
+		// toggle #pg element
+		if($("#pg").length>0) pg.close();
+		else pg.open();
+		pg.attachEventHandlers();
+		//
+	},
+	open: function() {
+		if(pg.pg_el) $(pg.pg_el).remove();
+		pg.pg_el = $("<div id='pg'>\
+			<div id='pg_nav' class='pg_nav'>\
+				<div id='pg_browser'></div>\
+				<div id='pg_toolbox'></div>\
+			</div>\
+			<div id='pg_panel' class='pg_panel'></div>\
+		</div>");
+		$(pg.documentBody).append(pg.pg_el);
+		$(pg.documentBody).css("padding-left","600px");
+		pg.browser = new pg.Browser($(pg.pg_el.find("#pg_browser")), pg.enhancements);
+	},
+	close: function() {
+		$(pg.pg_el).remove();
+		$(pg.documentBody).css("padding-left","0px");
+		pg.inspector.off();
 	},
 	toggle_visibility: function() {
-		$("#pg").toggle();
+		$(pg.pg_el).toggle();
 	},
-	execute: function() {
-		pg.execute_script(pg.panel.nodes);
-		pg.panel.redraw();
+	// execute: function() {
+	// 	pg.execute_script(pg.panel.enhancement);
+	// 	pg.panel.redraw();
+	// },
+	new_enhancement: function(_title) {
+		var enhancement = new pg.Enhancement(_title);
+		pg.save_enhancement(enhancement);
+		pg.enhancements = pg.load_all_enhancements();
+		pg.browser.updateEnhancements(pg.enhancements);
 	},
-	new_script: function(_title) {
-		var triggerNode = pg.Node.create({type:'trigger', P:pg.planner.get_prototype({type:"trigger"}), position:[1,0]});
-		triggerNode.P.param.event_source = "page";
-		var defaultNodes = [triggerNode];
-		var program = {nodes:defaultNodes, active:true};
-		var title = _title || "Rothko-"+makeid();
-		pg.save_script(title, program);
-		pg.load_script(title);
-	},
-	save_script : function(title, _program) {
-		if(!_program) return false;
+	save_enhancement : function(_enh) {
+		if(!_enh) return false;
 		try {
-			var old_data = localStorage["prgr"];
+			var old_data = localStorage[LOCAL_STORAGE_KEY];
 			if (old_data =="undefined" || old_data == "[object Object]" || old_data == "[]") old_data="{}";
-			program_dict = pg.parse(old_data);
+			enhancement_dictionary = pg.parse(old_data);
 		} catch(e) {
-			program_dict = {};
+			enhancement_dictionary = {};
 		}	
 		// create program object to save
-		var program={};	
-		var clone_nodes = _.map(_program.nodes, function(n) { return pg.Node.create(n); });
-		program.nodes = typeof _program.nodes !== 'undefined' ? clone_nodes : [];
-		program.timestamp = Date.now();
-		program.active = typeof _program.active !== 'undefined' ? _program.active : true;
-		program.domain = typeof _program.domain !== 'undefined' ? _program.domain : [document.URL];
+		var enh={};	
+		var clone_nodes = _.map(_enh.nodes, function(n) { return pg.Node.create(n); });
+		enh.nodes = typeof _enh.nodes !== 'undefined' ? clone_nodes : [];
+		enh.timestamp = Date.now();
+		enh.active = typeof _enh.active !== 'undefined' ? _enh.active : true;
+		enh.domain = typeof _enh.domain !== 'undefined' ? _enh.domain : [document.URL];
+		enh.title = typeof _enh.title !== 'undefined' ? _enh.title : "Tandem-"+makeid();
+		enh.description = typeof _enh.description !== 'undefined' ? _enh.description : "no description";
+		enh.id = _enh.id;
 		
-		program_dict[title] = program;
-		new_data = pg.serialize(program_dict);
-		localStorage.setItem("prgr",new_data);
-		return program_dict;
+		enhancement_dictionary[enh.id] = enh;
+		new_data = pg.serialize(enhancement_dictionary);
+		localStorage.setItem(LOCAL_STORAGE_KEY,new_data);
+		return enhancement_dictionary;
 	},
-	load_json_script: function(json, _title) {
-		var title = (_title)?_title:"remote execution";
-		var nodes = JSON.parse(json);
-		pg.panel.init(title, nodes);
+	// load_json_enhancement: function(json, _title) {
+	// 	var title = (_title)?_title:"remote execution";
+	// 	var nodes = JSON.parse(json);
+	// 	var target_el = $(pg.pg_el).find(".pg_panel");
+	// 	pg.panel.init(title, nodes);
+	// },
+	load_all_enhancements : function() {
+		if (localStorage[LOCAL_STORAGE_KEY]==undefined) return false;
+		else {
+			var data = localStorage.getItem(LOCAL_STORAGE_KEY);
+			return programs = pg.parse(data);
+		}	
 	},
-	load_script : function(title) {
-		var programs = pg.load_all_scripts();
-		if(!programs || _.keys(programs).length==0) {
-			pg.new_script("first script");
-			return;
-		}
-		if(title=="_latest") {
-			var sortedPrograms = _.without(_.sortBy(_.pairs(programs), function(title_program) {
-				return title_program[1].timestamp;
-			}),false, undefined);
-			var latest = sortedPrograms[sortedPrograms.length-1]; 
-			if(!latest) {   
-				pg.new_script();
-				return false;
-			}
-			pg.panel.init(latest[0], latest[1].nodes);
-		} else if(programs[title]) {
-			pg.panel.init(title, programs[title].nodes);
-		} else return false;
+	load_enhancement: function(eid) {
+		if(!pg.enhancements[eid]) return;
+		pg.open_enhancement(pg.enhancements[eid]);
 	},
-	clear_script: function() {
-		pg.open_panel(pg.panel.title, []);
+	get_enhancement: function(eid) {
+		return _.filter(pg.enhancements, function(e) {
+			return e.id == eid;
+		})[0];
 	},
-	remove_script: function(title) {
+	open_enhancement: function(enhancement) {
+		var target_el = $(pg.pg_el).find(".pg_panel");
+		pg.panel.init(target_el, enhancement);
+	},
+	remove_enhancement: function(id) {
 		try {
-			var old_data = localStorage["prgr"];
+			var old_data = localStorage[LOCAL_STORAGE_KEY];
 			if (old_data =="undefined" || old_data == "[object Object]" || old_data == "[]") old_data="{}";
 			programs = pg.parse(old_data);
 		} catch(e) {
 			programs = {};
 		}	
-		delete programs[title];
+		delete programs[id];
 		new_data = pg.serialize(programs);
-		localStorage.setItem("prgr",new_data);
-		return programs;
-	},
-	load_all_scripts : function() {
-		if (localStorage["prgr"]==undefined) return false;
-		else {
-			var data = localStorage.getItem("prgr");
-			return programs = pg.parse(data);
-		}	
+		localStorage.setItem(LOCAL_STORAGE_KEY,new_data);
+		pg.enhancements = pg.load_all_enhancements();
+		pg.browser.updateEnhancements(pg.enhancements);
 	},
 	serialize: function(programs) {
 		_.each(programs, function(program) {
@@ -163,7 +156,7 @@ pg = {
 		}
 	},
 	cleanStorage: function() {
-		localStorage["prgr"]="{}";
+		localStorage[LOCAL_STORAGE_KEY]="{}";
 	},
 	////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////
@@ -171,9 +164,9 @@ pg = {
 	////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////
 	open_dialog : function(content) {
-		$("<div class='pg_dialog_backdrop'></div>").appendTo($("#pg"));
+		$("<div class='pg_dialog_backdrop'></div>").appendTo(pg.pg_el);
 		var diag_el = $("<div class='pg_dialog'></div>")
-		.append(content).appendTo("#pg");
+		.append(content).appendTo(pg.pg_el);
 		$(diag_el).css({
 			'bottom': "100px",
 			'left': "100px"
@@ -183,7 +176,16 @@ pg = {
 	close_dialog : function() {
 		$(".pg_dialog").remove();
 		$(".pg_dialog_backdrop").remove();
+	},
+
+	attachEventHandlers: function() {
+		$("#pg").hover(function() {
+			$(pg.documentBody).css("overflow","hidden");
+		},function() {
+			$(pg.documentBody).css("overflow","auto");
+		});	
 	}
+	
 };
 
 
@@ -191,7 +193,7 @@ pg = {
 
 
 
-// pg.backup_page = $(pg.body).clone().get(0);
+// pg.backup_page = $(pg.documentBody).clone().get(0);
 
 
 DEFAULT_PLATE_DIMENSION = 3000
@@ -211,4 +213,7 @@ MAX_CONTEXT_NODES = 20;
 
 MAX_INT = 9007199254740992;
 MIN_INT = -9007199254740992;
+
+
+LOCAL_STORAGE_KEY = "tandem_1";
 

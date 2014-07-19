@@ -12,7 +12,6 @@ chrome.runtime.onMessage.addListener(
 		if(request.action === 'openGrid'){
 			// when browser button is clicked.
 			pg.init();
-			pg.load_script("_latest");
 		}
 		if(request.action === 'shareElements') {
 			if(request.message) pg.panel.paste_elements(request.message);

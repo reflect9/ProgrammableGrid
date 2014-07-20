@@ -128,16 +128,21 @@ pg = {
 	},
 	parse: function(data) {
 		try {
-			var programs = JSON.parse(data);
-			_.each(programs, function(prg) {
-				_.each(prg.nodes, function(node) {
-					if(node.P) {
-						node.P.kind = (pg.planner.get_prototype(node.P)).kind;
-						node.P.icon = (pg.planner.get_prototype(node.P)).icon;
-					}
-				});
+			// loaded enhancements are json objects, so we should convert them to Enhancement objects
+			var enhancements_js_obj = JSON.parse(data);  
+			enhancements = {};
+			_.each(enhancements_js_obj, function(enh_json_obj, eid) {
+				var enh = new pg.Enhancement(); // create new Enhancement ojb
+				for (var key in enh_json_obj) { enh[key] = enh_json_obj[key]; } // copy all properties
+				// _.each(enh.nodes, function(node) {
+				// 	if(node.P) {
+				// 		node.P.kind = (pg.planner.get_prototype(node.P)).kind;
+				// 		node.P.icon = (pg.planner.get_prototype(node.P)).icon;
+				// 	}
+				// });
+				enhancements[eid]=enh;
 			});
-			return programs;
+			return enhancements;
 		} catch(e) {
 			return {};
 		}

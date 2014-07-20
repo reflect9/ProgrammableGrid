@@ -12,7 +12,7 @@ pg.Enhancement = function(_title, _nodes) {
 	
 };
 pg.Enhancement.prototype.delete = function(node_to_delete) {
-	this.nodes = _without(this.nodes, node_to_delete);
+	this.nodes = _.without(this.nodes, node_to_delete);
 };
 pg.Enhancement.prototype.clear = function() {
 	this.nodes = [];

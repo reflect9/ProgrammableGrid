@@ -36,6 +36,7 @@ pg.Browser.prototype.renderEnhancement = function(enh) {
 		<div class='enh_description'>"+enh.description+"</div>\
 		<div class='enh_date'>Saved "+(new Date(enh.timestamp)).toUTCString()+"</div>\
 		<div class='enh_settings'>\
+			<i class='fa fa-folder-open open_enhancement_button'></i>\
 			<i class='fa fa-play-circle execute_button'></i>\
 			<i class='fa fa-trash-o trash_enhancement_button'></i>\
 		</div>\

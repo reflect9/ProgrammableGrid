@@ -18,7 +18,7 @@ pg.panel = {
 		// attach editUI and commandUI
 		// this.editUI.create();
 		// this.commandUI.create();  this.commandUI.remove();
-		this.toolbar.create();
+		// this.toolbar.create();
 		pg.panel.drawPlate();
 		pg.panel.redraw();
 	},
@@ -258,7 +258,7 @@ pg.panel = {
 	get_current_node:function() {
 		return _.map($("#tiles .node[selected]").toArray(), function(nodeEl) {
 			return pg.panel.get_node_by_id($(nodeEl).prop('id'));
-		});
+		})[0];
 	},
 	get_adjacent_node:function(direction, node, _allNodes) {
 		return pg.panel.enhancement.get_adjacent_node(direction, node, _allNodes);
@@ -469,8 +469,8 @@ pg.panel = {
 			}
 		},this);
 		this.attachEventListeners();
-		if(pg.panel.enhancement.get_current_node().length>0) {
-			var n = pg.panel.enhancement.get_current_node();
+		if(pg.panel.get_current_node()) {
+			var n = pg.panel.get_current_node();
 			pg.panel.deselect();
 			pg.panel.select(n);
 		}

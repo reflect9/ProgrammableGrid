@@ -94,11 +94,53 @@
 		margin: 0;
 		padding: 0; 
 	}
+	li.draggableItem {
+		list-style-type: none;
+		color:white;
+		display:inline-table;
+		cursor: move;
+		z-index:1001;
+		position:relative;
+		border:1px solid #aaa;
+		border-radius:3px;
+		padding:2px;
+		margin:4px 3px 4px 3px;
+		.op_icon {
+			display:table-cell;
+			vertical-align:middle;
+			i { font-size: 15px; }
+		}
+		.op_type{
+			display:inline;
+			font-size:16px;
+			font-weight:200;
+			margin-left: 3px; 
+			margin-right: 3px;
+			
+		}
+		.op_description{
+		 	display:none;
+		}
+
+	}
+	li.draggableItem[kind="pick"] { background-color: @paleblue;	}
+	li.draggableItem[kind="transform"] {	background-color:  @palegreen; }
+	li.draggableItem[kind="apply"] {	background-color:  @palered; }
+	li.draggableItem[kind="flow"] {	background-color:  #aaa; }
 
 
 .notClickable {
 	pointer-events: none;
 } 
+.unselectable {
+	-webkit-user-select: none; /* Chrome/Safari */        
+	-moz-user-select: none; /* Firefox */
+	-ms-user-select: none; /* IE10+ */
+
+	/* Rules below not implemented in browsers yet */
+	-o-user-select: none;
+	user-select: none;
+}
 .hidden {
 	display:none;
 }
@@ -122,12 +164,12 @@
 		overflow:hidden;
 		.toolbar{
 			position:absolute;
-			z-index:1000;
+			z-index:999;
 			height:40px;
 			width:100%;
 			top:0px;
-			background:#ddd;
-			box-shadow:0px 2px 2px 2px rgba(0,0,0,0.1);
+			background:#ccc;
+			box-shadow:0px 2px 2px 2px rgba(0,0,0,0.03);
 			// border-bottom:1px solid #fff;
 			color:white;
 			font-size:20px;
@@ -154,6 +196,7 @@
 			width:100%;
 			height:calc(~'100% - 40px');
 			overflow:auto;
+			background-color:white;
 			ul{
 				list-style-type: none; padding:0; margin:0;
 				li{
@@ -180,18 +223,141 @@
 						label{}
 						i { font-size:20px;	margin:5px;}
 					}
-				}
+				} 
 			}
 		}
 	} // END OF pg_browser
 	
 	#pg_toolbox {
+		position:relative;
 		height:50%;
-		background-color:#faa;
+		background-color:#fff;
+		.toolbar{
+			position:absolute;
+			z-index:999;
+			height:40px;
+			width:100%;
+			top:0px;
+			background:#ccc;
+			box-shadow:0px 2px 2px 2px rgba(0,0,0,0.03);
+			// border-bottom:1px solid #fff;
+			color:white;
+			font-size:20px;
+			.nav-icon {
+				position:absolute;
+				top:11px; left:15px;
+			}
+			.title{
+				position:absolute;
+				top:11px; left:40px;
+				
+			}
+			.menus{
+				position:absolute;
+				top:0px; right:0px;
+				i{
+					margin:11px;
+				}
+			}
+		}
+		.tool_container {
+			color:#888;
+			padding-top:40px;
+			width:100%;
+			height:calc(~'100% - 40px');
+			overflow:auto;
+			background-color:white;
+			label {
+				display:block;
+				margin: 5px 0px 0px 10px;
+				font-size:14px; font-weight:600;
+			}
+			ul {
+				list-style-type: none; 
+				padding:0px 5px 0px 10px; 
+				margin:0px;
+				li{
+					color:#fff;
+					z-index:998;
+				}
+			}
+			ul.task_list {
+				li {
+					display:inline-table;
+					cursor: move;
+					position:relative;
+					border:1px solid #aaa;
+					border-radius:3px;
+					padding:2px;
+					margin:4px 3px 4px 3px;
+				}
+				li[kind="pick"] { background-color: @paleblue;	}
+				li[kind="transform"] {	background-color:  @palegreen; }
+				li[kind="apply"] {	background-color:  @palered; }
+				li[kind="flow"] {	background-color:  #aaa; }
 
+			}
+			ul.operation_rest, ul.operation_list {
+				li[mode="small"]{
+					display:inline-table;
+					cursor: move;
+					position:relative;
+					border:1px solid #aaa;
+					border-radius:3px;
+					padding:2px;
+					margin:4px 3px 4px 3px;
+					.op_icon {
+						display:table-cell;
+						vertical-align:middle;
+						i { font-size: 15px; }
+					}
+					.op_type{
+						display:inline;
+						font-size:16px;
+						font-weight:200;
+						margin-left: 3px; 
+						margin-right: 3px;
+						
+					}
+					.op_description{
+					 	display:none;
+					}
+				} 
+				li[mode="big"] {
+					display:block;
+					cursor: move;
+					width:75%;
+					margin:5px;
+					position:relative;
+					border:1px solid #aaa;
+					border-radius:5px;
+					padding:5px 5px 5px 33px;
+					.op_icon {
+						position:absolute;
+						top:10px;  left:10px;
+						i { font-size: 18px; }
+					}
+					.op_type{
+						font-size:18px; 
+						width:100%;
+					}
+					.op_description{
+					 	font-size:14px;
+					}
+				}
+				li[kind="pick"] { background-color: @paleblue;	}
+				li[kind="transform"] {	background-color:  @palegreen; }
+				li[kind="apply"] {	background-color:  @palered; }
+				li[kind="flow"] {	background-color:  #aaa; }
+			}
+		}
 	} // END OF pg_toolbox
 	
 }
+
+
+
+
 
 
 .pg_panel {
@@ -201,7 +367,7 @@
 	z-index:999;
 	top:0px; left:300px;
 	background:#eee;
-	overflow:hidden;
+	overflow:inherit;
 	font-size:13px;
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 	color:black;
@@ -265,7 +431,6 @@
 		width:100%;
 		height:900px;
 		margin-top:5px;
-		border:1px solid #dcc;
 		overflow:auto;
 		
 		#overlay {

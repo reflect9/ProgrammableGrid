@@ -33,6 +33,9 @@ pg = {
 		$(pg.documentBody).append(pg.pg_el);
 		$(pg.documentBody).css("padding-left","600px");
 		pg.browser = new pg.Browser($(pg.pg_el.find("#pg_browser")), pg.enhancements);
+		pg.toolbox = new pg.Toolbox($(pg.pg_el.find("#pg_toolbox")), []);
+		var last_enh = pg.latest_enhancement(pg.enhancements);
+		pg.open_enhancement(last_enh);
 	},
 	close: function() {
 		$(pg.pg_el).remove();
@@ -50,7 +53,7 @@ pg = {
 		var enhancement = new pg.Enhancement(_title);
 		pg.save_enhancement(enhancement);
 		pg.enhancements = pg.load_all_enhancements();
-		pg.browser.updateEnhancements(pg.enhancements);
+		pg.browser.redraw(pg.enhancements);
 	},
 	save_enhancement : function(_enh) {
 		if(!_enh) return false;
@@ -90,10 +93,10 @@ pg = {
 			return programs = pg.parse(data);
 		}	
 	},
-	load_enhancement: function(eid) {
-		if(!pg.enhancements[eid]) return;
-		pg.open_enhancement(pg.enhancements[eid]);
-	},
+	// load_enhancement: function(eid) {
+	// 	if(!pg.enhancements[eid]) return;
+	// 	pg.open_enhancement(pg.enhancements[eid]);
+	// },
 	get_enhancement: function(eid) {
 		return _.filter(pg.enhancements, function(e) {
 			return e.id == eid;
@@ -102,6 +105,12 @@ pg = {
 	open_enhancement: function(enhancement) {
 		var target_el = $(pg.pg_el).find(".pg_panel");
 		pg.panel.init(target_el, enhancement);
+	},
+	latest_enhancement: function(enh_dict) {
+		var sorted_enh= _.sortBy(enh_dict, function(enh, eid) {
+			return enh.timestamp;
+		});
+		return sorted_enh[0];
 	},
 	remove_enhancement: function(id) {
 		try {
@@ -115,7 +124,7 @@ pg = {
 		new_data = pg.serialize(programs);
 		localStorage.setItem(LOCAL_STORAGE_KEY,new_data);
 		pg.enhancements = pg.load_all_enhancements();
-		pg.browser.updateEnhancements(pg.enhancements);
+		pg.browser.redraw(pg.enhancements);
 	},
 	serialize: function(programs) {
 		_.each(programs, function(program) {
@@ -184,7 +193,7 @@ pg = {
 	},
 
 	attachEventHandlers: function() {
-		$("#pg").hover(function() {
+		$("#pg_nav, #pg_panel").hover(function() {
 			$(pg.documentBody).css("overflow","hidden");
 		},function() {
 			$(pg.documentBody).css("overflow","auto");

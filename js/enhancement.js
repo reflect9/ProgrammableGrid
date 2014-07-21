@@ -4,7 +4,7 @@ pg.Enhancement = function(_title, _nodes) {
 	this.description = "description";
 	if(_nodes && isArray(_nodes) && _nodes.length>0) this.nodes = _nodes;
 	else {
-		var default_trigger_node = pg.Node.create({type:'trigger', P:pg.planner.get_prototype({type:"trigger"}), position:[1,0]});
+		var default_trigger_node = pg.Node.create({type:'trigger', P:pg.planner.get_prototype({type:"trigger"}), position:[0,1]});
 		default_trigger_node.P.param.event_source = "page";
 		this.nodes = [default_trigger_node];
 		this.title = _title || "Tandem-"+makeid();
@@ -78,13 +78,13 @@ pg.Enhancement.prototype.insert = function(new_nodes, target_node) {
 		});
 	});
 };
-pg.Enhancement.prototype.push_at = function(new_nodes, target_position) {
-	var candDiff = [[1,0],[-1,0],[0,1],[0,-1]];
+pg.Enhancement.prototype.push_at = function(new_node, target_position) {
+	var candDiff = [[0,0],[1,0],[-1,0],[0,1],[0,-1]];
 	for(var i in candDiff) {
-		var newPos = [newNode.position[0]+candDiff[i][0],newNode.position[1]+candDiff[i][1]];
-		if(pg.panel.Enhancement.get_node_by_position(newPos)==false) {
-			newNode.position = newPos;
-			pg.panel.get_nodes().push(newNode);
+		var newPos = [new_node.position[0]+candDiff[i][0],new_node.position[1]+candDiff[i][1]];
+		if(pg.panel.enhancement.get_node_by_position(newPos)==false) {
+			new_node.position = newPos;
+			pg.panel.get_nodes().push(new_node);
 			pg.panel.redraw();
 			return;
 		}

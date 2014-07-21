@@ -475,6 +475,7 @@ pg.panel = {
 			pg.panel.select(n);
 		}
 		pg.panel.drawConnector_node_list();
+		pg.toolbox.redraw(pg.planner.get_all_operations());
 	},
 	drawPlate: function() {
 		var el_plate = $("#pg_panel > #plate_container > #plate");
@@ -681,14 +682,6 @@ pg.panel = {
 						<button class='delete_column_button'>column</button> \
 					</div>\
 				</div>\
-				<div class='operation_panel'>\
-					<div class='operation_menu'>\
-						<div id='task_container'>\
-						</div>\
-						<div id='operation_container'>\
-						</div>\
-					</div>\
-				</div>\
 				<div class='data_panel'>\
 					<div class='input_data'>\
 						<div class='input_nodes_container'></div>\
@@ -762,6 +755,8 @@ pg.panel = {
 
 			/////
 			$(pg.panel.targetEl).append(ui_el);	
+
+
 			$(ui_el).css({
 				'visibility':"visible",
 				"top":pg.panel.commandUI.top + "px",
@@ -803,20 +798,32 @@ pg.panel = {
 			pg.panel.commandUI.renderOperationInfo(node, operation_info);
 		},
 		updateSuggestedOperation: function(node) {
-			var operation_container = $("#pg_command_ui").find("#operation_container");  	// main command UI
-			var task_container = $("#pg_command_ui").find("#task_container");  	// main command UI
-			$(operation_container).empty();   $(task_container).empty();
+			// var operation_container = $("#pg_command_ui").find("#operation_container");  	// main command UI
+			// var task_container = $("#pg_command_ui").find("#task_container");  	// main command UI
+			// $(operation_container).empty();   $(task_container).empty();
 
 			// 0. infer tasks and operations
 			var Is = _.without(_.map(node.I, function(input_id) {
 				return pg.panel.enhancement.get_node_by_id(input_id, node);
 			}), false, undefined);
-			var taskSuggestions = []; var opSuggestions=[];
+			var taskSuggestions = []; var opSuggestions=[]; var opRest = [];
+			// infer tasks matching with the given input and output
 			if(node.V && node.V.length>0) {
 				taskSuggestions = (node.V && node.V.length>0)? pg.planner.plan(Is, node) : [];	
 			} 
-			opSuggestions = (Is.length>0)? pg.planner.find_applicable_operations(Is) : [];
+			// suggest applicable operations
+			opSuggestions = pg.planner.find_applicable_operations(Is);
+			var operation_types = _.map(opSuggestions, function(op){return op.type; });
 
+			// The rest of the operations
+			var opRest = _.filter(pg.planner.get_all_operations(), function(op) {
+				return operation_types.indexOf(op.type)==-1;
+			});
+
+			pg.toolbox.redraw(_.union(taskSuggestions, opSuggestions, opRest));
+
+
+			/*
 			// 1. show taskSuggestions 
 			if(taskSuggestions.length>0) {
 				_.each(taskSuggestions, function(sn, sni) {
@@ -843,6 +850,34 @@ pg.panel = {
 				var commandButton = pg.panel.commandUI.makeSuggestedOperationButton(op, true);
 				$(operation_container).append(commandButton);
 			});
+*/
+		},
+		makeSuggestedTaskButton: function(_nodes) {
+			var el = $("<div class='nodes'></div>"); 
+			var nodes = $.makeArray(_nodes);
+			_.each(nodes, function(n) {
+				$("<div class='command'>"+ n.P.type +"</div>").appendTo(el);
+			});
+			$(el).click($.proxy(function() {
+				pg.panel.enhancement.insert(this, pg.panel.get_current_node());
+				pg.panel.run_node(this[0]);
+			},nodes));
+			return el;
+		},
+		makeSuggestedOperationButton: function(command, dimmed) {
+			var el = $("<div class='command'>\
+				<div class='com_icon'></div>\
+				<div class='com_title'>"+ command.type +"</div>\
+				</div>\
+				"); 
+			if(dimmed) $(el).attr('dimmed','yes');
+			$(el).click($.proxy(function() {
+				var n = pg.panel.get_current_node();
+				n.P = this;
+				pg.panel.run_node(n);
+				pg.panel.redraw();
+			},command));
+			return el;
 		},
 		renderInputNode: function(node) {
 			var input_nodes_el = [];
@@ -1051,33 +1086,7 @@ pg.panel = {
 			pg.panel.commandUI.removeData(pos, node);
 			pg.panel.commandUI.addData(val, pos, node);
 		},
-		makeSuggestedTaskButton: function(_nodes) {
-			var el = $("<div class='nodes'></div>"); 
-			var nodes = $.makeArray(_nodes);
-			_.each(nodes, function(n) {
-				$("<div class='command'>"+ n.P.type +"</div>").appendTo(el);
-			});
-			$(el).click($.proxy(function() {
-				pg.panel.enhancement.insert(this, pg.panel.get_current_node());
-				pg.panel.run_node(this[0]);
-			},nodes));
-			return el;
-		},
-		makeSuggestedOperationButton: function(command, dimmed) {
-			var el = $("<div class='command'>\
-				<div class='com_icon'></div>\
-				<div class='com_title'>"+ command.type +"</div>\
-				</div>\
-				"); 
-			if(dimmed) $(el).attr('dimmed','yes');
-			$(el).click($.proxy(function() {
-				var n = pg.panel.get_current_node();
-				n.P = this;
-				pg.panel.run_node(n);
-				pg.panel.redraw();
-			},command));
-			return el;
-		},
+		
 		remove: function() {
 			$("#pg_command_ui").remove();
 			pg.panel.solutionNodes=[];
@@ -1205,6 +1214,24 @@ pg.panel = {
 			.dblclick(function(e) {
 				e.stopPropagation();
 			});
+		$(pg.pg_el).find("#plate").droppable({
+			accept: ".task_item, .operation_item",
+			drop: function( event, ui ) {
+				var position = [ Math.round((ui.position.top-$(this).offset().top) / pg.panel.node_dimension),
+											Math.round((ui.position.left-$(this).offset().left) / pg.panel.node_dimension)	];
+				console.log("dropped at "+position);
+				var existing_node = pg.panel.get_node_by_position(position);
+				if(existing_node) {
+					existing_node.P=pg.toolbox.draggingOperation;
+				} else {
+					var new_node = pg.Node.create();
+					new_node.P = pg.toolbox.draggingOperation;	
+					new_node.position = position;
+					pg.panel.enhancement.push_at(new_node, position);
+				} 
+			}
+
+		});
 		$(".node .node_content").click(function(e) {
 			var n = $(e.target).parents(".node");
 			if($(n).is('.ui-draggable-dragging')){
@@ -1253,7 +1280,7 @@ pg.panel = {
 		});
 		// resizable panel
 		$(this.el).find("#resize_handle_panel").draggable({
-			axis: "y",
+			axis: "x",
 			start: function() {
 				if(pg.inspector.flag_inspect) {
 					pg.panel.commandUI.turn_inspector(false);
@@ -1271,9 +1298,12 @@ pg.panel = {
 				
 				// console.log($(window).height()-$(this).offset().top);
 				// console.log($(this).offset());
-				$(pg.panel.el).height(window.innerHeight-top);
-				$(this).css({'top':0});
-				$("#pg_spacer").height($(pg.panel.el).height());
+				// $(pg.panel.el).height(window.innerHeight-top);
+				$(pg.panel.el).width()
+				$(this).css({'right':0, 'top':0});
+				// $("#pg_spacer").height($(pg.panel.el).height());
+				// var new_padding = $(pg.browser.target_el).width
+				// $(pg.documentBody).css("padding-left","")
 			}
 		});
 		// Prevent scrolling body when mouse is over panel element.

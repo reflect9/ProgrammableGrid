@@ -28,7 +28,7 @@ pg.planner = {
 		if(!Is || Is.length>0) {
 			var operations = _.map(pg.planner.operations, function(operation, operationName) {
 				try{
-					if(operation.pre(Is)) return operation.proto;
+					if(operation.pre(Is)) return jsonClone(operation.proto);
 				} catch(e) {
 					console.log(e.stack);
 					return undefined;
@@ -36,15 +36,23 @@ pg.planner = {
 			});
 			protos = _.filter(operations, function(c) { return c!==undefined; });
 		} else {	// If Input is empty
-			protos = _.map(pg.planner.operations, function(operation) { return operation.proto; });
+			protos = [];
 		}
-		protos_copy = _.map(protos, function(pro){
-			return JSON.parse(JSON.stringify(pro));
-		});
-		return protos_copy;
+		for(var i in protos) {  protos[i].applicable = true; }
+		return protos;
 	},
 	get_all_operations: function() {
-		return _.map(pg.planner.operations, function(op) { return jsonClone(op.proto); });
+		var ops = _.map(pg.planner.operations, function(op) { return jsonClone(op.proto); });
+		ops = _.groupBy(ops, function(op) {
+			return op.kind;
+		});
+		ops['pick'] = _.sortBy(ops['pick'], function(op) {  return op.icon; });
+		ops['transform'] = _.sortBy(ops['transform'], function(op) {  return op.icon; });
+		ops['apply'] = _.sortBy(ops['apply'], function(op) {  return op.icon; });
+		ops['flow'] = _.sortBy(ops['flow'], function(op) {  return op.icon; });
+		ops = _.union(ops['pick'],ops['transform'],ops['apply'],ops['flow']);
+		for(var i in ops) {  ops[i].applicable = false; }
+		return ops;
 	},
 	operations: {
 
@@ -417,10 +425,10 @@ pg.planner = {
 				return O;
 			}
 		},
-		findTab: {
+		find_tab: {
 			proto: {
 				kind:'pick',
-				type:'findTab',
+				type:'find_tab',
 				icon:'folder-open',
 				param:{url:"_input1"},
 				description: "Find a currently open [url], and execute the following nodes in the tab."
@@ -448,10 +456,10 @@ pg.planner = {
 				return O;
 			}
 		},
-		loadPage: {
+		load_page: {
 			proto:{
 				kind:'pick',
-				type:'loadPage',
+				type:'load_page',
 				icon:'globe',
 				param:{source:"_input1", mode:"xhttp"},
 				description: "Load pages of URLs in [source] using [mode]."
@@ -1696,7 +1704,7 @@ pg.planner = {
 				if(O.P && O.P.param && O.P.param.event_source == "_input1") {
 					if(!O.I || !O.I[0]) return;
 					var I = pg.panel.get_node_by_id(O.I[0], O);
-					// if(I.P || I.P.param || I.P.param.type=="loadPage") return O;
+					// if(I.P || I.P.param || I.P.param.type=="load_page") return O;
 					if(!isDomList(I.V)) return O;
 					_.each(I.V, function(el) {
 						var tag = $(el).prop("tagName").toLowerCase();
@@ -1738,7 +1746,7 @@ pg.planner = {
 			},
 			generate: function(Is,O){	// I -> original_el -> modified (O)
 				// find differences
-				Is[0].P={type:'loadPage',param:''};
+				Is[0].P={type:'load_page',param:''};
 				var pI = Is[0].V[0];  var pO = O.V[0];
 				var all_el_I = $(pI).find("*").toArray(); 	var all_el_O = $(pO).find("*").toArray();
 				var el_differ_I = [];

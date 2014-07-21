@@ -18,10 +18,10 @@ pg.Browser = function(target_el, enhancements) {
 	$(target_el).find(".create_enhancement_button").click(function() {
 		pg.new_enhancement();
 	});
-	this.updateEnhancements(this.enhancements);
+	this.redraw(this.enhancements);
 };
 
-pg.Browser.prototype.updateEnhancements = function(_new_enhancements) {
+pg.Browser.prototype.redraw = function(_new_enhancements) {
 	if(_new_enhancements) this.enhancements = _new_enhancements;
 	var ul = $(this.el_enhancements).find('ul').empty();
 	for(var i in this.enhancements) {
@@ -43,12 +43,12 @@ pg.Browser.prototype.renderEnhancement = function(enh) {
 	</li>");
 	$(enh_li).find(".enh_title").makeEditable($.proxy(function(new_value){
 		this.enh.title=new_value;
-		this.browser.updateEnhancements();
+		this.browser.redraw();
 		pg.save_enhancement(this.enh);
 	},{browser:this, enh:enh}));
 	$(enh_li).find(".enh_description").makeEditable($.proxy(function(new_value){
 		this.enh.description=new_value;
-		this.browser.updateEnhancements();
+		this.browser.redraw();
 		pg.save_enhancement(this.enh);
 	},{browser:this, enh:enh}));
 	$(enh_li).find(".run_auto_checkbox").change(function(){});
@@ -60,7 +60,7 @@ pg.Browser.prototype.renderEnhancement = function(enh) {
 	},{enh:enh}));
 	$(enh_li).find(".trash_enhancement_button").click($.proxy(function(){
 		pg.remove_enhancement(this.enh.id);
-		this.browser.updateEnhancements();
+		this.browser.redraw();
 	},{browser:this, enh:enh}));
 	return enh_li;
 };

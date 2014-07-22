@@ -2,7 +2,7 @@
 pg.Node = {
 	create: function(p) {
 		var n = {
-				I:['_left','_above'], 
+				I:['_above','_left'], 
 				ID: makeid(),
 				P: undefined,
 				V: [],
@@ -12,7 +12,7 @@ pg.Node = {
 				executed: false
 			};
 		if(p) {
-			n.I = typeof p.I !== 'undefined' ? _.clone(p.I) : ['_left','_above'];
+			n.I = typeof p.I !== 'undefined' ? _.clone(p.I) : ['_above','_left'];
 			n.ID = typeof p.ID !== 'undefined' ? _.clone(p.ID) : makeid();
 			n.P = typeof p.P !== 'undefined' ? jsonClone(p.P) : undefined;
 			n.V = typeof p.V !== 'undefined' ? _.clone(p.V) : [];

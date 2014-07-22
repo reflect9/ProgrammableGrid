@@ -81,6 +81,16 @@
   -webkit-user-select: none;
   -o-user-select: none;
 }
+#pg button.simple {
+  font-size: 12px;
+  border-radius: 0px;
+  height: 13px;
+  padding: 2px 4px 2px 4px;
+  color: #fff;
+  font-weight: 200;
+  background: transparent;
+  border: 1px solid #fff;
+}
 #pg .floating_buttons_at_the_bottom {
   position: absolute;
   bottom: 0px;
@@ -169,9 +179,14 @@
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
 }
+#pg .pg_nav #pg_browser.minimized .enhancements_container {
+  display: none;
+}
 #pg .pg_nav #pg_browser {
   position: relative;
-  height: 50%;
+  height: auto;
+  max-height: 50%;
+  min-height: 40px;
   overflow: hidden;
 }
 #pg .pg_nav #pg_browser .toolbar {
@@ -243,6 +258,9 @@
   font-size: 20px;
   margin: 5px;
 }
+#pg .pg_nav #pg_browser .enhancements_container ul li[selected] {
+  box-shadow: inset 0px 0px 1px 1px rgba(255, 255, 0, 0.5);
+}
 #pg .pg_nav #pg_toolbox {
   position: relative;
   height: 50%;
@@ -300,14 +318,81 @@
   color: #fff;
   z-index: 998;
 }
-#pg .pg_nav #pg_toolbox .tool_container ul.task_list li {
-  display: inline-table;
+#pg .pg_nav #pg_toolbox .tool_container ul.task_list li.task_item[mode="small"] {
+  display: table;
   cursor: move;
   position: relative;
+  background: #eee;
+  border: 1px solid #aaa;
+  border-radius: 3px;
+  padding: 2px;
+  margin: 3px 3px 3px 3px;
+}
+#pg .pg_nav #pg_toolbox .tool_container ul.task_list li.task_item[mode="small"] ul.sub_op li.sub_op_item {
+  display: inline-table;
   border: 1px solid #aaa;
   border-radius: 3px;
   padding: 2px;
   margin: 4px 3px 4px 3px;
+}
+#pg .pg_nav #pg_toolbox .tool_container ul.task_list li.task_item[mode="small"] ul.sub_op li.sub_op_item .op_icon {
+  display: table-cell;
+  vertical-align: middle;
+}
+#pg .pg_nav #pg_toolbox .tool_container ul.task_list li.task_item[mode="small"] ul.sub_op li.sub_op_item .op_icon i {
+  font-size: 15px;
+}
+#pg .pg_nav #pg_toolbox .tool_container ul.task_list li.task_item[mode="small"] ul.sub_op li.sub_op_item .op_type {
+  display: inline;
+  font-size: 16px;
+  font-weight: 200;
+  margin-left: 3px;
+  margin-right: 3px;
+}
+#pg .pg_nav #pg_toolbox .tool_container ul.task_list li.task_item[mode="small"] ul.sub_op li.sub_op_item .op_description {
+  display: none;
+}
+#pg .pg_nav #pg_toolbox .tool_container ul.task_list li.task_item[mode="small"] ul.sub_op li.sub_op_item .op_actions {
+  display: none;
+}
+#pg .pg_nav #pg_toolbox .tool_container ul.task_list li.task_item[mode="big"] {
+  display: table;
+  width: 80%;
+  margin: 5px;
+  border: 1px solid #aaa;
+  border-radius: 2px;
+  padding: 2px;
+}
+#pg .pg_nav #pg_toolbox .tool_container ul.task_list li.task_item[mode="big"] ul.sub_op li.sub_op_item {
+  display: inline-table;
+  border: 1px solid #aaa;
+  border-radius: 3px;
+  padding: 2px;
+  margin: 4px 3px 4px 3px;
+}
+#pg .pg_nav #pg_toolbox .tool_container ul.task_list li.task_item[mode="big"] ul.sub_op li.sub_op_item .op_icon {
+  display: table-cell;
+  vertical-align: middle;
+}
+#pg .pg_nav #pg_toolbox .tool_container ul.task_list li.task_item[mode="big"] ul.sub_op li.sub_op_item .op_icon i {
+  font-size: 15px;
+}
+#pg .pg_nav #pg_toolbox .tool_container ul.task_list li.task_item[mode="big"] ul.sub_op li.sub_op_item .op_type {
+  display: inline;
+  font-size: 16px;
+  font-weight: 200;
+  margin-left: 3px;
+  margin-right: 3px;
+}
+#pg .pg_nav #pg_toolbox .tool_container ul.task_list li.task_item[mode="big"] ul.sub_op li.sub_op_item .op_description {
+  display: block;
+  font-size: 13px;
+  font-weight: 200;
+  margin-top: 2px;
+}
+#pg .pg_nav #pg_toolbox .tool_container ul.task_list li.task_item[mode="big"] ul.sub_op li.sub_op_item .op_actions {
+  display: block;
+  margin-top: 5px;
 }
 #pg .pg_nav #pg_toolbox .tool_container ul.task_list li[kind="pick"] {
   background-color: #54a6ad;
@@ -352,11 +437,15 @@
 #pg .pg_nav #pg_toolbox .tool_container ul.operation_list li[mode="small"] .op_description {
   display: none;
 }
+#pg .pg_nav #pg_toolbox .tool_container ul.operation_rest li[mode="small"] .op_actions,
+#pg .pg_nav #pg_toolbox .tool_container ul.operation_list li[mode="small"] .op_actions {
+  display: none;
+}
 #pg .pg_nav #pg_toolbox .tool_container ul.operation_rest li[mode="big"],
 #pg .pg_nav #pg_toolbox .tool_container ul.operation_list li[mode="big"] {
   display: block;
   cursor: move;
-  width: 75%;
+  width: 80%;
   margin: 5px;
   position: relative;
   border: 1px solid #aaa;
@@ -377,10 +466,19 @@
 #pg .pg_nav #pg_toolbox .tool_container ul.operation_list li[mode="big"] .op_type {
   font-size: 18px;
   width: 100%;
+  margin: 0px;
 }
 #pg .pg_nav #pg_toolbox .tool_container ul.operation_rest li[mode="big"] .op_description,
 #pg .pg_nav #pg_toolbox .tool_container ul.operation_list li[mode="big"] .op_description {
-  font-size: 14px;
+  display: block;
+  font-size: 13px;
+  font-weight: 200;
+  margin-top: 2px;
+}
+#pg .pg_nav #pg_toolbox .tool_container ul.operation_rest li[mode="big"] .op_actions,
+#pg .pg_nav #pg_toolbox .tool_container ul.operation_list li[mode="big"] .op_actions {
+  display: block;
+  margin-top: 5px;
 }
 #pg .pg_nav #pg_toolbox .tool_container ul.operation_rest li[kind="pick"],
 #pg .pg_nav #pg_toolbox .tool_container ul.operation_list li[kind="pick"] {
@@ -409,6 +507,7 @@
   overflow: inherit;
   font-size: 13px;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  box-shadow: inset 3px 0px 3px 0px rgba(0, 0, 0, 0.1), inset -3px 0px 3px 0px rgba(0, 0, 0, 0.1);
   color: black;
   text-align: left;
   /* NODE  */

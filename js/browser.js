@@ -3,7 +3,7 @@ pg.Browser = function(target_el, enhancements) {
 	this.enhancements = enhancements;
 	$(this.target_el).empty();
 	var browser_content = $("<div class='toolbar'>\
-			<i class='fa fa-bars nav-icon'></i>\
+			<i class='fa fa-bars nav-icon toggleSize'></i>\
 			<div class='title'>Enhancements</div>\
 			<div class='menus'>\
 				<i class='fa fa-plus create_enhancement_button'></i>\
@@ -15,6 +15,7 @@ pg.Browser = function(target_el, enhancements) {
 	").appendTo(this.target_el);
 	this.el_enhancements = $(target_el).find(".enhancements_container");
 	this.el_tools = $(target_el).find(".tools");
+	$(target_el).find(".toggleSize").click(function() { pg.browser.toggle(); } );
 	$(target_el).find(".create_enhancement_button").click(function() {
 		pg.new_enhancement();
 	});
@@ -31,7 +32,7 @@ pg.Browser.prototype.redraw = function(_new_enhancements) {
 };
 
 pg.Browser.prototype.renderEnhancement = function(enh) {
-	var enh_li = $("<li eid='"+enh.id+"'>\
+	var enh_li = $("<li eid='"+enh.id+"' class='enhancement'>\
 		<div class='enh_title'>"+enh.title+"</div>\
 		<div class='enh_description'>"+enh.description+"</div>\
 		<div class='enh_date'>Saved "+(new Date(enh.timestamp)).toUTCString()+"</div>\
@@ -53,8 +54,11 @@ pg.Browser.prototype.renderEnhancement = function(enh) {
 	},{browser:this, enh:enh}));
 	$(enh_li).find(".run_auto_checkbox").change(function(){});
 	$(enh_li).find(".open_enhancement_button").click($.proxy(function(){
+		$(this.enh_li).parent().find("li").removeAttr("selected");
+		$(this.enh_li).attr("selected","true");
 		pg.open_enhancement(this.enh);
-	},{enh:enh}));
+		pg.browser.minimize();
+	},{enh:enh,enh_li:enh_li}));
 	$(enh_li).find(".execute_button").click($.proxy(function(){
 		this.enh.execute();
 	},{enh:enh}));
@@ -68,9 +72,15 @@ pg.Browser.prototype.renderEnhancement = function(enh) {
 
 
 
+pg.Browser.prototype.toggle = function() {
+	if($(this.target_el).hasClass("minimized")) this.maximize();
+	else pg.browser.minimize();
+};
 pg.Browser.prototype.minimize = function() {
-	this.el_enhancements.hide('fast');
+	$(this.target_el).addClass("minimized");
+
 };
 pg.Browser.prototype.maximize = function() {
+	$(this.target_el).removeClass("minimized");
 	this.el_enhancements.show('fast');
 };

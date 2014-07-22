@@ -36,29 +36,69 @@ pg.Toolbox.prototype.redraw = function(_new_items) {
 			$(this.ul_task).append(this.renderTask(item));
 			$(this.el_tools).find("label.task_label").show();
 		} else if(item.applicable) {
-			$(this.ul_operation).append(this.renderOperation(item));
+			$(this.ul_operation).append(this.renderEmptyOperation(item));
 			$(this.el_tools).find("label.operation_label").show();
 		} else {
-			$(this.ul_operation_rest).append(this.renderOperation(item));
+			$(this.ul_operation_rest).append(this.renderEmptyOperation(item));
 			$(this.el_tools).find("label.operation_rest_label").show();
 		}
 	}
 };
 
-pg.Toolbox.prototype.renderTask = function(task) {
-	var task_li = $("<li class='task_item draggableItem'></li>");
-	for(var i in task) {
-		task_li.append(this.renderOperation(task[i]));
+pg.Toolbox.prototype.renderTask = function(nodes) {
+	var task_li = $("<li class='task_item draggableItem' mode='small'><ul class='sub_op'></ul></li>");
+	var ul = $(task_li).find("ul");
+	for(var i in nodes) {
+		ul.append(this.renderSubOperation(nodes[i]));
 	}
+	$(task_li).click(function() {
+		if($(this).attr("mode")=="small") {
+			$(this).parent().find("li").attr("mode","small");
+			$(this).attr("mode","big"); 	
+		} 
+		else $(this).attr("mode","small"); 
+	});
 	return task_li;
 };
 
+// render inferred operation with parameters
+pg.Toolbox.prototype.renderSubOperation = function(node) {
+	var node_li = $("<li class='sub_op_item' kind='"+node.P.kind+"' type='"+node.P.type+"'>\
+		<div class='op_icon'><i class='fa fa-"+node.P.icon+" fa-lg'></i></div>\
+		<div class='op_type unselectable'>"+toTitleCase(node.P.type.replace("_"," "))+"</div>\
+		<div class='op_description unselectable'></div>\
+		<div class='op_actions'></div>\
+	</li>");
+	$(node_li).find(".op_description").append(this.renderNodeDescription(node));
+	return node_li;
+};
 
-pg.Toolbox.prototype.renderOperation = function(op, _notDraggable) {
+
+pg.Toolbox.prototype.renderNodeDescription = function(node) {
+	if(!node || typeof node.P==='undefined' || typeof node.P.description==='undefined') 
+		return "No Description is available"
+	var desc = node.P.description;
+	var desc_el = desc;
+	var params_raw = desc.match(/\[\w+\]/g);
+	if (params_raw===null) return desc;
+	_.each(params_raw, function(praw) { // replace [key] to span element text
+		var key = praw.replace(/\[|\]/g,'');
+		if(typeof node.P.param==='undefined' || !(key in node.P.param)) return;
+		var value = node.P.param[key];
+		if(value=="") value="___";
+		desc_el = desc_el.replace(praw,"<span class='param' paramKey='"+key+"'>"+value+"</span>");
+	});
+	desc_el = $("<span>"+desc_el+"</span>");	// convert to jQuery element
+	return desc_el;
+};
+
+// render default prototyp operations without inference
+pg.Toolbox.prototype.renderEmptyOperation = function(op, _notDraggable) {
 	var op_li = $("<li class='operation_item draggableItem' mode='small' kind='"+op.kind+"' type='"+op.type+"'>\
 		<div class='op_icon'><i class='fa fa-"+op.icon+" fa-lg'></i></div>\
 		<div class='op_type unselectable'>"+toTitleCase(op.type.replace("_"," "))+"</div>\
 		<div class='op_description unselectable'>"+op.description+"</div>\
+		<div class='op_actions'><button class='simple doc_button'>Show Documentation</button></div>\
 	</li>");
 	if(op.applicable) $(op_li).attr("applicable","true");
 	$(op_li).click(function() {
@@ -67,6 +107,10 @@ pg.Toolbox.prototype.renderOperation = function(op, _notDraggable) {
 			$(this).attr("mode","big"); 	
 		} 
 		else $(this).attr("mode","small"); 
+	});
+	$(op_li).find(".doc_button").click(function(event) {
+		// show documentation page
+		event.stopPropagation();
 	});
 	if(_notDraggable) { }
 	else {

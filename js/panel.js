@@ -660,8 +660,8 @@ pg.panel = {
 	///  command floating panel UI
 	///////////////////////////////////////////////////////////////////
 	commandUI: {
-		top:100,
-		left:100,
+		top:520,
+		left:310,
 		create: function() {
 			$("#pg_command_ui").remove();
 			var ui_el = $("<div id='pg_command_ui'>\
@@ -1217,12 +1217,13 @@ pg.panel = {
 		$(pg.pg_el).find("#plate").droppable({
 			accept: ".task_item, .operation_item",
 			drop: function( event, ui ) {
-				var position = [ Math.round((ui.position.top-$(this).offset().top) / pg.panel.node_dimension),
-											Math.round((ui.position.left-$(this).offset().left) / pg.panel.node_dimension)	];
+				var position = [ Math.floor((event.clientY-$(this).offset().top) / pg.panel.node_dimension),
+											Math.floor((event.clientX-$(this).offset().left) / pg.panel.node_dimension)	];
 				console.log("dropped at "+position);
 				var existing_node = pg.panel.get_node_by_position(position);
 				if(existing_node) {
 					existing_node.P=pg.toolbox.draggingOperation;
+					pg.panel.redraw();
 				} else {
 					var new_node = pg.Node.create();
 					new_node.P = pg.toolbox.draggingOperation;	

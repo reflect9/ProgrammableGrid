@@ -3,7 +3,7 @@ pg.Browser = function(target_el, enhancements) {
 	this.enhancements = enhancements;
 	$(this.target_el).empty();
 	var browser_content = $("<div class='toolbar'>\
-			<i class='fa fa-bars nav-icon toggleSize'></i>\
+			<i class='fa fa-folder nav-icon toggleSize'></i>\
 			<div class='title'>Enhancements</div>\
 			<div class='menus'>\
 				<i class='fa fa-plus create_enhancement_button'></i>\
@@ -42,45 +42,42 @@ pg.Browser.prototype.renderEnhancement = function(enh) {
 			<i class='fa fa-trash-o trash_enhancement_button'></i>\
 		</div>\
 	</li>");
-	$(enh_li).find(".enh_title").makeEditable($.proxy(function(new_value){
-		this.enh.title=new_value;
-		this.browser.redraw();
-		pg.save_enhancement(this.enh);
-	},{browser:this, enh:enh}));
-	$(enh_li).find(".enh_description").makeEditable($.proxy(function(new_value){
-		this.enh.description=new_value;
-		this.browser.redraw();
-		pg.save_enhancement(this.enh);
-	},{browser:this, enh:enh}));
-	$(enh_li).find(".run_auto_checkbox").change(function(){});
-	$(enh_li).find(".open_enhancement_button").click($.proxy(function(){
+	
+	var func_open_enhancement = $.proxy(function(){
 		$(this.enh_li).parent().find("li").removeAttr("selected");
 		$(this.enh_li).attr("selected","true");
-		pg.open_enhancement(this.enh);
-		pg.browser.minimize();
-	},{enh:enh,enh_li:enh_li}));
-	$(enh_li).find(".execute_button").click($.proxy(function(){
-		this.enh.execute();
+		pg.browser.close($.proxy(function(){
+			pg.open_enhancement(this.enh);
+		},{enh:enh}));
+	},{enh:enh,enh_li:enh_li});
+
+
+	$(enh_li).find(".open_enhancement_button").click(func_open_enhancement);
+	$(enh_li).click(func_open_enhancement);
+		
+	
+	$(enh_li).find(".execute_button").click($.proxy(function(e){
+		// this.enh.execute();
+		event.stopPropagation();
 	},{enh:enh}));
-	$(enh_li).find(".trash_enhancement_button").click($.proxy(function(){
+	$(enh_li).find(".trash_enhancement_button").click($.proxy(function(e){
 		pg.remove_enhancement(this.enh.id);
 		this.browser.redraw();
+		event.stopPropagation();
 	},{browser:this, enh:enh}));
 	return enh_li;
 };
 
 
-
-
 pg.Browser.prototype.toggle = function() {
-	if($(this.target_el).hasClass("minimized")) this.maximize();
-	else pg.browser.minimize();
-};
-pg.Browser.prototype.minimize = function() {
-	$(this.target_el).addClass("minimized");
+	$(this.target_el).toggle("slide");
 
 };
-pg.Browser.prototype.maximize = function() {
-	$(this.target_el).removeClass("minimized");
-	this.el_enhancements.show('fast');
+pg.Browser.prototype.close = function(completed_callback) {
+	$(this.target_el).hide({effect:"slide", complete:completed_callback});
+
+};
+pg.Browser.prototype.open = function() {
+	this.redraw(pg.enhancements);
+	this.target_el.show('slide');
 };

@@ -111,7 +111,6 @@
 		cursor: move;
 		z-index:1001;
 		position:relative;
-		border:1px solid #aaa;
 		border-radius:3px;
 		padding:2px;
 		margin:4px 3px 4px 3px;
@@ -128,9 +127,8 @@
 			margin-right: 3px;
 			
 		}
-		.op_description{
-		 	display:none;
-		}
+		.op_description{	display:none;		}
+		.op_actions { 	display:none;	}
 
 	}
 	li.draggableItem[kind="pick"] { background-color: @paleblue;	}
@@ -163,21 +161,50 @@
 	height:100%;
 	top:0px; left:0px;
 	z-index:999;
-	background:#ddd;
+	background:white;
 	overflow:auto;
 	*, *:before, *:after {
-		-moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
+		-moz-box-sizing: border-box !important;
+		-webkit-box-sizing: border-box !important;
+		box-sizing: border-box !important;
 	}
-	#pg_browser.minimized {
-		.enhancements_container {
-			display:none;
+	#pg_info {
+		position:relative;
+		padding:10px 10px 10px 40px;
+		i.open_browser_button {
+			position:absolute;
+			top:11px; left:15px;
+			font-size:20px; 
+		}
+		.enh_title{
+			font-size:18px;
+			width:100%;
+			margin-bottom:5px;
+		}
+		.enh_description{
+		 	font-size:13px;
+		 	color:#555;
+		}
+		.enh_date{ 
+			font-size:13px;
+			padding-left:1px;
+			color:#999;
+			margin-bottom:5px;
+		}
+		.enh_settings{
+			width:100%;
+			text-align:right;
+			label{}
+			i { font-size:18px; color:#333; margin:5px;}
 		}
 	}
 	#pg_browser {
-		position:relative;
+		position:absolute;
+		top:0px; left:0px;
 		height:auto;
-		max-height:50%;
-		min-height:40px;
+		width:300px;
+		height:inherit;
+		z-index:1001;
 		overflow:hidden;
 		.toolbar{
 			position:absolute;
@@ -242,7 +269,8 @@
 					}
 				} 
 				li[selected] {
-					box-shadow:inset 0px 0px 1px 1px rgba(255,255,0,0.5);
+					//box-shadow:inset 0px 0px 1px 1px rgba(255,255,0,0.5);
+					background:rgba(255,255,0,0.2);
 				}
 			}
 		}
@@ -250,15 +278,15 @@
 	
 	#pg_toolbox {
 		position:relative;
-		height:50%;
+		height:auto;
 		background-color:#fff;
 		.toolbar{
 			position:absolute;
 			z-index:999;
-			height:40px;
 			width:100%;
 			top:0px;
 			background:#ccc;
+			padding:7px 15px 7px 15px;
 			box-shadow:0px 2px 2px 2px rgba(0,0,0,0.03);
 			// border-bottom:1px solid #fff;
 			color:white;
@@ -268,9 +296,6 @@
 				top:11px; left:15px;
 			}
 			.title{
-				position:absolute;
-				top:11px; left:40px;
-				
 			}
 			.menus{
 				position:absolute;
@@ -284,7 +309,7 @@
 			color:#888;
 			padding-top:40px;
 			width:100%;
-			height:calc(~'100% - 40px');
+			height:auto;
 			overflow:auto;
 			background-color:white;
 			label {
@@ -302,21 +327,37 @@
 				}
 			}
 			ul.task_list {
-				li.task_item[mode="small"] {
+				li.task_item {
 					display:table;
 					cursor: move;
 					position:relative;
-					background:#eee;
-					border:1px solid #aaa;
-					border-radius:3px;
-					padding:2px;
-					margin:3px 3px 3px 3px;
+					width:100%;
+					background:#ddd;
+					border:none;
+					border-radius:5px;
+					text-align:right;
+					button.simple{
+						color:#555;
+						border:1px solid #555;
+						height:auto;
+					}
+				}			
+				li.task_item[mode="small"] {
+					margin:2px 0px 5px 0px;
 					ul.sub_op {
+						text-align:left;
+						margin:0;
+						padding:0;
+						li.sub_op_item:first-child {
+							border-radius:4px 0px 0px 4px !important;
+						}
+						li.sub_op_item:last-child {
+							border-radius:0px 4px 4px 0px !important;
+						}
 						li.sub_op_item {
 							display:inline-table;
-							border:1px solid #aaa;
-							border-radius:3px;
-							padding:2px;
+							border-radius:0px;
+							padding:2px 5px;
 							margin:4px 3px 4px 3px;
 							.op_icon {
 								display:table-cell;
@@ -338,39 +379,58 @@
 					}
 				}
 				li.task_item[mode="big"] {
-					display:table;
-					width:80%;
-					margin:5px;
-					//position:relative;
-					border:1px solid #aaa;
-					border-radius:2px;
-					padding:2px;
+					margin:2px 0px 10px 0px;
 					ul.sub_op {
+						margin:0;
+						padding:3px;
+						text-align:left;
+						li.sub_op_item:first-child {
+							border-radius:3px 3px 0px 0px;
+						}
+						li.sub_op_item:last-child {
+							border-radius:0px 0px 3px 3px;
+						}
+						li.sub_op_item:not(:last-child) {
+							margin:0px 0px 2px 0px;
+						}
 						li.sub_op_item {
-							display:inline-table;
-							border:1px solid #aaa;
-							border-radius:3px;
-							padding:2px;
-							margin:4px 3px 4px 3px;
+							display:inline-block;
+							position:relative;
+							width:100%;
+							border-radius:0px;
+							padding:5px;
 							.op_icon {
-								display:table-cell;
+								position:absolute;
+								top:7px; left:6px;
 								vertical-align:middle;
-								i { font-size: 15px; }
+								color:rgba(0,0,0,0.3);
+								i { font-size: 13px; }
 								
 							}
 							.op_type{
 								display:inline;
-								font-size:16px;
-								font-weight:200;
-								margin-left: 3px; 
-								margin-right: 3px;
-								
+								font-size:13px;
+								margin-left: 20px; 
+								color:rgba(0,0,0,0.4);
+								font-weight:500;
 							}
 							.op_description{
 								display:block;
-							 	font-size:13px;
+							 	font-size:18px;
 							 	font-weight:200;
 							 	margin-top:2px;
+							 	margin-left:20px;
+							 	line-height:1.2em;
+							 	span.param {
+							 		display:inline;
+									word-wrap: break-word;
+									border-radius:2px;
+									padding:0 2px 0 2px;
+									min-width:5px;
+									background-color: rgba(0,0,0,0.15);
+									color:white;
+									font-size:inherit;
+							 	}
 							}
 							.op_actions {
 								display:block;
@@ -386,13 +446,12 @@
 
 			}
 			ul.operation_rest, ul.operation_list {
-				li[mode="small"]{
+				li.operation_item[mode="small"]{
 					display:inline-table;
 					cursor: move;
 					position:relative;
-					border:1px solid #aaa;
 					border-radius:3px;
-					padding:2px;
+					padding:2px 5px 2px 5px;
 					margin:4px 3px 4px 3px;
 					.op_icon {
 						display:table-cell;
@@ -411,13 +470,12 @@
 					.op_description{	display:none;	}
 					.op_actions {	display:none;	}
 				} 
-				li[mode="big"] {
+				li.operation_item[mode="big"] {
 					display:block;
 					cursor: move;
 					width:80%;
 					margin:5px;
 					position:relative;
-					border:1px solid #aaa;
 					border-radius:5px;
 					padding:5px 5px 5px 33px;
 					.op_icon {
@@ -517,6 +575,8 @@
 		width:3000px;
 		height:3000px;
 		z-index:100;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/js/image/plate.png");
+		background-repeat: repeat;
 	}
 	#script_selector{
 		width:200px;
@@ -527,7 +587,6 @@
 		position:relative;
 		width:100%;
 		height:900px;
-		margin-top:5px;
 		overflow:auto;
 		
 		#overlay {
@@ -537,12 +596,17 @@
 			height:100%;
 			top:0px; left:0px;
 			pointer-events:none;
-			.path_connector {
-				fill:none; stroke:#222; stroke-width:1;
+			svg{
+				width:inherit;
+				height:inherit;
+				.path_connector {
+					fill:none; stroke:#fff; stroke-width:1.5;
+				}
+				rect {
+					fill:white; stroke:white; stroke-width:0; 
+				}
 			}
-			circle {
-				fill:white; stroke:#222; stroke-width:2;
-			}
+			
 		}
 	}
 	#node_size_slider {
@@ -588,7 +652,7 @@
 			width:100%; height:100%;	
 			.nth-input {   
 				position:absolute;
-				width:10px; height:12px;
+				width:12px; height:12px;
 				background-color:white;
 				text-align:center;
 				font-weight:500;
@@ -602,7 +666,7 @@
 				height:4px;
 				//background:#fff;
 				.nth-input {   
-					top:-9px; left:48%;
+					top:-8px; left:46%;
 					border-radius: 2px 2px 0 0;
 				}
 				i.fa { color:white; font-size:20px; position:absolute;  top:-0px; left:47%;   }
@@ -615,7 +679,7 @@
 				height:4px;
 				//background:#fff;
 				.nth-input {   
-					bottom:-9px; left:48%;
+					bottom:-8px; left:46%;
 					border-radius: 0 0 2px 2px;
 				}
 				i.fa { color:white; font-size:20px; position:absolute;  bottom:-0px; left:47%;   }
@@ -628,7 +692,7 @@
 				height:calc(100%-4px);;
 				//background:#fff;
 				.nth-input {   
-					top:48%; left:-9px;
+					top:48%; left:-12px;
 					border-radius: 2px 0 0 2px;
 				}
 				i.fa { color:white; font-size:20px; position:absolute;  top:47%; left:-0px;   }
@@ -641,7 +705,7 @@
 				height:calc(100%-4px);;
 				//background:#fff;	
 				.nth-input {   
-					top:48%; right:-9px;
+					top:48%; right:-12px;
 					border-radius: 0 2px 2px 0;
 				}
 				i.fa { color:white; font-size:20px; position:absolute;  top:47%; right:0px;   }
@@ -653,7 +717,7 @@
 			z-index:98;
 			top:0px; left:0px;
 			background:#999; 
-			box-shadow: inset 0 0 0 1px #ffffff;
+			box-shadow: inset 0 0 0 1px #eee;
 			width:100%; height:100%;
 
 		}
@@ -679,7 +743,7 @@
 
 	.node[selected] {
 		.node_bg {
-			box-shadow:inset 0px 0px 3px 3px rgba(0,0,0,0.6);
+			box-shadow:inset 0px 0px 2px 2px rgba(0,0,0,1.0);
 		}
 		.node_borders {
 			//.above, .below, .left, .right { background:@purple; }
@@ -718,10 +782,10 @@
 	.node-icon {
 		width:30px;
 		height:30px;
-		padding:4px;
+		padding:3px 1px 3px 1px;
 		color:#fff;
-		font-size:15px;
-		text-shadow:-1px -1px 0px rgba(0,0,0,0.5);
+		font-size:13px;
+		//text-shadow:-1px -1px 0px rgba(0,0,0,0.5);
 		//background-repeat:no-repeat;
 		//background-position: center center;
 		//background-image: url('chrome-extension://__MSG_@@extension_id__/js/lib/glyphicons/glyphicons-halflings-150.png')
@@ -829,7 +893,7 @@
 	.node-type {
 		/* mid-level detail when there's no value in the node */
 		position:absolute;
-		top:2px; left: 28px;
+		top:2px; left: 20px;
 		font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 		font-size: 13px;
 		line-height:13px;
@@ -906,7 +970,7 @@
 	overflow:hidden;
 	background: rgba(255,255,255,1);
 	border:2px solid #555;
-	box-shadow: 3px 3px 3px 1px rgba(0,0,0,0.2);
+	box-shadow: 0px 0px 3px 1px rgba(0,0,0,0.2);
 	z-index:10006;
 	label {
 		text-transform:capitalize;
@@ -919,32 +983,36 @@
 		position:relative;
 		width:auto;
 		padding:7px;
-		background:white;
+		border-color: #aaa;  
+		background-color: #aaa;
 		border-bottom:1px solid #aaa;
 		.operation_info {
+			color:white;
 			.operation_title {
 				width:auto;
-				font-size:16px;
-				font-weight:800;
-				.node-icon{  display:inline-block; margin-top:-4px; margin-right:5px; }
+				font-size:17px;
+				font-weight:500;
+				i{  
+					font-size:24px; 
+					margin-right:5px;
+				}
 				margin-bottom:6px;
 			}
 			.operation_description {
 				width:auto;
 				font-size:24px;
-				padding-left:10px;
+				padding-left:29px;
 				font-weight:300;
 				line-height:1.3em;
 				.param {
 					display:inline;
 					word-wrap: break-word;
 					border-radius:5px;
-					border:1px solid orange;
-					padding:0 2px 0 2px;
-					background:white;
+					padding:0 4px 0 4px;
+					background:rgba(0,0,0,0.3);
 					min-width:10px;
 					overflow:hidden;
-					color:orange;
+					color:white;
 					font-size:22px;
 					input {
 						font-size:18px;
@@ -958,24 +1026,25 @@
 			}
 		}
 		.header_panel_tools_burger { 
-			position:absolute; top:5px; right:5px;
+			position:absolute; 
+			top:0px; right:2px;
+			font-size:18px; 
+			margin:5px;
+			color:white;
 		}
 		.header_panel_tools {
-			position:absolute; top:5px; right:25px;
+			position:absolute; top:3px; right:25px;
 			display:none;
 			label {
 				text-transform:none;
 				font-weight:700;
-				font-size:11px;
-				color:#aaa;
+				font-size:10px;
+				color:white;
 			}
 			button{
 				text-transform:uppercase;
-				font-size:10px;
-				color:#888;
-				padding: 0px 2px 0px 2px;
-				border:1px solid #aaa;
-				border-radius:6px;
+				font-size:11px;
+				color:white;
 			}
 		}
 	}
@@ -1089,7 +1158,7 @@
 						padding:3px;
 						font-size:14px;
 						background:white;
-						color:red;
+						color:black;
 						border-radius:4px;
 					}
 				} 
@@ -1338,7 +1407,22 @@
 	
 
 }
-
+#pg_command_ui[operation_kind='pick'] { 
+	border-color: @paleblue;  
+	.header_panel { background-color: @paleblue; }
+}
+#pg_command_ui[operation_kind='transform'] { 
+	border-color: @palegreen;  
+	.header_panel { background-color: @palegreen; }
+}
+#pg_command_ui[operation_kind='apply'] { 
+	border-color: @palered;  
+	.header_panel { background-color: @palered; }
+}
+#pg_command_ui[operation_kind='flow'] { 
+	border-color: #aaa;  
+	.header_panel { background-color: #aaa; }
+}
 
 
 .pg_dialog {

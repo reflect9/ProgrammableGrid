@@ -884,12 +884,12 @@ function matchLists(l1, l2, func, option) {	// option:= (min_len|repeat|extend)
 }
 
 function get_parameter_value(parameter, node) {
-	if(parameter.indexOf("_input")==-1) {
+	if(parameter.match(/I[0-9]/)==null) {
 		// parameter is string or number value
 		return parameter;
 	} else {
 		// parameter is node id
-		var param_number = parseInt(parameter.slice(6));
+		var param_number = parseInt(parameter.match(/I([0-9])/)[1]);
 		var param_node_id = node.I[param_number];
 		if(!param_node_id) return false;
 		var param_node = pg.panel.get_node_by_id(param_node_id, node);

@@ -1,13 +1,13 @@
 pg.panel = {
 	init: function(target, _enhancement){
+		console.log("init start");
 		pg.panel.targetEl = target;
 		$(target).empty();
 		this.enhancement = _enhancement;
 		this.commands = [];
 		this.selected_element;
 		this.node_dimension = DEFAULT_NODE_DIMENSION;
-		this.el = $("<div id='resize_handle_panel'></div>\
-					<div id='plate_container'>\
+		this.el = $("<div id='plate_container'>\
 						<div id='overlay'>\
 							<svg></svg>\
 						</div>\
@@ -19,7 +19,9 @@ pg.panel = {
 		// this.editUI.create();
 		// this.commandUI.create();  this.commandUI.remove();
 		// this.toolbar.create();
-		pg.panel.drawPlate();
+		pg.info.update(this.enhancement);
+		//pg.panel.drawPlate();
+		console.log("redraw start");
 		pg.panel.redraw();
 	},
 	close: function() {
@@ -45,12 +47,9 @@ pg.panel = {
 		_.each(pg.panel.get_nodes(), function(n) { n.selected=false; });
 		pg.panel.node_show_inputs(node);
 		node.selected = true;
-		console.log("commandUI redraw start");
 		pg.panel.commandUI.create();
 		pg.panel.commandUI.redraw();
-		console.log("commandUI redraw end");
 		pg.panel.commandUI.turn_inspector(true);
-		console.log("inspector turned on");
 	},
 	deselect: function() {
 		pg.inspector.unhighlight_list();
@@ -474,10 +473,13 @@ pg.panel = {
 			pg.panel.deselect();
 			pg.panel.select(n);
 		}
+		console.log("draw connector nodes");
 		pg.panel.drawConnector_node_list();
+		console.log("redraw toolbox");
 		pg.toolbox.redraw(pg.planner.get_all_operations());
 	},
 	drawPlate: function() {
+		pg.panel.plateDrawn=true;
 		var el_plate = $("#pg_panel > #plate_container > #plate");
 		$(el_plate).children().remove();
 		var canvas = $("<canvas id='plate_canvas' width='3000' height='3000'></canvas>");
@@ -527,7 +529,7 @@ pg.panel = {
 		// draw connecting line at the #pg_panel>#plate_container>#overlay>svg
 		var marginPortion = 0.1;
 		var margin = $(_fromEl).width()*marginPortion;
-		var fromPos = {left: $(_fromEl).position().left+$(_fromEl).width()-margin, top:$(_fromEl).position().top+margin};
+		var fromPos = {left: $(_fromEl).position().left+margin, top:$(_fromEl).position().top+$(_fromEl).height()-margin};
 		var toPos = {left: $(_toEl).position().left+margin, top:$(_toEl).position().top+margin*nth_input};
 
 		// var qPos = {left:fromPos.left+10, top:fromPos.top};
@@ -546,14 +548,19 @@ pg.panel = {
 		$(svg).append(newLine);
 
 		if(typeof nth_input !== 'undefined') {
-			var circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
-			circle.setAttribute('cx', fromPos.left);	circle.setAttribute('cy', fromPos.top);
-			circle.setAttribute('r', "10");
-			$(svg).append(circle);
+			// var circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+			// circle.setAttribute('cx', fromPos.left);	circle.setAttribute('cy', fromPos.top);
+			// circle.setAttribute('r', "10");
+			// $(svg).append(circle);
+			var rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+			rect.setAttribute('x', fromPos.left-6);	rect.setAttribute('y', fromPos.top-6);
+			rect.setAttribute('rx', 2);	rect.setAttribute('ry', 2);
+			rect.setAttribute('width', 12);	rect.setAttribute('height', 12);
+			$(svg).append(rect);
 			var nth =  document.createElementNS('http://www.w3.org/2000/svg','text');
 			nth.setAttribute('text-anchor','middle');
 			nth.setAttribute('x',fromPos.left);
-			nth.setAttribute('y',fromPos.top+5);  nth.setAttribute('fill','black');
+			nth.setAttribute('y',fromPos.top+4);  nth.setAttribute('fill','gray');
 			$(nth).text(nth_input);
 			$(svg).append(nth);
 
@@ -631,7 +638,7 @@ pg.panel = {
 			});	
 			$(ui_el).css("top", pos.y + $(window).scrollTop());
 			$(ui_el).css("left", pos.x + $(window).scrollLeft());
-			$(pg.body).append(ui_el).show('fast');
+			$(pg.documentBody).append(ui_el).show('fast');
 			return ui_el;
 		},
 		remove: function() {
@@ -646,14 +653,6 @@ pg.panel = {
 				pg.panel.data_selection_box=undefined;
 			}
 			$("#pg_data_ui").remove();
-		},
-		save: function() {
-			// var tr = $("#pg_data_ui > div > table > tr");
-			// var node_id = $("#pg_data_ui").attr("node_id");
-			// var data_list = _.map(tr, function(tr) {
-			// 	return $(tr).find("td").text();
-			// });
-			// pg.panel.get_node_by_id(node_id).V = data_list;
 		}
 	},
 	///////////////////////////////////////////////////////////////////
@@ -669,17 +668,17 @@ pg.panel = {
 					<div class='operation_info'>\
 						<div class='operation_title'></div>\
 						<div class='operation_description'></div>\
-						<div class='operation_execute'><i class='fa fa-play-circle-o operation_execute_button'></i></div>\
 					</div>\
-					<div class='header_panel_tools_burger'><i class='fa fa-bars' style='font-size:14px; margin:5px;'></i></div>\
+					<div class='header_panel_tools_burger'><i class='fa fa-bars'></i></div>\
 					<div class='header_panel_tools'>\
-						<button class='duplicate_button'>duplicate</button> <button class='copy_button'>copy</button>\
-						<button class='share_button'>share_across_tabs</button>\
-						<button class='clear_data_button'>clear data</button>\
-						<label>INSERT</label><button class='insert_left_button'>left</button>\
-						<button class='insert_above_button'>above</button> \
-						<label>DELETE</label><button class='delete_row_button'>row</button>\
-						<button class='delete_column_button'>column</button> \
+						<button class='simple duplicate_button'>duplicate</button> \
+						<button class='simple copy_button'>copy</button>\
+						<button class='simple share_button'>share_across_tabs</button>\
+						<button class='simple clear_data_button'>clear data</button>\
+						<label>INSERT</label><button class='simple insert_left_button'>left</button>\
+						<button class='simple insert_above_button'>above</button> \
+						<label>DELETE</label><button class='simple delete_row_button'>row</button>\
+						<button class='simple delete_column_button'>column</button> \
 					</div>\
 				</div>\
 				<div class='data_panel'>\
@@ -704,13 +703,19 @@ pg.panel = {
 					</div>\
 				</div>\
 				</div>");
+			var cur_node = pg.panel.get_current_node();
+			if(cur_node && cur_node.P && cur_node.P.kind) {
+				$(ui_el).attr("operation_kind",cur_node.P.kind);				
+			}
+
 			$(ui_el).find(".header_panel_tools_burger").click(function() {
 				console.log("burger");
-				$("#pg_command_ui").find(".header_panel_tools").toggle("fast");
+				$("#pg_command_ui").find(".header_panel_tools").toggle("slide", {direction:"right"}, 300);
 			});
 			$(ui_el).find(".operation_execute_button").click(function() {
 				var node = pg.panel.get_current_node();
 				pg.panel.enhancement.run_node(node);
+				pg.panel.redraw();
 			});
 			$(ui_el).find(".duplicate_button").click(function() {
 				pg.panel.duplicate_node();
@@ -937,9 +942,12 @@ pg.panel = {
 				title = (P.type)? P.type.toUpperCase().replace("_"," "): "Unknown";
 				description= pg.panel.commandUI.renderDescription(node);
 			}
-			$(container_el).find(".operation_title").empty()
-				.append(pg.Node.getNodeIcon(node))
-				.append(title);
+			if(node.P) {
+				$(container_el).find(".operation_title").empty()
+					.attr("kind",node.P.kind)
+					.append("<i class='fa fa-"+node.P.icon+" fa-lg'></i>")
+					.append(title);	
+			}
 			$(container_el).find(".operation_description").empty()	
 				.append(description);
 			return $(container_el).get(0);
@@ -1164,8 +1172,8 @@ pg.panel = {
 				pg.open_dialog(diag_content);
 			});
 			$(ui_el.find("#button_save")).click(function() {
-				var active = $(pg.body).find("#control_ui").find(".active_checkbox").prop('checked');
-				pg.save_enhancement(pg.panel.title,{nodes:pg.panel.get_nodes(), active:active});
+				var active = $(pg.documentBody).find("#control_ui").find(".active_checkbox").prop('checked');
+				pg.save_enhancement(pg.panel.enhancement);
 			});
 			$(ui_el.find("#button_execute")).click(pg.panel.execute);
 			$(ui_el).find('button.zoom_button').click(function() {
@@ -1217,8 +1225,8 @@ pg.panel = {
 		$(pg.pg_el).find("#plate").droppable({
 			accept: ".task_item, .operation_item",
 			drop: function( event, ui ) {
-				var position = [ Math.floor((event.clientY-$(this).offset().top) / pg.panel.node_dimension),
-											Math.floor((event.clientX-$(this).offset().left) / pg.panel.node_dimension)	];
+				var position = [ Math.floor((event.clientY-$(this).offset().top+$(document).scrollTop()) / pg.panel.node_dimension),
+											Math.floor((event.clientX-$(this).offset().left+$(document).scrollLeft()) / pg.panel.node_dimension)	];
 				console.log("dropped at "+position);
 				var existing_node = pg.panel.get_node_by_position(position);
 				if(existing_node) {
@@ -1251,8 +1259,9 @@ pg.panel = {
 		// Assign backspace button to delete node. Prevent page back navigation
 		$(document).off("keydown").keydown(function (e) {
             var element = e.target.nodeName.toLowerCase();
+            var contenteditable = $(e.target).attr("contenteditable");
             console.log(element);
-            if ((element != 'input' && element != 'textarea') || $(e.target).attr("readonly")) {
+            if ((element != 'input' && element != 'textarea' && !contenteditable) || $(e.target).attr("readonly")) {
                 if (e.keyCode === 8 || e.keyCode === 46) {
                 	if(document.activeElement.tagName==='SPAN') return;
                     pg.panel.delete();

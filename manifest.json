@@ -27,6 +27,7 @@
             "js/utils.js",
             "js/pg.js",
             "js/pageLoader.js",
+            "js/info.js",
             "js/panel.js",
             "js/enhancement.js",
             "js/browser.js",
@@ -61,6 +62,7 @@
     "http://*/", "https://*/"
   ],
   "web_accessible_resources": [
+    "js/image/plate.png",
     "js/lib/jquery-2.0.3.min.js",
     "js/lib/jquery-ui-1.10.3.custom.min.js",
     "js/lib/jquery-2.0.3.min.map",

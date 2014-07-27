@@ -11,6 +11,7 @@ window.addEventListener('load', function() {
 
 function init() {
 	console.log("adding background page listeners.");
+
 	// when browserAction button is clicked
 	chrome.browserAction.onClicked.addListener(function() {
 		chrome.tabs.getSelected(null, function(tab) {

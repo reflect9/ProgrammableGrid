@@ -75,8 +75,8 @@ pg.Enhancement.prototype.insert = function(new_nodes, target_node) {
 			else if(input_id === this.get_node_by_id("_right",nd)) return "_right";
 			else if(input_id === this.get_node_by_id("_below",nd)) return "_below";
 			else return input_id;
-		});
-	});
+		}, this);
+	},this);
 };
 pg.Enhancement.prototype.push_at = function(new_node, target_position) {
 	var candDiff = [[0,0],[1,0],[-1,0],[0,1],[0,-1]];
@@ -181,9 +181,11 @@ pg.Enhancement.prototype.get_next_nodes = function(node, _reachableNodes, _allNo
 	// find next node among _reachableNodes.  _allNodes is the entire set of nodes
 	var allNodes = (_allNodes)?_allNodes: this.get_nodes();
 	var reachableNodes = (_reachableNodes)?_reachableNodes: allNodes;
-	return _.filter(reachableNodes, function(n) {
-		return this.get_prev_nodes(n, allNodes).indexOf(node)!=-1;
-	});
+	var nextNodes = [];
+	for(var i=0;i<reachableNodes.length;i++) {
+		if(this.get_prev_nodes(reachableNodes[i], allNodes).indexOf(node)!=-1) nextNodes.push(reachableNodes[i]);
+	}
+	return nextNodes;
 };
 pg.Enhancement.prototype.get_reachable_nodes = function(_starting_nodes, _allNodes, _include_triggers) {
 	var allNodes = (_allNodes)? _.clone(_allNodes): _.clone(this.get_nodes());
@@ -214,9 +216,12 @@ pg.Enhancement.prototype.get_informative_nodes = function(nodes) {
 };
 pg.Enhancement.prototype.get_prev_nodes = function(node, _allNodes) {	
 	var allNodes = (_allNodes)?_allNodes: this.get_nodes();
-	return _.without(_.map(node.I, function(input_id) {
-		return this.get_node_by_id(input_id, node, allNodes);
-	}),false,undefined);	
+	var prevNodes = [];
+	for(var i=0;i<node.I.length;i++) {
+		prevNodes.push(this.get_node_by_id(node.I[i], node, allNodes));
+	}
+	prevNodes = _.without(prevNodes, false, undefined);
+	return prevNodes;
 };
 pg.Enhancement.prototype.get_ready_nodes = function(_candidateNodes, _allNodes) {
 	var allNodes = (_allNodes)?_allNodes: this.get_nodes();
@@ -228,7 +233,7 @@ pg.Enhancement.prototype.get_ready_nodes = function(_candidateNodes, _allNodes) 
 				_.filter(prev_nodes, function(n) { return n.executed==false; }).length==0 ) 
 			return true;
 		else return false;	
-	});
+	},this);
 	return ready_nodes;
 };
 

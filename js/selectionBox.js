@@ -23,7 +23,7 @@
 pg.SelectionBox = function(edgeSize, edgeColor, edgeContainer) {
 	edgeSize = edgeSize ? edgeSize : 2;
 	edgeColor = edgeColor ? edgeColor : '#ff0000';
-	edgeContainer = edgeContainer ? edgeContainer : $(pg.body).get(0);
+	edgeContainer = edgeContainer ? edgeContainer : $(pg.documentBody).get(0);
 	/**
 		* Create an edge
 		* @return {element} DIV for the edge
@@ -176,10 +176,10 @@ pg.SelectionBox = function(edgeSize, edgeColor, edgeContainer) {
 		width = el.scrollWidth;
 		height = el.scrollHeight;
 		}
-		// then we need to check if pg.body has a bigger scroll size value
-		// because sometimes depending on the browser and the page, the pg.body
+		// then we need to check if pg.documentBody has a bigger scroll size value
+		// because sometimes depending on the browser and the page, the pg.documentBody
 		// scroll size returns a smaller (and wrong) measure
-		if ((el = pg.body) && (el.scrollHeight || el.scrollWidth) &&
+		if ((el = pg.documentBody) && (el.scrollHeight || el.scrollWidth) &&
 		(el.scrollWidth > width || el.scrollHeight > height)) {
 		width = el.scrollWidth;
 		height = el.scrollHeight;
@@ -218,7 +218,7 @@ pg.SelectionBox = function(edgeSize, edgeColor, edgeContainer) {
 		width = el.clientWidth;
 		height = el.clientHeight;
 		}
-		else if ((el = pg.body) && (el.clientHeight || el.clientWidth)) {
+		else if ((el = pg.documentBody) && (el.clientHeight || el.clientWidth)) {
 		width = el.clientWidth;
 		height = el.clientHeight;
 		}
@@ -235,7 +235,7 @@ pg.SelectionBox = function(edgeSize, edgeColor, edgeContainer) {
 		top = window.pageYOffset;
 		left = window.pageXOffset;
 		}
-		else if ((el = pg.body) && (el.scrollTop || el.scrollLeft)) {
+		else if ((el = pg.documentBody) && (el.scrollTop || el.scrollLeft)) {
 		top = el.scrollTop;
 		left = el.scrollLeft;
 		}

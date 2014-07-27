@@ -1,7 +1,7 @@
 pg = {
 	body: undefined,
 	init: function() {
-		pg.enhancements = pg.load_all_enhancements();
+		pg.load_all_enhancements();
 		// get documentBody
 		if($("body").length==0) { // WHEN BODY IS IN IFRAME
 			var frame= $("frame");
@@ -26,12 +26,14 @@ pg = {
 		pg.pg_el = $("<div id='pg'>\
 			<div id='pg_nav' class='pg_nav'>\
 				<div id='pg_browser'></div>\
+				<div id='pg_info'></div>\
 				<div id='pg_toolbox'></div>\
 			</div>\
 			<div id='pg_panel' class='pg_panel'></div>\
 		</div>");
 		$(pg.documentBody).append(pg.pg_el);
 		$(pg.documentBody).css("padding-left","600px");
+		pg.info.init($(pg.pg_el).find("#pg_info"));
 		pg.browser = new pg.Browser($(pg.pg_el.find("#pg_browser")), pg.enhancements);
 		pg.toolbox = new pg.Toolbox($(pg.pg_el.find("#pg_toolbox")), []);
 		var last_enh = pg.latest_enhancement(pg.enhancements);
@@ -52,7 +54,6 @@ pg = {
 	new_enhancement: function(_title) {
 		var enhancement = new pg.Enhancement(_title);
 		pg.save_enhancement(enhancement);
-		pg.enhancements = pg.load_all_enhancements();
 		pg.browser.redraw(pg.enhancements);
 	},
 	save_enhancement : function(_enh) {
@@ -78,7 +79,7 @@ pg = {
 		enhancement_dictionary[enh.id] = enh;
 		new_data = pg.serialize(enhancement_dictionary);
 		localStorage.setItem(LOCAL_STORAGE_KEY,new_data);
-		return enhancement_dictionary;
+		pg.load_all_enhancements();
 	},
 	// load_json_enhancement: function(json, _title) {
 	// 	var title = (_title)?_title:"remote execution";
@@ -90,7 +91,7 @@ pg = {
 		if (localStorage[LOCAL_STORAGE_KEY]==undefined) return false;
 		else {
 			var data = localStorage.getItem(LOCAL_STORAGE_KEY);
-			return programs = pg.parse(data);
+			pg.enhancements = pg.parse(data);
 		}	
 	},
 	// load_enhancement: function(eid) {
@@ -105,6 +106,7 @@ pg = {
 	open_enhancement: function(enhancement) {
 		var target_el = $(pg.pg_el).find(".pg_panel");
 		pg.panel.init(target_el, enhancement);
+		pg.browser.close();
 	},
 	latest_enhancement: function(enh_dict) {
 		var sorted_enh= _.sortBy(enh_dict, function(enh, eid) {
@@ -123,7 +125,7 @@ pg = {
 		delete programs[id];
 		new_data = pg.serialize(programs);
 		localStorage.setItem(LOCAL_STORAGE_KEY,new_data);
-		pg.enhancements = pg.load_all_enhancements();
+		pg.load_all_enhancements();
 		pg.browser.redraw(pg.enhancements);
 	},
 	serialize: function(programs) {
@@ -211,12 +213,12 @@ pg = {
 
 
 DEFAULT_PLATE_DIMENSION = 3000
-DEFAULT_NODE_DIMENSION = 100
+DEFAULT_NODE_DIMENSION = 85
 NODE_MARGIN = 2
 
-NODE_SIZE_LOW = 50
-NODE_SIZE_MID = 100
-NODE_SIZE_HIGH = 200
+NODE_SIZE_LOW = 30
+NODE_SIZE_MID = 80
+NODE_SIZE_HIGH = 150
 
 TILE_TYPES = ['Trigger','Page','Element','Variable','Operation'];
 

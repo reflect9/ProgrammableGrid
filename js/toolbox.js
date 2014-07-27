@@ -2,18 +2,17 @@ pg.Toolbox = function(target_el, items) {
 	this.target_el = target_el;
 	this.items = items;
 	$(this.target_el).empty();
-	var html = $("<div class='toolbar'>\
-			<i class='fa fa-bars nav-icon'></i>\
-			<div class='title'>Operations</div>\
+	var html = $("<div class='toolbar unselectable'>\
+			<div class='title'>Tools</div>\
 			<div class='menus'>\
 			</div>\
 		</div>\
 		<div class='tool_container unselectable'>\
 			<label class='task_label'>Matching Tasks</label>\
 			<ul class='task_list'></ul>\
-			<label class='operation_label'>Applicable Operations</label>\
+			<label class='operation_label'>Operations applicable to Input nodes</label>\
 			<ul class='operation_list'></ul>\
-			<label class='operation_rest_label'>Other Operations</label>\
+			<label class='operation_rest_label'>Available Operations</label>\
 			<ul class='operation_rest'></ul>\
 		</div>\
 	").appendTo(this.target_el);
@@ -43,17 +42,28 @@ pg.Toolbox.prototype.redraw = function(_new_items) {
 			$(this.el_tools).find("label.operation_rest_label").show();
 		}
 	}
+	console.log("done toolbox redrawing");
 };
 
 pg.Toolbox.prototype.renderTask = function(nodes) {
-	var task_li = $("<li class='task_item draggableItem' mode='small'><ul class='sub_op'></ul></li>");
+	var task_li = $("<li class='task_item draggableItem' mode='big'><ul class='sub_op'></ul></li>");
 	var ul = $(task_li).find("ul");
 	for(var i in nodes) {
 		ul.append(this.renderSubOperation(nodes[i]));
 	}
+	$("<button class='simple insert_button'>Insert this task</button>")
+		.click($.proxy(function() {
+			var currently_selected_node = pg.panel.get_current_node();
+			if(currently_selected_node) {
+				pg.panel.insert(this.nodes, currently_selected_node);	
+			} else {
+				// what should it do if there's no target nodes to insert at? 
+			}
+		},{nodes:nodes}))
+		.insertAfter(ul);
 	$(task_li).click(function() {
 		if($(this).attr("mode")=="small") {
-			$(this).parent().find("li").attr("mode","small");
+			//$(this).parent().find("li").attr("mode","small");
 			$(this).attr("mode","big"); 	
 		} 
 		else $(this).attr("mode","small"); 
@@ -98,7 +108,10 @@ pg.Toolbox.prototype.renderEmptyOperation = function(op, _notDraggable) {
 		<div class='op_icon'><i class='fa fa-"+op.icon+" fa-lg'></i></div>\
 		<div class='op_type unselectable'>"+toTitleCase(op.type.replace("_"," "))+"</div>\
 		<div class='op_description unselectable'>"+op.description+"</div>\
-		<div class='op_actions'><button class='simple doc_button'>Show Documentation</button></div>\
+		<div class='op_actions'>\
+			<button class='simple doc_button'>Show Documentation</button>\
+			<button class='simple apply_button hidden'>Apply to the current node</button>\
+		</div>\
 	</li>");
 	if(op.applicable) $(op_li).attr("applicable","true");
 	$(op_li).click(function() {
@@ -112,6 +125,16 @@ pg.Toolbox.prototype.renderEmptyOperation = function(op, _notDraggable) {
 		// show documentation page
 		event.stopPropagation();
 	});
+	if(pg.panel.get_current_node()) {
+		$(op_li).find(".apply_button").show().click($.proxy(function(e) {
+			var node = pg.panel.get_current_node();
+			node.P = this.op;
+			pg.panel.redraw();
+		},{op:op}));
+	}
+	$(op_li).find(".doc_button").click(function(event) {
+
+	});
 	if(_notDraggable) { }
 	else {
 		$(op_li).draggable({
@@ -119,7 +142,7 @@ pg.Toolbox.prototype.renderEmptyOperation = function(op, _notDraggable) {
 			helper: "clone",
 			appendTo: "#pg",
 			containment: "DOM",
-			cursor: "move",
+			//cursor: "move",
 			start: $.proxy(function(event, ui) {
 				pg.toolbox.draggingOperation = this.op;
 			},{op:op})			

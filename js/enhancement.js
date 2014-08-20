@@ -15,7 +15,9 @@ pg.Enhancement.prototype.delete = function(node_to_delete) {
 	this.nodes = _.without(this.nodes, node_to_delete);
 };
 pg.Enhancement.prototype.clear = function() {
-	this.nodes = [];
+	var default_trigger_node = pg.Node.create({type:'trigger', P:pg.planner.get_prototype({type:"trigger"}), position:[0,1]});
+	default_trigger_node.P.param.event_source = "page";
+	this.nodes = [default_trigger_node];	
 };
 pg.Enhancement.prototype.load_json = function(json){
 	this.nodes = _.map(json.nodes, function(n_data,ni){
@@ -38,30 +40,34 @@ pg.Enhancement.prototype.insert = function(new_nodes, target_node) {
 		this.delete(target_node);
 		if(new_nodes.length>1) {
 			// push nodes right or below
-			_.each(this.get_nodes(), function(node) {
-				if(node.position[1]>target_position[1]) {
-					// for nodes on the right side of the target node
-					node.position[1] = node.position[1] + nodes_range.columns-1;
-				} else if(node.position[1]==target_position[1] && node.position[0]>target_position[0]) {
-					// for nodes that are below the target
-					node.position[0] = node.position[0] + nodes_range.rows - 1; 
-				}
-			});
+			// _.each(this.get_nodes(), function(node) {
+			// 	if(node.position[1]>target_position[1]) {
+			// 		// for nodes on the right side of the target node
+			// 		node.position[1] = node.position[1] + nodes_range.columns-1;
+			// 	} else if(node.position[1]==target_position[1] && node.position[0]>target_position[0]) {
+			// 		// for nodes that are below the target
+			// 		node.position[0] = node.position[0] + nodes_range.rows - 1; 
+			// 	}
+			// });
 		} 
 	} else {
 		// when there's no target node, append at the bottom
 		var max_y = _.max(this.get_nodes(), function(n){ return n.position[0];}).position[0]+1;
 		target_position = [max_y,1];
 	}
+	// set positions of the new nodes and push to enhancements.
 	for(var ni=0; ni<new_nodes.length;ni++) {
 		var nd = new_nodes[ni]; 	
 		if(typeof nd.position !== 'undefined') {
+			// when the node has relative positions
 			nd.position=[target_position[0]+nd.position[0]-nodes_range.min_y, target_position[1]+nd.position[1]-nodes_range.min_x]; 	
 		} else {
-			nd.position=[target_position[0], target_position[1]+ni]; 	
+			// unless, just place them in one vertical line.
+			nd.position=[target_position[0]+ni, target_position[1]]; 	
 		}
 		this.get_nodes().push(nd);
 	}
+	// convert absolute input connections to relative positions
 	_.each(new_nodes, function(nd) {
 		nd.I = _.map(nd.I, function(input_id) {	// replace nd.I with <left> if the left node is the input node.
 			if(input_id === "_pageLoad") {

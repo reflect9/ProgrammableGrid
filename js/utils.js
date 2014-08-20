@@ -126,12 +126,29 @@ jQuery.fn.myIndex = function(selector) {
 	var i = $(this).parent().children(selector).index(this);
 	return (i && i>-1)? i:0;
 };
+jQuery.fn.text_delimited = function(delimiter) {
+	return $(this).justtext()+" "+$(this).children_text_delimited(delimiter);
+};
 jQuery.fn.justtext = function() {
-    return $(this).clone()
+	if($(this).length==0) return "";
+	var text = "";
+    try {	text = $(this).clone()
             .children()
             .remove()
             .end()
             .text();
+    } catch(e) { 
+    	console.log(e.stack); 
+    }
+    return text;
+};
+jQuery.fn.children_text_delimited = function(delimiter) {
+	var children = $(this).clone().children();
+	var t_list = [];
+	var c_text_list = $.each(children, function(i, c) {
+		t_list.push($(c).text_delimited(" "));
+	});
+	return (t_list.length>0)? t_list.join(" "): "";
 };
 jQuery.fn.html_no_children = function() {
     var el_no_children = $(this).clone()
@@ -310,11 +327,16 @@ var isNumberString = function(str) {
 };
 var isBooleanList = function(list) {
 	var toCheck = (_.isArray(list))? list: [list];
-	return typeof list!=='undefined' && list.length>0 && _.filter(toCheck, function(e) {
-		return e!==null && _.isBoolean(e)===false 
-			&& (_.isString(e) && (e.toLowerCase()!=="true" && e.toLowerCase()!=="false")) 
-			&& e!==1 && e!==0;
-	}).length===0;
+	if(typeof list==='undefined') return false;
+	if( list.length==0) return false;
+	var legidBool = [];
+	for(var i=0;i<list.length;i++) {
+		if(_.isBoolean(list[i])) legidBool.push(list[i]);
+		else if(list[i]===1 || list[i]===0) legidBool.push(list[i]);
+		else if(list[i]==="true" || list[i]==="false") legidBool.push(list[i]);
+	}
+	if(legidBool.length !== list.length) return false;
+	else return true;
 };
 var isURLList = function(list) {
 	var toCheck = (_.isArray(list))? list: [list];
@@ -883,13 +905,38 @@ function matchLists(l1, l2, func, option) {	// option:= (min_len|repeat|extend)
 	return result;
 }
 
+
+function applyFunctionTwoLists(l1, l2, func) {
+	// func has two parameters,  one of l1 and l2 can be single element. 
+	if(l1.length==l2.length) {
+		return _.map(_.zip(l1, l2), function(e) {
+			return func(e[0],e[1]);
+		});
+	} else {
+		if(l1.length===1) {
+			return _.map(l2, function(e) {
+				return func(l1[0],e);
+			});
+		} else if(l2.length===1) {
+			return _.map(l1, function(e) {
+				return func(e,l2[0]);
+			});
+		} else {
+			var shorter_len = Math.min(l1.length, l2.length);
+			return _.map(_.range(shorter_len), function(i) {
+				return func(l1[i],l2[i]);
+			});
+		}
+	}
+}
+
 function get_parameter_value(parameter, node) {
-	if(parameter.match(/I[0-9]/)==null) {
+	if(parameter.match(/input[0-9]/)==null) {
 		// parameter is string or number value
 		return parameter;
 	} else {
 		// parameter is node id
-		var param_number = parseInt(parameter.match(/I([0-9])/)[1]);
+		var param_number = parseInt(parameter.match(/input([0-9])/)[1]);
 		var param_node_id = node.I[param_number];
 		if(!param_node_id) return false;
 		var param_node = pg.panel.get_node_by_id(param_node_id, node);
@@ -960,8 +1007,27 @@ function toTitleCase(str)
     return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
 }
 
+function trimText(desc, max) {
+	if(desc.length>max) return desc.substring(0,max)+"...";
+	else return desc;
+}
 
-
+function pickCombination(items, n_to_pick, combination) {
+	var new_combination=[];
+	if(!combination || !_.isArray(combination) || combination.length==0) 
+		new_combination = _.map(items, function(e){ return [e]; });
+	else {
+		for(var n in combination) {
+			for(var i in items) {
+				new_combination.push(combination[n].concat(items[i]));
+			}
+		}
+	}	
+	if(n_to_pick==1) return _.filter(new_combination, function(c) {
+		return _.uniq(c).length== c.length;
+	});
+	else return pickCombination(items, n_to_pick-1, new_combination);
+}
 
 
 

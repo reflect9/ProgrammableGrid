@@ -1,5 +1,5 @@
 pg = {
-	body: undefined,
+	documentBody: undefined,
 	init: function() {
 		pg.load_all_enhancements();
 		// get documentBody
@@ -24,15 +24,20 @@ pg = {
 	open: function() {
 		if(pg.pg_el) $(pg.pg_el).remove();
 		pg.pg_el = $("<div id='pg'>\
-			<div id='pg_nav' class='pg_nav'>\
-				<div id='pg_browser'></div>\
-				<div id='pg_info'></div>\
-				<div id='pg_toolbox'></div>\
+			<div id='pg_nav' class='pg_nav unselectable'>\
+				<div id='pg_browser' class='unselectable'></div>\
+				<div id='pg_info' class='unselectable'></div>\
+				<div id='pg_toolbox' class='unselectable'></div>\
 			</div>\
-			<div id='pg_panel' class='pg_panel'></div>\
+			<div id='resize_handle_panel'><i class='fa fa-caret-left'></i><i class='fa fa-caret-right'></i></div>\
+			<div id='pg_panel' class='pg_panel unselectable'></div>\
 		</div>");
 		$(pg.documentBody).append(pg.pg_el);
-		$(pg.documentBody).css("padding-left","600px");
+		$(pg.documentBody).css({
+			"position":"relative",
+			"padding-left":"600px",
+			"margin":"0px"
+		});
 		pg.info.init($(pg.pg_el).find("#pg_info"));
 		pg.browser = new pg.Browser($(pg.pg_el.find("#pg_browser")), pg.enhancements);
 		pg.toolbox = new pg.Toolbox($(pg.pg_el.find("#pg_toolbox")), []);
@@ -110,7 +115,7 @@ pg = {
 	},
 	latest_enhancement: function(enh_dict) {
 		var sorted_enh= _.sortBy(enh_dict, function(enh, eid) {
-			return enh.timestamp;
+			return -enh.timestamp;
 		});
 		return sorted_enh[0];
 	},

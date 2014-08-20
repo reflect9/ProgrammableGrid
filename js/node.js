@@ -48,7 +48,7 @@ pg.Node = {
 		// NODE BASE
 		var html = "<div class='node' id='"+node.ID+"'>\
 			<div class='node_cover'>\
-				<div class='nth-input-text'></div>\
+				<div class='nth-input-text hidden'></div>\
 			</div>\
 			<div class='node_content'></div>\
 			<div class='node_borders'>\
@@ -147,7 +147,14 @@ pg.Node = {
 		});
 		return table;
 	},
-
+	getParamNodeID: function(node, paramKey) {
+		var paramValue = node.P.param[paramKey];
+		var n_I;
+		if(paramValue && _.isString(paramValue) && paramValue.match(/input([0-9])/)) {
+			n_I = parseInt(paramValue.match(/input([0-9])/)[1])-1;
+			return node.I[n_I];
+		} else return false;
+	},
 	getNodeIcon: function(node, node_size) {
 		var icon;
 		if(node_size<NODE_SIZE_MID) {

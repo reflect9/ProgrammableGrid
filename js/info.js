@@ -15,8 +15,8 @@ pg.info = {
 			<div class='enh_settings'>\
 				<i class='fa fa-save save_button'></i>\
 				<i class='fa fa-play-circle execute_button'></i>\
-				<i class='fa fa-copy copy_button'></i>\
-				<i class='fa fa-paste paste_button'></i>\
+				<!--<i class='fa fa-copy copy_button'></i>\
+				<i class='fa fa-paste paste_button'></i>-->\
 				<i class='fa fa-trash-o clear_button'></i>\
 			</div>\
 		");
@@ -25,10 +25,18 @@ pg.info = {
 		$(pg.info.target_el).find(".open_browser_button").click(function() {
 			pg.browser.open();
 		});
-
 		$(pg.info.target_el).find(".enh_title").makeEditable($.proxy(function(new_value){
 			this.enh.title=new_value;
 			pg.save_enhancement(this.enh);
+		},{enh:enh}));
+		$(pg.info.target_el).find(".enh_title").keypress($.proxy(function(e) {
+			if ( event.which == 13 ) {
+				var new_value = $(e.target).text();
+				this.enh.title=new_value;
+				pg.save_enhancement(this.enh);
+				$(e.target).blur();
+				event.preventDefault();
+			}
 		},{enh:enh}));
 		$(pg.info.target_el).find(".enh_description").makeEditable($.proxy(function(new_value){
 			this.enh.description=new_value;

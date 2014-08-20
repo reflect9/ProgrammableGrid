@@ -25,9 +25,13 @@ pg.Browser = function(target_el, enhancements) {
 pg.Browser.prototype.redraw = function(_new_enhancements) {
 	if(_new_enhancements) this.enhancements = _new_enhancements;
 	var ul = $(this.el_enhancements).find('ul').empty();
-	for(var i in this.enhancements) {
-		var li_el = this.renderEnhancement(this.enhancements[i]);
+	var enh_sorted = _.sortBy(this.enhancements, function(e) { return -e.timestamp;});
+	for(var i in enh_sorted) {
+		var li_el = this.renderEnhancement(enh_sorted[i]);
 		$(ul).append(li_el);
+	}
+	if(enh_sorted.length==0) {
+		$(ul).append($("<div class='msg'>No enhancement exists in the current domain. Create one with the + button above. </div>"))
 	}
 };
 

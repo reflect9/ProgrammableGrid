@@ -436,9 +436,9 @@ pg.panel = {
 		pg.panel.redraw();
 	},
 	infer: function(output_node) {
-		var Is = _.without(_.map(output_node.I, function(input_id) {
+		var Is = _.map(output_node.I, function(input_id) {
 			return pg.panel.enhancement.get_node_by_id(input_id, output_node);
-		}), false);
+		});
 		var O = output_node;
 		if(O.V.length==0) {
 			return pg.planner.find_applicable_operations(Is); // return a list of operations

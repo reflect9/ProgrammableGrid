@@ -61,6 +61,7 @@
 				//pg.panel.enhancement.run_node(node);
 				pg.panel.enhancement.run_triggered_nodes([node]);
 				pg.panel.redraw();
+				pg.panel.commandUI.redraw();
 			});
 			$(ui_el).find(".reset_operation").click(function() {
 				var node = pg.panel.get_current_node();
@@ -142,6 +143,9 @@
 			pg.panel.commandUI.updateSuggestedOperation(node);
 			pg.panel.commandUI.updateInputNodes(node);
 			pg.panel.commandUI.renderDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
+		},
+		highlightExecuteButton: function() {
+			$("#pg_command_ui").find(".run_operation").addClass("ready");
 		},
 		updateInputNodes: function(node) {
 			var input_container = $("#pg_command_ui").find(".input_nodes_container");	 
@@ -304,7 +308,10 @@
 					.attr("kind",node.P.kind)
 					.append("<i class='fa fa-"+node.P.icon+" fa-lg'></i>")
 					.append(title);	
-				$("<div class='run_operation' title='Run current operation'><i class='fa fa-play-circle'></i></div>")
+				$("<div class='run_operation' title='Run current operation'>\
+						<span class='run_op_inst'>Update Values</span>\
+						<i class='fa fa-play-circle'></i>\
+					</div>")
 					.click(function() {
 						var node = pg.panel.get_current_node();
 						//pg.panel.enhancement.run_node(node);
@@ -350,6 +357,7 @@
 						var node = pg.panel.get_current_node();
 						node.P.param[$(this).attr('paramKey')]=$(this).text();
 						pg.panel.redraw();
+						pg.panel.commandUI.highlightExecuteButton();
 					}
 					$(op_desc_el).find(".param_option_list").remove();
 					event.preventDefault();
@@ -361,6 +369,7 @@
 					var node = pg.panel.get_current_node();
 					node.P.param[$(this).attr('paramKey')]=$(this).text();
 					pg.panel.redraw();
+					pg.panel.commandUI.highlightExecuteButton();
 				}
 				$(op_desc_el).find(".param_option_list").remove();
 				//pg.panel.commandUI.redraw();

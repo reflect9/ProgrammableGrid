@@ -155,6 +155,11 @@ pg.Node = {
 			return node.I[n_I];
 		} else return false;
 	},
+	getParamValue: function(node, paramKey) {
+		var node_id = pg.Node.getParamNodeID(node,paramKey);
+		if(node_id)	return pg.panel.get_node_by_id(node_id,node).V;
+		else return str2value(node.P.param[paramKey]);
+	},
 	getNodeIcon: function(node, node_size) {
 		var icon;
 		if(node_size<NODE_SIZE_MID) {

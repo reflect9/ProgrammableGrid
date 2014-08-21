@@ -454,6 +454,7 @@
 							 	word-break:break-all;
 							 	span.param {
 							 		display:inline;
+							 		white-space:pre-wrap;
 									word-wrap: break-word;
 									border-radius:2px;
 									padding:0 2px 0 2px;
@@ -1075,9 +1076,18 @@
 					i {
 						font-size:25px;
 					}
-					i:hover {
-						text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+					span.run_op_inst {
+						font-size:14px;
+						display:none;
 					}
+				}
+				div.run_operation:hover {
+					span.run_op_inst { display:inline;}
+					text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+				}
+				div.run_operation.ready {
+					.blink_me;
+					span.run_op_inst { display:inline;}
 				}
 
 			}
@@ -1768,7 +1778,40 @@ div.pg_data_table {
 
 
 
+.blink_me {
+    -webkit-animation-name: blinker;
+    -webkit-animation-duration: 1s;
+    -webkit-animation-timing-function: linear;
+    -webkit-animation-iteration-count: infinite;
 
+    -moz-animation-name: blinker;
+    -moz-animation-duration: 1s;
+    -moz-animation-timing-function: linear;
+    -moz-animation-iteration-count: infinite;
+
+    animation-name: blinker;
+    animation-duration: 1s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+
+@-moz-keyframes blinker {  
+    0% { opacity: 1.0; }
+    50% { opacity: 0.0; }
+    100% { opacity: 1.0; }
+}
+
+@-webkit-keyframes blinker {  
+    0% { opacity: 1.0; }
+    50% { opacity: 0.0; }
+    100% { opacity: 1.0; }
+}
+
+@keyframes blinker {  
+    0% { opacity: 1.0; }
+    50% { opacity: 0.0; }
+    100% { opacity: 1.0; }
+}
 
 
 

@@ -491,6 +491,7 @@
 }
 #pg .pg_nav #pg_toolbox .tool_container ul.task_list li.task_item[mode="big"] ul.sub_op li.sub_op_item .op_description span.param {
   display: inline;
+  white-space: pre-wrap;
   word-wrap: break-word;
   border-radius: 2px;
   padding: 0 2px 0 2px;
@@ -1176,8 +1177,32 @@
 #pg #pg_command_ui .header_panel .operation_info .operation_description div.run_operation i {
   font-size: 25px;
 }
-#pg #pg_command_ui .header_panel .operation_info .operation_description div.run_operation i:hover {
+#pg #pg_command_ui .header_panel .operation_info .operation_description div.run_operation span.run_op_inst {
+  font-size: 14px;
+  display: none;
+}
+#pg #pg_command_ui .header_panel .operation_info .operation_description div.run_operation:hover {
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+#pg #pg_command_ui .header_panel .operation_info .operation_description div.run_operation:hover span.run_op_inst {
+  display: inline;
+}
+#pg #pg_command_ui .header_panel .operation_info .operation_description div.run_operation.ready {
+  -webkit-animation-name: blinker;
+  -webkit-animation-duration: 1s;
+  -webkit-animation-timing-function: linear;
+  -webkit-animation-iteration-count: infinite;
+  -moz-animation-name: blinker;
+  -moz-animation-duration: 1s;
+  -moz-animation-timing-function: linear;
+  -moz-animation-iteration-count: infinite;
+  animation-name: blinker;
+  animation-duration: 1s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+#pg #pg_command_ui .header_panel .operation_info .operation_description div.run_operation.ready span.run_op_inst {
+  display: inline;
 }
 #pg #pg_command_ui .header_panel .operation_info .operation_execute {
   position: absolute;
@@ -1855,5 +1880,52 @@ div.pg_data_table div.dt_inst label {
   -khtml-user-select: none;
   -webkit-user-select: none;
   -o-user-select: none;
+}
+.blink_me {
+  -webkit-animation-name: blinker;
+  -webkit-animation-duration: 1s;
+  -webkit-animation-timing-function: linear;
+  -webkit-animation-iteration-count: infinite;
+  -moz-animation-name: blinker;
+  -moz-animation-duration: 1s;
+  -moz-animation-timing-function: linear;
+  -moz-animation-iteration-count: infinite;
+  animation-name: blinker;
+  animation-duration: 1s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@-moz-keyframes blinker {
+  0% {
+    opacity: 1.0;
+  }
+  50% {
+    opacity: 0.0;
+  }
+  100% {
+    opacity: 1.0;
+  }
+}
+@-webkit-keyframes blinker {
+  0% {
+    opacity: 1.0;
+  }
+  50% {
+    opacity: 0.0;
+  }
+  100% {
+    opacity: 1.0;
+  }
+}
+@keyframes blinker {
+  0% {
+    opacity: 1.0;
+  }
+  50% {
+    opacity: 0.0;
+  }
+  100% {
+    opacity: 1.0;
+  }
 }
 /***********************/

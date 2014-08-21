@@ -789,6 +789,17 @@ function jsonClone(obj) {
 	return JSON.parse(JSON.stringify(obj));
 }
 
+function isFiltered(original,filtered) {
+	var IV = _.clone(original);
+	for(var i in filtered) {
+		var idx = IV.indexOf(filtered[i]);
+		if(idx==-1) return false;
+		else IV.splice(0,idx);
+	}
+	return true;
+}
+
+
 function get_attr_table(elements) {
 	var list_of_dict = _.map($.makeArray(elements), function(el) {
 		return get_attr_dict(el);

@@ -1,6 +1,7 @@
 pg = {
 	documentBody: undefined,
 	init: function() {
+		pg.history.init();
 		pg.load_all_enhancements();
 		// get documentBody
 		if($("body").length==0) { // WHEN BODY IS IN IFRAME
@@ -236,5 +237,5 @@ MAX_INT = 9007199254740992;
 MIN_INT = -9007199254740992;
 
 
-LOCAL_STORAGE_KEY = "tandem_1";
+LOCAL_STORAGE_KEY = "tandem_2";
 

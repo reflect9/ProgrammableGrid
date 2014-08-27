@@ -52,6 +52,7 @@ pg.panel = {
 		_.each(pg.panel.get_nodes(), function(n) { n.selected=false; });
 		pg.panel.node_show_inputs(node);
 		node.selected = true;
+		pg.history.reset();
 		pg.panel.commandUI.create();
 		pg.panel.commandUI.redraw();
 		pg.panel.commandUI.turn_inspector(true);
@@ -635,21 +636,28 @@ pg.panel = {
 			$("<button>Send to other tabs</button>").click($.proxy(function() {
 				pg.panel.share_elements([this.el]);
 			},{el:el})).appendTo(tools_el);
-			
 
+			// DRAW DATA TABLE
 			var attr_dict = get_attr_dict(el);  // get_attr_dict returns simplified attr->value object
 			_.each(attr_dict, function(value,key) {
 				var attr_el = $("<div class='attr'><span class='attr_key'>"+ key +":</span></div>").appendTo(attributes_el);
 				var attr_setter_func = pg.planner.attr_func(key).setter;
-				$("<span class='attr_value' contenteditable='true'>"+value+"</span>").bind("input", $.proxy(function(e) {
-					console.log("new value:"+$(e.target).text());
-					if($(this.el).attr("original_value")) { // remember the original attribute
-						$(this.el).attr("original_key",this.key);
-						$(this.el).attr("original_value",this.original_value);
-					}
-					this.setter(this.el,$(e.target).text());
+				$("<span class='attr_value' contenteditable='true' original_value='"+value+"'>"+value+"</span>").bind("blur", $.proxy(function(e) {
+					if($(e.target).attr('original_value')===$(e.target).text()) return; 
+					var new_value = $(e.target).text();
+					console.log("new value:"+new_value);
+					$(e.target).attr('original_value',new_value);
+					// if($(this.el).attr("original_value")) { // remember the original attribute
+					// 	$(this.el).attr("original_key",this.key);
+					// 	$(this.el).attr("original_value",this.original_value);
+					// }
+					this.setter(this.el,new_value);
+					pg.history.put({type:'set_attribute',target:el,key:key,value:new_value});
+					pg.history.infer();
 				},{key:key, original_value:value, setter:attr_setter_func, el:el})).appendTo(attr_el);
 			});	
+
+			// PLACE DATA UI PANEL
 			$(ui_el).css("top", pos.y + $(window).scrollTop());
 			$(ui_el).css("left", pos.x + $(window).scrollLeft());
 			$(pg.documentBody).append(ui_el).show('fast');
@@ -833,10 +841,10 @@ pg.panel = {
 		// Double-Click --> create new node
 		var el_tiles = $("#pg").find("#tiles");
 		$(el_tiles).off('click').click(function(e) {
-			// if(pg.panel.get_current_node()) {
-			// 	pg.panel.deselect();
-			// 	return;
-			// } else {
+			if(pg.panel.get_current_node()) {
+				pg.panel.deselect();
+				return;
+			} else {
 				var mouse_coord = {left: e.pageX - $(this).offset().left,
 									top: e.pageY - $(this).offset().top};
 				var mouse_pos = {left: Math.floor(mouse_coord.left/pg.panel.node_dimension), 
@@ -849,7 +857,7 @@ pg.panel = {
 				pg.panel.deselect();
 				pg.panel.redraw();
 				pg.panel.select(new_node);
-			// }
+			}
 		});
 		// Click tile -> deselect node
 		// $(el_tiles).off('click').click(function(e) {

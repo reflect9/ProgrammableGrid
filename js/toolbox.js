@@ -8,8 +8,12 @@ pg.Toolbox = function(target_el, items) {
 			</div>\
 		</div>\
 		<div class='tool_container unselectable'>\
-			<div class='cont task_div'>\
-				<label class='task_label'>Suggested Actions</label>\
+			<div class='cont actions_div'>\
+				<label class='task_label'>Suggested for Current Node Values </label>\
+				<ul class='task_list'></ul>\
+			</div>\
+			<div class='cont demo_div'>\
+				<label class='demo_label'>Suggested for Recent Activity</label>\
 				<ul class='task_list'></ul>\
 			</div>\
 			<div class='cont operation_div'>\
@@ -20,7 +24,8 @@ pg.Toolbox = function(target_el, items) {
 		</div>\
 	").appendTo(this.target_el);
 	this.el_tools = $(target_el).find(".tool_container");
-	this.ul_task = $(target_el).find(".task_list");
+	this.ul_task = $(target_el).find(".actions_div").find(".task_list");
+	this.ul_demo = $(target_el).find(".demo_div").find(".task_list");
 	this.ul_operation = $(target_el).find(".operation_list");
 	$(target_el).find("#search_operation").keyup(function(e) {
 		if(e.which==27) {  $(this).val("");  }
@@ -54,10 +59,18 @@ pg.Toolbox.prototype.redraw = function(_new_items) {
 		var item = this.items[i];
 		if(_.isArray(item)) {
 			$(this.ul_task).append(this.renderTask(item));
-			$(this.el_tools).find("div.task_div").show();
+			$(this.el_tools).find("div.actions_div").show();
 		} else {
 			$(this.ul_operation).append(this.renderOperation(item));
 			$(this.el_tools).find("div.operation_div").show();
+		}
+	}
+	// draw demoed actions
+	var demo_actions = pg.history.inferredActions;
+	if(demo_actions.length>0) {
+		for(var i=0;i<demo_actions.length;i++) {
+			$(this.ul_demo).append(this.renderDemo(demo_actions[i]));
+			$(this.el_tools).find("div.demo_div").show();
 		}
 	}
 };
@@ -84,7 +97,54 @@ pg.Toolbox.prototype.renderTask = function(nodes) {
 		}
 	},{nodes:nodes});
 	$(task_li).click(func_apply);
+	var curNode = pg.panel.get_current_node();
+	if(curNode && curNode.P && nodes.length==1) {
+		if(pg.planner.compare_operation(nodes[0].P,curNode.P)) {
+			$(task_li).addClass("sameToCurrentNode");
+		}
+	} 
 	return task_li;
+};
+
+pg.Toolbox.prototype.renderDemo = function(demo_action) {
+	// demo_action consists of target_position string and nodes list
+	var demo_li = $("<li class='task_item draggableItem' mode='big'><ul class='sub_op'></ul></li>");
+	var ul = $(demo_li).find("ul");
+	var nodes = demo_action.nodes;
+	for(var i in nodes) {
+		ul.append(this.renderSubOperation(nodes[i]));
+	}
+	$("<label class='simple insert_task'>Add to the target position</label>").insertAfter(ul);
+	var func_apply = $.proxy(function() {
+		var current_node_position;
+		var currently_selected_node = pg.panel.get_current_node();
+		if(currently_selected_node) 
+			current_node_position = currently_selected_node.position;
+		if(this.target_position==false) {
+			_.each(this.nodes, function(n) {
+				n.position = [n.position[0]+current_node_position[0], n.position[1]+current_node_position[1]];
+			},this);	
+		} else {
+			_.each(this.nodes, function(n) {
+				n.position = [n.position[0]+this.target_position[0], n.position[1]+this.target_position[1]];
+			},this);	
+		}
+		pg.panel.enhancement.insert_at(this.nodes);
+		// TRIGGER
+		var position_to_trigger = (this.target_position)? this.target_position:current_node_position;
+		var node_to_trigger = pg.panel.enhancement.get_node_by_position(position_to_trigger);
+		pg.panel.enhancement.run_triggered_nodes([node_to_trigger]);
+		pg.panel.select(_.last(this.nodes));
+		pg.panel.redraw();
+	},{nodes:nodes, target_position:demo_action.target_position});
+	$(demo_li).click(func_apply);
+	// var curNode = pg.panel.get_current_node();
+	// if(curNode && curNode.P && nodes.length==1) {
+	// 	if(pg.planner.compare_operation(nodes[0].P,curNode.P)) {
+	// 		$(demo_li).addClass("sameToCurrentNode");
+	// 	}
+	// } 
+	return demo_li;
 };
 
 // render inferred operation with parameters

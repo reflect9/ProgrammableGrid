@@ -1,3 +1,46 @@
+.drop-hover {
+  background-color: rgba(255, 0, 0, 0.1);
+}
+.tandem_backdrop {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 99999;
+}
+.dialog_attach {
+  display: block;
+  position: absolute;
+  background: white;
+  width: 300px;
+  border-radius: 5px;
+  padding: 4px;
+  z-index: 100000;
+  border: 1px solid #aaa;
+  box-shadow: 3px 3px 3px 1px rgba(0, 0, 0, 0.2);
+}
+.dialog_attach span.el {
+  color: red;
+}
+.dialog_attach span.target {
+  color: #02aff0;
+}
+.dialog_attach button {
+  width: 60px;
+  font-size: 13px;
+  display: inline-block;
+}
+.dialog_attach div.target_el_border {
+  display: inline-block;
+  border: 2px solid #02aff0;
+  padding: 3px;
+}
+.dialog_attach .parents_list {
+  font-size: 11px;
+  font-family: "Times New Roman", Georgia, Serif;
+}
 #pg {
   height: 100%;
   width: 600px;
@@ -218,8 +261,14 @@
 }
 #pg .pg_nav #pg_info .enh_settings i {
   font-size: 18px;
+  color: #666;
+  margin: 5px;
+}
+#pg .pg_nav #pg_info .enh_settings i:hover {
+  font-size: 18px;
   color: #333;
   margin: 5px;
+  text-shadow: -1px -1px 2px rgba(0, 0, 0, 0.5);
 }
 #pg .pg_nav #pg_browser {
   position: absolute;
@@ -391,6 +440,9 @@
   font-size: 13px;
   font-weight: 500;
   height: auto;
+}
+#pg .pg_nav #pg_toolbox .tool_container ul.task_list li.task_item.sameToCurrentNode {
+  background: #888;
 }
 #pg .pg_nav #pg_toolbox .tool_container ul.task_list li.task_item:hover label.simple {
   display: block;
@@ -1164,6 +1216,7 @@
 #pg #pg_command_ui .header_panel .operation_info .operation_description div.param_option_list li {
   list-style: none outside none;
   cursor: pointer;
+  line-height: 20px;
 }
 #pg #pg_command_ui .header_panel .operation_info .operation_description div.param_option_list li:hover {
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
@@ -1469,6 +1522,11 @@
   border-bottom: 1px dotted #bbb;
   min-height: 9px;
 }
+#pg #pg_command_ui .data_panel .output_data .output_data_table ul li div.tag {
+  color: red;
+  margin-bottom: 5px;
+  cursor: move;
+}
 #pg #pg_command_ui .data_panel .output_data .output_data_table ul li .data_edit_buttons {
   display: none;
   position: absolute;
@@ -1506,7 +1564,7 @@
 }
 #pg #pg_command_ui .data_panel .output_data .output_data_table div.attr {
   font-size: 12px;
-  margin-left: 5px;
+  margin-left: 8px;
   max-height: 90px;
   overflow: hidden;
   margin-bottom: 5px;
@@ -1806,6 +1864,11 @@ div.pg_data_table div.attr {
   max-height: 90px;
   overflow: hidden;
   margin-bottom: 3px;
+}
+div.pg_data_table div.attr div.tag {
+  color: red;
+  border-radius: 3px;
+  border: 1px solid red;
 }
 div.pg_data_table div.attr span.attr_key {
   color: black;

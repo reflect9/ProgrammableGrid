@@ -10,6 +10,45 @@
 @palegreen: #92ba67;
 @palered: #c96b6b;
 
+.drop-hover {
+	background-color:rgba(255,0,0,0.1);
+}
+.tandem_backdrop {
+	position:fixed;
+	top:0px; left:0px;
+	width:100%;
+	height:100%;
+	background:rgba(0,0,0,0.3);
+	z-index:99999;
+}
+.dialog_attach {
+	display:block;
+	position:absolute;
+	background:white;
+	width:300px;
+	border-radius:5px;
+	padding:4px;
+	z-index:100000;
+	border:1px solid #aaa;
+	box-shadow: 3px 3px 3px 1px rgba(0,0,0,0.2);
+	span.el { color:red; }
+	span.target { color:@skyblue; }
+	button {
+		width:60px;
+		font-size:13px;
+		display:inline-block;
+	}
+	div.target_el_border {
+		display:inline-block;
+		border:2px solid @skyblue;
+		padding:3px;
+	}
+	.parents_list {
+		font-size:11px;
+		font-family: "Times New Roman",Georgia,Serif;
+	}
+}
+
 #pg{
 	position:fixed; 
 	height:100%;
@@ -199,7 +238,10 @@
 			width:100%;
 			text-align:right;
 			label{}
-			i { font-size:18px; color:#333; margin:5px;}
+			i { font-size:18px; color:#666; margin:5px;}
+			i:hover { font-size:18px; color:#333; margin:5px; 
+				text-shadow:-1px -1px 2px rgba(0,0,0,0.5);
+			}
 		}
 	}
 	#pg_browser {
@@ -345,7 +387,7 @@
 					z-index:998;
 				}
 			}
-			ul.task_list {
+			ul.task_list{
 				li.task_item {
 					display:table;
 					cursor: e-resize;
@@ -365,7 +407,10 @@
 						font-size:13px; font-weight:500;
 						height:auto;
 					}
-				}			
+				}		
+				li.task_item.sameToCurrentNode {
+					background:#888;
+				}	
 				li.task_item:hover {
 					label.simple{  display:block; }
 				}
@@ -1064,6 +1109,7 @@
 					li { 
 						list-style: none outside none;
 						cursor:pointer;
+						line-height:20px;
 					}
 					li:hover{
 						text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
@@ -1352,6 +1398,14 @@
 			    		position:relative;
 			    		border-bottom:1px dotted #bbb;
 			    		min-height:9px;
+			    		div.tag {
+							color:red;
+							margin-bottom:5px;
+							cursor:move;
+						}
+						div.tag:hover {
+							// 
+						}
 			    		.data_edit_buttons {
 							display:none;
 							position:absolute;
@@ -1392,7 +1446,7 @@
 			    }
 				div.attr{ 
 					font-size:12px;
-					margin-left:5px;
+					margin-left:8px;
 					max-height:90px;
 					overflow:hidden;
 					margin-bottom:5px;
@@ -1693,6 +1747,11 @@ div.pg_data_table {
 		max-height:90px;
 		overflow:hidden;
 		margin-bottom:3px;
+		div.tag {
+			color:red;
+			border-radius:3px;
+			border:1px solid red;
+		}
 		span.attr_key {
 			color:black;
 			font-weight:700;

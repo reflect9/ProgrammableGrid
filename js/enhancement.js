@@ -14,6 +14,11 @@ pg.Enhancement = function(_title, _nodes) {
 pg.Enhancement.prototype.delete = function(node_to_delete) {
 	this.nodes = _.without(this.nodes, node_to_delete);
 };
+pg.Enhancement.prototype.delete_at = function(position_to_delete) {
+	this.nodes = _.filter(this.nodes, function(n){ 
+		return n.position!=position_to_delete; 
+	});	
+};
 pg.Enhancement.prototype.clear = function() {
 	var default_trigger_node = pg.Node.create({type:'trigger', P:pg.planner.get_prototype({type:"trigger"}), position:[0,1]});
 	default_trigger_node.P.param.event_source = "page";
@@ -55,18 +60,6 @@ pg.Enhancement.prototype.insert = function(new_nodes, target_node) {
 		var max_y = _.max(this.get_nodes(), function(n){ return n.position[0];}).position[0]+1;
 		target_position = [max_y,1];
 	}
-	// set positions of the new nodes and push to enhancements.
-	for(var ni=0; ni<new_nodes.length;ni++) {
-		var nd = new_nodes[ni]; 	
-		if(typeof nd.position !== 'undefined') {
-			// when the node has relative positions
-			nd.position=[target_position[0]+nd.position[0]-nodes_range.min_y, target_position[1]+nd.position[1]-nodes_range.min_x]; 	
-		} else {
-			// unless, just place them in one vertical line.
-			nd.position=[target_position[0]+ni, target_position[1]]; 	
-		}
-		this.get_nodes().push(nd);
-	}
 	// convert absolute input connections to relative positions
 	_.each(new_nodes, function(nd) {
 		nd.I = _.map(nd.I, function(input_id) {	// replace nd.I with <left> if the left node is the input node.
@@ -83,6 +76,45 @@ pg.Enhancement.prototype.insert = function(new_nodes, target_node) {
 			else return input_id;
 		}, this);
 	},this);
+	// set positions of the new nodes and push to enhancements.
+	for(var ni=0; ni<new_nodes.length;ni++) {
+		var nd = new_nodes[ni]; 	
+		if(typeof nd.position !== 'undefined') {
+			// when the node has relative positions
+			nd.position=[target_position[0]+nd.position[0]-nodes_range.min_y, target_position[1]+nd.position[1]-nodes_range.min_x]; 	
+		} else {
+			// unless, just place them in one vertical line.
+			nd.position=[target_position[0]+ni, target_position[1]]; 	
+		}
+		this.delete_at(nd.position);
+		this.get_nodes().push(nd);
+	}
+};
+pg.Enhancement.prototype.insert_at = function(new_nodes) {
+	// all new nodes must have absolute positions
+	for(var ni=0;ni<new_nodes.length;ni++) 
+		if(typeof new_nodes[ni].position === 'undefined') return false;
+	// now place new_nodes
+	_.each(new_nodes, function(nd) {
+		nd.I = _.map(nd.I, function(input_id) {	// replace nd.I with <left> if the left node is the input node.
+			if(input_id === "_pageLoad") {
+				var trigger_page_load = _.filter(this.get_nodes(), function(n) {
+					return n.P && n.P.type=='trigger' && n.P.param && n.P.param.event_source==="page";
+				});
+				if(trigger_page_load.length>0) return trigger_page_load[0].ID;
+			}
+			if(input_id === this.get_node_by_id("_left",nd)) return "_left";
+			else if(input_id === this.get_node_by_id("_above",nd)) return "_above";
+			else if(input_id === this.get_node_by_id("_right",nd)) return "_right";
+			else if(input_id === this.get_node_by_id("_below",nd)) return "_below";
+			else return input_id;
+		}, this);
+	},this);
+	for(var ni=0;ni<new_nodes.length;ni++) {
+		var nd = new_nodes[ni];
+		this.delete_at(nd.position);
+		this.get_nodes().push(nd);
+	}
 };
 pg.Enhancement.prototype.push_at = function(new_node, target_position) {
 	var candDiff = [[0,0],[1,0],[-1,0],[0,1],[0,-1]];
@@ -154,7 +186,7 @@ pg.Enhancement.prototype.get_adjacent_node = function(direction, node, _allNodes
 
 pg.Enhancement.prototype.get_node_by_id = function(node_id, ref_node, _allNodes) {
 	var allNodes = (_allNodes)?_allNodes: this.get_nodes();
-
+	if(node_id===undefined || node_id===false) return false;
 	if(node_id.substring(0,5) == '_left' && ref_node) {
 		var new_node_id = node_id.substring(5); var old_node_id = node_id.substring(0,5);
 		if(new_node_id.length>0) return this.get_adjacent_node("_left", this.get_node_by_id(new_node_id,ref_node), allNodes);
@@ -179,10 +211,25 @@ pg.Enhancement.prototype.get_node_by_id = function(node_id, ref_node, _allNodes)
 };
 pg.Enhancement.prototype.get_node_by_position = function(position, _allNodes) {
 	var allNodes = (_allNodes)?_allNodes: this.get_nodes();
+	if(position===undefined || position===false) return false;
 	for(var i in allNodes) {
 		if (allNodes[i].position[0] == position[0] && allNodes[i].position[1] == position[1]) return allNodes[i];
 	}	return false;
 };	
+pg.Enhancement.prototype.get_node_by_values = function(_values) {
+	// return nodes that contain all the values
+	var values = _.union([],_values);
+	return _.filter(this.nodes, function(node) {
+		return _.every(values, function(v) {
+			return node.V.indexOf(v)!== -1;
+		});
+	});
+};
+pg.Enhancement.prototype.get_page_trigger_node = function() {
+	return _.filter(this.nodes, function(node) {
+		return node.P && node.P.type=='trigger' && node.P.param.event_source=='page';
+	});
+};
 pg.Enhancement.prototype.get_next_nodes = function(node, _reachableNodes, _allNodes) {
 	// find next node among _reachableNodes.  _allNodes is the entire set of nodes
 	var allNodes = (_allNodes)?_allNodes: this.get_nodes();

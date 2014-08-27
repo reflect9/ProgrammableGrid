@@ -89,8 +89,9 @@ pg.planner = {
 				// CREATE inputDOM_list (if there's no valid DOM input, then get it from body)
 				_.each(Is, function(I,I_index) {
 					if(!I || !isDomList(I.V)) return false;
+					if(!($.contains(I.V[0],O.V[0]))) return false;
 					inputDOM_list.push({
-						'source':"input"+I_index+1,
+						'source':"input"+(I_index+1),
 						'domList':I.V
 					});
 				});
@@ -100,11 +101,12 @@ pg.planner = {
 				_.each(inputDOM_list, function(inputDOM) {
 					var n_extracted_el, n_filtered_el;
 					var _O = pg.Node.create(O);
-					_O.P = pg.planner.get_prototype({type:"extract_element"}); 	
-					if(inputDOM.length > 1) { // n-to-n extraction
+					_O.P = jsonClone(this.proto); 	
+					if(inputDOM.domList.length > 1) { // n-to-n extraction
 						var paths = []; 
-						for(var i in O.V)
-							if(_O.V[i])	paths.push($(inputDOM[i]).findQuerySelector([O.V[i]]));
+						for(var i in _O.V)
+							if($.contains(inputDOM.domList[i],_O.V[i])==false) return false;
+							if(_O.V[i])	paths.push($(inputDOM.domList[i]).findQuerySelector([O.V[i]]));
 						var commonPath = _.uniq(paths);	
 						if(commonPath.length==1) {	// if all the path are same, it's easy
 							_O.P.param.selector = commonPath[0];	
@@ -113,28 +115,36 @@ pg.planner = {
 							_O.P.param.selector = shortestPath;
 						}
 						if(_O.P.param.selector==="") return false; // reject null path 
-					} else if(inputDOM.length==1) {
+					} else if(inputDOM.domList.length==1) {
 						// 1-to-n extraction
-						var path = $(inputDOM[0]).findQuerySelector(O.V);
+						for(var i in _O.V) 
+							if($.contains(inputDOM.domList[0],_O.V[i])==false) return false;
+						var path = $(inputDOM.domList[0]).findQuerySelector(_O.V);
 						if(path===null || path==="") return false;
 						else {
 							_O.P.param.selector = path;
 						}
 					} else return false;
 					_O.P.param.source = inputDOM.source;
+					if(inputDOM.source=='_current') _O.I=[pg.panel.enhancement.get_page_trigger_node()[0].ID];
 					valid_O.push(_O);
-				});
+				},this);
 				return (valid_O.length>0)? valid_O:false;
 			},
 			execute: function(O) {
 				var path = O.P.param.selector;
 				var new_V = [];
 				var inputDOM;
-				if(O.P.param.source.match(/input[0-9]/)!==null)  {
-					var nth_input = parseInt(O.P.param.source.match(/input([0-9])/)[1])-1; 
-					inputDOM = pg.panel.get_node_by_id(O.I[nth_input], O).V;
-				} else if(O.P.param.source=="_current") inputDOM = $.makeArray($(pg.documentBody));
-				else return O;
+				if(O.P.param.source=="_current") inputDOM = $.makeArray($(pg.documentBody));
+				else {
+					if(O.P.param.source.match(/input[0-9]/)!==null)  {
+						var nth_input = parseInt(O.P.param.source.match(/input([0-9])/)[1])-1; 
+						inputDOM = pg.panel.get_node_by_id(O.I[nth_input], O).V;
+					} else return O;	
+				}
+				if(typeof inputDOM=='undefined') {
+					return O;
+				}
 				if (inputDOM.length!=1) {	// n-to-n extraction
 					for(var i in inputDOM) {
 						new_V.push($(inputDOM[i]).find(path).get(0));
@@ -159,7 +169,7 @@ pg.planner = {
 			},
 			parameters: {
 				'source': {type:'text', label:"DOM to extract parent from", default:"input1", options:["input1","input2"]},
-				'step': {type:'text', label:"Number of up-steps it goes (zero-base)", default:1}
+				'step': {type:'text', label:"Number of steps it goes up.", default:1}
 			},
 			pre: function(Is) {
 				try{
@@ -177,18 +187,18 @@ pg.planner = {
 							if(!I.V || !I.V[i] || !isDom(I.V[i])) return false;
 							if(!$.contains(O.V[i], I.V[i])) return false;
 							else { // now let's find step
-								var step_up = $(I.V[i]).parents().index(O.V[i]);
-								if(step_up==-1) return false;
+								var step_up = $(I.V[i]).parents().index(O.V[i])+1;
+								if(step_up==0) return false;
 								step_up_list.push(step_up);
 							}
 						}
 						if((_.unique(step_up_list)).length!=1) return false;
 						var _O = pg.Node.create(O);
-						_O.P = jsonClone(this.proto); 	
+						_O.P = jsonClone(this.proto); 	 	
 						_O.P.param.source = "input"+(I_index+1);
 						_O.P.param.step = (_.unique(step_up_list))[0];
 						valid_O.push(_O);
-					});
+					},this);
 					return (valid_O.length>0)? valid_O:false;
 				} catch(e) {return false;}
 			},
@@ -200,7 +210,7 @@ pg.planner = {
 					inputDOM = pg.panel.get_node_by_id(O.I[nth_input], O).V;
 				} else return O;
 				for(var i in inputDOM) {
-					new_V.push($(inputDOM[i]).parents()[parseInt(O.P.param.step)]);	
+					new_V.push($(inputDOM[i]).parents()[parseInt(O.P.param.step)-1]);	
 				}
 				O.V = new_V;
 				return O;
@@ -285,7 +295,7 @@ pg.planner = {
 						_O.P.param.source = "input"+(I_index+1);
 						valid_O.push(_O);
 					} else return false;
-				});
+				},this);
 				return valid_O;
 			},
 			execute: function(O) {
@@ -413,7 +423,7 @@ pg.planner = {
 					_O.P.param = validCombination[0]; 
 					_O.P.param.source = "input"+(I_index+1);
 					valid_O.push(_O);
-				});
+				},this);
 				return (valid_O.length>0)? valid_O:false;
 			},
 			execute: function(O) {
@@ -547,10 +557,10 @@ pg.planner = {
 					if(O.V[0] != I.V.length) return false;
 					var _O = pg.Node.create(O);
 					_O.I = [I.ID];
-					_O.P = jsonClone(this.proto); 
+					_O.P = jsonClone(this.proto);
 					_O.P.param.source = "input"+(I_index+1);
 					valid_O.push(_O);
-				});
+				},this);
 				return (valid_O.length>0)? valid_O:false;
 			},
 			execute: function(O) {
@@ -587,11 +597,10 @@ pg.planner = {
 					if(!I || !I.V || !isNumberList(I.V)) return false;
 					if(O.V[0] != _.reduce(I.V, function(memo, num){ return memo + num; }, 0)) return false;
 					var _O = pg.Node.create(O);
-					_O.I = [I.ID];
 					_O.P = jsonClone(this.proto); 
 					_O.P.param.source = "input"+(I_index+1);
 					valid_O.push(_O);
-				});
+				},this);
 				return (valid_O.length>0)? valid_O:false;
 			},
 			execute: function(O) {
@@ -645,7 +654,7 @@ pg.planner = {
 							valid_O.push(_O);
 						}
 					}
-				});
+				},this);
 				return (valid_O.length>0)? valid_O:false;				
 			},
 			execute: function(O) {
@@ -675,15 +684,20 @@ pg.planner = {
 				'source': {type:'text', label:"Elements to get ", default:"input1", options:["input1","input2"]},
 			},
 			pre: function(Is) {
-				if(!Is || !Is[0] || !Is[0].V || !isValueList(Is[0].V)) return false;
-				if (_.unique(Is[0].V).length == Is[0].V.length) return false; // if it's already unique
-				return true;
+				return false;
+				// var _Is = _.clone(Is); // _Is is including empty(false) nodes
+				// Is = _.without(Is,false);
+				// if(!Is || !Is[0] || !Is[0].V) return false;
+				// if (_.unique(Is[0].V).length == Is[0].V.length) return false; // if it's already unique
+				// return true;
 			},
 			generate: function(Is, O) {
+				var _Is = _.clone(Is); // _Is is including empty(false) nodes
+				Is = _.without(Is,false);
 				if(!O || !O.V) return false;
 				var valid_O = [];
 				_.each(Is, function(I, I_index) {
-					if(!I || !I.V || !isValueList(I.V)) return false;
+					if(!I || !I.V) return false;
 					var true_unique_list = _.unique(I.V);
 					if (true_unique_list.length == I.V.length) return false; // if it's already unique
 					if(!isSameArray(O.V, true_unique_list)) return false;
@@ -691,7 +705,7 @@ pg.planner = {
 					_O.P = jsonClone(this.proto); 
 					_O.P.param.source = "input"+(I_index+1);
 					valid_O.push(_O);
-				});
+				},this);
 				return (valid_O.length>0)? valid_O:false;				
 			},
 			execute: function(O) {
@@ -740,7 +754,7 @@ pg.planner = {
 				// OKAY. generate join.
 				var _O = pg.Node.create(O);
 				_O.P = jsonClone(this.proto); 
-				return _O;
+				return [_O];
 			},
 			execute: function(O) {
 				var I;
@@ -796,7 +810,7 @@ pg.planner = {
 							if(concat_str!="") return false;
 						}
 						var _O = pg.Node.create(O);
-						_O.P = pg.planner.get_prototype({type:"compose_text"});
+						_O.P = jsonClone(this.proto);
 						_O.P.param.connector=connector;		
 						_O.P.param.text_A = nth_A; 
 						_O.P.param.text_B = nth_B;
@@ -849,10 +863,12 @@ pg.planner = {
 			},
 			generate : function(Is, O) {
 				try{
+					var _Is = _.clone(Is); // _Is is including empty(false) nodes
+					Is = _.without(Is,false);
 					if(Is.length==0) return false;
-					for(var i=0; i<Is.length; i++) {
-						if(!isNumberList(Is[i].V)) return false;
-					}
+					// for(var i=0; i<Is.length; i++) {
+					// 	if(!isNumberList(Is[i].V)) return false;
+					// }
 					var helper = pg.planner.operations.arithmetic.helper_arithmetic;
 					var arithmetic_operators = ["+","-","*","/","%"];
 					var valid_O = [];
@@ -874,7 +890,10 @@ pg.planner = {
 						});
 						for(var i=0;i<valid_operator_operand.length;i++) {
 							var _O = pg.Node.create(O);
-							_O.P = jsonClone(pg.planner.get_prototype({"type":"arithmetic"}));
+							_O.P = jsonClone(this.proto); 
+							for(var j=0;j<_Is.length;j++) {
+								if(_Is[j].ID==Is[0].ID) _O.P.param.operand_A = "input"+(j+1);
+							}
 							_O.P.param.operator = valid_operator_operand[i].operator;
 							_O.P.param.operand_B = valid_operator_operand[i].operand;
 							valid_O.push(_O);
@@ -898,15 +917,15 @@ pg.planner = {
 							},{helper:helper});
 							if(valid_operators.length>0) {
 								var _O = pg.Node.create(O);
-								_O.P = jsonClone(pg.planner.get_prototype({"type":"arithmetic"}));
+								_O.P = jsonClone(this.proto); 	
 								_O.P.param.operator = valid_operators[0];
-								for(var i=0;i<Is.length;i++) {
-									if(Is[i].ID==input1.ID) _O.P.param.operand_A = "input"+(i+1);
-									if(Is[i].ID==input2.ID) _O.P.param.operand_B = "input"+(i+1);
+								for(var i=0;i<_Is.length;i++) {
+									if(_Is[i].ID==input1.ID) _O.P.param.operand_A = "input"+(i+1);
+									if(_Is[i].ID==input2.ID) _O.P.param.operand_B = "input"+(i+1);
 								}
 								valid_O.push(_O);
 							}
-						});
+						},this);
 					}
 				} catch(e) { console.log(e.stack); }
 				return valid_O;
@@ -983,22 +1002,22 @@ pg.planner = {
 						if(filtered_elements[i]!= O.V[i]) return false;
 					}
 					// passed all test. O is filtered list of input1 with 2
-					_O.P = jsonClone(this.proto);
+					_O.P = jsonClone(this.proto); 	
 					for(var i=0;i<Is.length;i++) {
 						if(Is[i].ID==input1.ID) _O.P.param.items = "input"+(i+1);
 						if(Is[i].ID==input2.ID) _O.P.param.booleans = "input"+(i+1);
 					}
 					valid_O.push(_O);
-				});
+				},this);
 				return valid_O;
 			},
 			execute: function(O) {
 				try{
-					var nth_item = pg.Node.getParamNodeID(O, 'items');
-					var nth_boolean = pg.Node.getParamNodeID(O, 'booleans');
-					if(nth_item===false || nth_boolean===false) return O;
-					var input_v = pg.panel.get_node_by_id(O.I[nth_item],O).V;
-					var input_b = pg.panel.get_node_by_id(O.I[nth_boolean],O).V;
+					var id_item_node = pg.Node.getParamNodeID(O, 'items');
+					var id_boolean_node = pg.Node.getParamNodeID(O, 'booleans');
+					if(id_item_node===false || id_boolean_node===false) return O;
+					var input_v = pg.panel.get_node_by_id(id_item_node,O).V;
+					var input_b = pg.panel.get_node_by_id(id_boolean_node,O).V;
 					var result = []; 
 					for(var i=0; i<Math.min(input_v.length, input_b.length); i++) {
 						if(input_b[i]== (O.P.param.true_or_false === 'true')) result.push(input_v[i]);
@@ -1033,6 +1052,9 @@ pg.planner = {
 				var valid_O = [];
 				var input_combinations;
 				// make input node combinations
+				var _Is = _.clone(Is); // _Is is including empty(false) nodes
+				Is = _.without(Is,false);
+				if(Is.length==0) return false;
 				if(Is.length>1)  input_combinations = pickCombination(Is, 2);
 				else input_combinations = _.map(Is, function(I){return [I,false];});
 				_.each(input_combinations, function(input_comb) {
@@ -1067,17 +1089,17 @@ pg.planner = {
 					else {
 						_.each(matching_combinations, function(comb){
 							var _O = pg.Node.create(O);
-							_O.P = pg.planner.get_prototype({type:"number_test"});
-							_O.P.param.operator = comb[0][0];
+							_O.P = jsonClone(this.proto); 	
+							_O.P.param.operator = comb[0];
 							for(var i=0;i<Is.length;i++) {
 								if(Is[i].ID==input1.ID) _O.P.param.operand_A = "input"+(i+1);
 								if(usingInput2 && Is[i].ID==input2.ID) _O.P.param.operand_B = "input"+(i+1);
 							}
-							if(!usingInput2) _O.P.param.operand_B = comb[0][1];
+							if(!usingInput2) _O.P.param.operand_B = comb[1];
 							valid_O.push(_O);
-						});
+						},this);
 					}
-				});				
+				},this);				
 				return (valid_O.length>0)? valid_O:false;
 			},
 			helper_candidate_operands: function(I) {
@@ -1144,7 +1166,8 @@ pg.planner = {
 					var valid_O = [];
 					var _Is = _.clone(Is); // _Is is including empty(false) nodes
 					Is = _.without(Is,false);
-					if(Is.length>1) {
+					if(Is.length==0) return false;
+					else if(Is.length>1) {
 						var input_combinations = pickCombination(Is, 2);
 						_.each(input_combinations, function(input_comb) {
 							var input1 = input_comb[0]; var input2 = input_comb[1];
@@ -1192,24 +1215,24 @@ pg.planner = {
 						// create valid Os for all the valid words 
 						_.each(valid_words_in, function(w) {
 							var _O = pg.Node.create(O);
-							_O.P = pg.planner.get_prototype({type:"string_test"});
+							_O.P = jsonClone(this.proto); 	
 							for(var i=0;i<_Is.length;i++) {
 								if(_Is[i].ID==input1.ID) _O.P.param.source = "input"+(i+1);
 							}
 							_O.P.param.key = w;
 							_O.P.param.isIn = "in";
 							valid_O.push(_O);
-						});
+						},this);
 						_.each(valid_words_not_in, function(w) {
 							var _O = pg.Node.create(O);
-							_O.P = pg.planner.get_prototype({type:"string_test"});
+							_O.P = jsonClone(this.proto); 	
 							for(var i=0;i<_Is.length;i++) {
 								if(_Is[i].ID==input1.ID) _O.P.param.source = "input"+(i+1);
 							}
 							_O.P.param.key = w;
 							_O.P.param.isIn = "not in";
 							valid_O.push(_O);
-						});
+						},this);
 					}
 					return (valid_O.length>0)? valid_O:false;
 				} catch(e) { 
@@ -1226,8 +1249,8 @@ pg.planner = {
 					if(!isValueList(source)) return O;
 					O.V = _.map(source, function(str) {
 						for(var i in key_list) {
-							if(O.P.param.isIn=="in" && str.toString().toLowerCase().indexOf(key_list[i].toLowerCase())!=-1) return true;
-							if(O.P.param.isIn=="not in" && str.toString().toLowerCase().indexOf(key_list[i].toLowerCase())==-1) return true;
+							if(O.P.param.isIn=="in" && str.toString().toLowerCase().indexOf(key_list[i].toString().toLowerCase())!=-1) return true;
+							if(O.P.param.isIn=="not in" && str.toString().toLowerCase().indexOf(key_list[i].toString().toLowerCase())==-1) return true;
 							return false;	
 						}
 					});
@@ -1248,14 +1271,14 @@ pg.planner = {
 				param: { 
 					'source':"input1",
 					'target':"input2",
-					'front_or_back':"front",
+					'location':"within-front",
 				},
-				description: "Attach [source] to [target] at [front_or_back]."
+				description: "Attach [source] to [target] at [location]."
 			},
 			parameters: {
 				'source': {type:'text', label:"Elements to attach", default:"input1", options:["input1","input2"]},
 				'target': {type:'text', label:"Place to attach elements", default:"input2", options:["input1","input2"]},
-				'front_or_back': {type:'text', label:"Attach front or back", default:"front", options:["front","back"]},
+				'location': {type:'text', label:"Attach front or back", default:"front", options:["before","after","within-front","within-back"]},
 			},
 			pre:function(Is) {
 				try{
@@ -1264,49 +1287,48 @@ pg.planner = {
 			},
 			generate: function(Is, O) {
 				return false;
-				// try {	// PRECHECK
-				// 	var _Is = _.clone(Is); // _Is is including empty(false) nodes
-				// 	Is = _.without(Is,false);
-				// 	if(!Is[0] || !isDomList(Is[0].V) || Is[0].V.length==0 || !Is[1] || Is[1].V.length==0 || isDomList(Is[1].V)) return false;
-				// 	if(O.V.length==0 || !isDomList(O.V)) return false;
-				// 	for(var i=0; i<O.V.length; i++) {
-				// 		if(	$.contains(Is[0].V[i], O.V[i])==false &&
-				// 			$.contains(Is[0].V[0], O.V[i])==false) return false;
-				// 		if( Is[1].V[i] == O.V[i] && 
-				// 			Is[1].V[0] == O.V[i])	return false;
-				// 	}
-				// } catch(e) { console.log(e.stack); return false;}
-				// var _O = pg.Node.create(O);
-				// _O.P = pg.planner.get_prototype({"type":"attach_element"});
-				// return _O;
 			},
 			execute: function(O) {
 				try{
-					var nth_source = pg.Node.getParamNodeID(O,"source");
-					var nth_target = pg.Node.getParamNodeID(O,"target");
+					var id_source = pg.Node.getParamNodeID(O,"source");
+					var id_target = pg.Node.getParamNodeID(O,"target");
 
-					var elements_to_attach = pg.panel.get_node_by_id(O.I[nth_source],O).V;
-					var target_elements = pg.panel.get_node_by_id(O.I[nth_target],O).V;
+					// var elements_to_attach = _.map(pg.panel.get_node_by_id(id_source,O).V, function(el) {
+					// 	var cloned_el = $.clone(el);
+					// 	$(cloned_el).attr("creator_ID",O.ID);
+					// 	return cloned_el;
+					// });
+					var elements_to_attach = pg.panel.get_node_by_id(id_source,O).V; 
+					var target_elements = pg.panel.get_node_by_id(id_target,O).V;
+					// REMOVE ELEMENTS PREVIOUSLY ATTACHED BY THE SAME NODE
+					$(target_elements).find("*[creator_ID='"+O.ID+"']").remove();
+					$(target_elements).find("*.dragged_element").remove();
 					var el_single,ta_single;
 					var new_V = [];
 					if(target_elements.length==1) {
 						_.each(elements_to_attach, function(e) { 
-							if(O.P.param['front_or_back']=='front') $(target_elements[0]).prepend(e); 
-							else $(target_elements[0]).append(e); 
+							if(O.P.param['location']=='before') $(target_elements[0]).before(e); 
+							else if(O.P.param['location']=='after') $(target_elements[0]).after(e); 
+							else if(O.P.param['location']=='within-front') $(target_elements[0]).prepend(e); 
+							else if(O.P.param['location']=='within-back') $(target_elements[0]).append(e); 
 						});
 						new_V = elements_to_attach;
 					} else if(target_elements.length>1) {
 						if(elements_to_attach.length==1) {
 							_.each(target_elements, function(e_target) { 
 								var cloned_el = $(elements_to_attach[0]).clone().get(0);
-								if(O.P.param['front_or_back']=='front') $(e_target).prepend(cloned_el); 
-								else $(e_target).append(cloned_el); 
+								if(O.P.param['location']=='before') $(e_target).before(cloned_el); 
+								else if(O.P.param['location']=='after') $(e_target).after(cloned_el); 
+								else if(O.P.param['location']=='within-front') $(e_target).prepend(cloned_el); 
+								else if(O.P.param['location']=='within-back') $(e_target).append(cloned_el); 
 								new_V.push(cloned_el)
 							});
 						} else if(elements_to_attach.length>1) {
 							for(var i=0;i< Math.min(target_elements.length, elements_to_attach.length);i++) {
-								if(O.P.param['front_or_back']=='front') $(target_elements[i]).prepend(elements_to_attach[i]);
-								else $(target_elements[i]).append(elements_to_attach[i]);
+								if(O.P.param['location']=='before') $(target_elements[i]).before(elements_to_attach[i]); 
+								else if(O.P.param['location']=='after') $(target_elements[i]).after(elements_to_attach[i]); 
+								else if(O.P.param['location']=='within-front') $(target_elements[i]).prepend(elements_to_attach[i]); 
+								else if(O.P.param['location']=='within-back') $(target_elements[i]).append(elements_to_attach[i]); 
 								new_V.push($(elements_to_attach[i]).get(0));
 							}
 						} else return O; 
@@ -1435,10 +1457,10 @@ pg.planner = {
 			execute: function(O) {
 				try{
 					var I_target, I_new_value;
-					var nth_target = pg.Node.getParamNodeID(O,"target");
-					var nth_new_value = pg.Node.getParamNodeID(O,"new_value");
-					I_target = pg.panel.get_node_by_id(O.I[nth_target], O).V;
-					if(nth_new_value) I_new_value = pg.panel.get_node_by_id(O.I[nth_new_value], O).V;
+					var id_target = pg.Node.getParamNodeID(O,"target");
+					var id_new_value = pg.Node.getParamNodeID(O,"new_value");
+					I_target = pg.panel.get_node_by_id(id_target, O).V;
+					if(id_new_value) I_new_value = pg.panel.get_node_by_id(id_new_value, O).V;
 					else I_new_value = $.makeArray(O.P.param.new_value);
 
 					if(!I_target || !isDomList(I_target)) return O;
@@ -1483,14 +1505,14 @@ pg.planner = {
 				_O.P = jsonClone(this.proto);
 				// _O.P.param.value=JSON.stringify(O.V);
 				_O.P.param.source=JSON.stringify(O.V);
-				return _O;	
+				return [_O];	
 			},
 			execute: function(O) {
 				try{
 					var sourceV;
-					var nth_source = pg.Node.getParamNodeID(O,"source");
-					if(nth_source) {
-						var sourceNode = pg.panel.get_node_by_id(O.I[nth_input-1],O);
+					var id_source = pg.Node.getParamNodeID(O,"source");
+					if(id_source) {
+						var sourceNode = pg.panel.get_node_by_id(id_source,O);
 						sourceValues = sourceNode.V; 
 						O.V = _.clone(sourceValues);
 					} else {
@@ -1552,8 +1574,8 @@ pg.planner = {
 			},
 			// if I[0] is text or number, then suggest creating span.  
 			pre:function(Is) {
-				if(Is.length==0) return false;
-				if(_.isString(Is[0].V[0]) || _.isNumber(Is[0].V[0]) ) return true;
+				// if(Is.length==0) return false;
+				// if(_.isString(Is[0].V[0]) || _.isNumber(Is[0].V[0]) ) return true;
 				return false;
 			},
 			generate: function(Is, O) {
@@ -1576,9 +1598,9 @@ pg.planner = {
 			},
 			execute: function(O) {
 				var tagName = O.P.param.tag;
-				var nth_value = pg.Node.getParamNodeID(O,"value");
-				if(nth_value) { // if value is input1,input2,...
-					var valueNode = pg.panel.get_node_by_id(O.I[nth_value], O);
+				var id_value = pg.Node.getParamNodeID(O,"value");
+				if(id_value) { // if value is input1,input2,...
+					var valueNode = pg.panel.get_node_by_id(id_value, O);
 					O.V = [];
 					if(tagName=="dropdown") {
 						var selectEl = $("<select></select>");
@@ -1603,7 +1625,7 @@ pg.planner = {
 				if(tag=="span") return $("<span>"+value+"</span>")[0];
 				if(tag=="p") return $("<p>"+value+"</p>")[0];
 				if(tag=="button") return $("<button>"+value+"</button>")[0];
-				if(tag=="text input") return $("<input type='text' style='width:30px;'/>")[0];
+				if(tag=="text input") return $("<input type='text' style='width:30px;' value='"+value+"'/>")[0];
 				if(tag=="checkbox") return $("<input type='checkbox' name='"+value+"'/><span>"+value+"</span>")[0];
 				if(tag=="img") return $("<img src='"+value+"'></img>")[0];
 				return false;
@@ -1638,7 +1660,7 @@ pg.planner = {
 
 				var _O = pg.Node.create(O);
 				_O.P = jsonClone(this.proto);
-				return _O;	
+				return [_O];	
 			},
 			execute: function(O) {
 				var I_id = (_.isArray(O.I))?O.I[0]:O.I;
@@ -1707,9 +1729,10 @@ pg.planner = {
 				data: {type:'text', label:"Data content", default:"input1", options:["input1","input2"]}
 			},
 			pre:function(Is) {
-				if(Is.length==0) return false;
-				if(!isDomList(Is[0].V[0])) return true;
-				else return false;
+				return false;
+				// if(Is.length==0) return false;
+				// if(!isDomList(Is[0].V[0])) return true;
+				// else return false;
 			},
 			generate: function(Is, O) {
 				return false;
@@ -1735,7 +1758,7 @@ pg.planner = {
 				type:'trigger', 
 				icon:'bell',
 				param:{event_source: "input1"},
-				description:"Trigger the following nodes when [event_source] is loaded or clicked."
+				description:"Trigger the following nodes when [event_source] is loaded, clicked, or changed."
 			},
 			parameters: {
 				event_source: {type:'text', label:'Event source (e.g. page, input1)', default:"input1", options:["input1","input2"]},
@@ -1755,10 +1778,10 @@ pg.planner = {
 			},
 			execute: function(O) {
 				// will execute all the following connected nodes
-				var nth_event = pg.Node.getParamNodeID(O,"event_source");
-				if(nth_event) {
-					if(!O.I || !O.I[nth_event]) return;
-					var I = pg.panel.get_node_by_id(O.I[nth_event], O);
+				var id_event = pg.Node.getParamNodeID(O,"event_source");
+				if(id_event) {
+					if(!O.I) return;
+					var I = pg.panel.get_node_by_id(id_event, O);
 					// if(I.P || I.P.param || I.P.param.type=="load_page") return O;
 					if(!isDomList(I.V)) return O;
 					_.each(I.V, function(el) {
@@ -1780,11 +1803,7 @@ pg.planner = {
 				}
 			}			
 		},
-
-		
 	},
-
-
 
 	tasks: {
 		// page_modified: {
@@ -1833,6 +1852,8 @@ pg.planner = {
 		// },
 		find_path: {
 			pre: function(Is, O) {
+				var _Is = _.clone(Is); // _Is is including empty(false) nodes
+				Is = _.without(Is,false);
 				if(Is.length==0  || !Is[0] || !Is[0].V || Is[0].V.length==0 || !isDomList(Is[0].V)) return false;
 				if(!O || !O.V || O.V.length==0 || !isDomList(O.V)) return false;
 				return true;
@@ -1843,22 +1864,23 @@ pg.planner = {
 					Is = _.without(Is,false);
 					// Is[0]-(select_representative)-> n_rep -(select_element)-> O
 					var solutions=[];
-
 					_.each(Is, function(I) {
-						var rep_el = findRepElements(I.V);
+						var rep_el = findRepElements(_.union(I.V,O.V));
 						if(!rep_el || rep_el.length==0) return false;
 						var n_rep = pg.Node.create({
 							'I':[I.ID],
 							'V':rep_el
 						});
-						n_rep = pg.planner.operations.extract_parent.generate([I],n_rep); // fill parameters
+						n_rep_list = pg.planner.operations.extract_parent.generate([I],n_rep); // fill parameters
+						if(n_rep_list===false) return false;
 						var _O = pg.Node.create(O);	// copy O
 						_O.position = undefined;
-						_O = pg.planner.operations.extract_element.generate([n_rep],_O); // fill parameter of extraction query
-						if(!_O) return false;
-						n_rep.position=[0,0]; 
-						_O.position = [1,0]; _O.I = ['_left'];
-						solutions.push(_.union(n_rep, _O));
+						_O_list = pg.planner.operations.extract_element.generate([n_rep],_O); // fill parameter of extraction query
+						if(!_O_list) return false;
+						_.each(n_rep_list, function(n){ n.position=[0,0]; });
+						_.each(_O_list, function(o) { o.position = [1,0]; o.I = ['_above']; });
+						solutions.push(_.union(n_rep_list[0], _O_list[0]));
+						// solutions.push(n_rep_list, _O_list));
 					});
 					return (solutions.length>0)? solutions:false;
 				} catch(e) {
@@ -1912,24 +1934,20 @@ pg.planner = {
 					
 					// create intermediate nodes
 					var n_inter_1 = pg.Node.create();	n_inter_1.V = el_containing_O; n_inter_1.I = [I.ID];
-					var n_inter_2 = pg.Node.create();	n_inter_2.V = text_containing_O; n_inter_2.I = [n_inter_1.ID];
+					//var n_inter_2 = pg.Node.create();	n_inter_2.V = text_containing_O; n_inter_2.I = [n_inter_1.ID];
 					//sub-prob 	A. (enclosing element) --[extract_element]--> (smaller elements containing the text list)
-					var result_A = pg.planner.operations.extract_element.generate([I], n_inter_1);
+					var result_A_list = pg.planner.operations.extract_element.generate([I], n_inter_1);
 					//			B. (smaller elements) --[attribute]--> (text' list: not exactly the same)
-					var result_B = pg.planner.operations.get_attribute.generate([n_inter_1], n_inter_2);
+					var result_B_list = pg.planner.operations.get_attribute.generate([n_inter_1], O);
 					//			C. (text' list) --[string-transform]--> (text list)
-					var result_C = pg.planner.operations.substring.generate([n_inter_2], O);
+					//var result_C_list = pg.planner.operations.substring.generate([n_inter_2], O);
 
+					var result_A = result_A_list[0];
+					var result_B = result_B_list[0];
 					if(result_A &&result_B) {
-						if(result_C) {
-							result_A.position=[0,0]; result_B.position=[1,0]; result_C.position=[2,0];
-							solutions.push(_.union(result_A,result_B,result_C));	
-						} else {
-							result_A.position=[0,0]; result_B.position=[1,0]; 
-							solutions.push(_.union(result_A,result_B));		
-						} 
-					} else return false;
-					return solutions;
+						result_A.position=[0,0]; result_B.position=[1,0]; 
+						solutions.push(_.union(result_A,result_B));		
+					} 
 				});
 				return (solutions.length>0)? solutions:false;	
 			},
@@ -2079,9 +2097,8 @@ pg.planner = {
 			generate: function(Is, O) {
 				var _Is = _.clone(Is); // _Is is including empty(false) nodes
 				Is = _.without(Is,false);
-				// if(Is.length!=1) return false;   
+				if(Is.length!=1) return false;   
 				var solutions = [];
-
 				_.each(Is, function(I) {
 					var true_booleans = get_true_booleans(I.V, O.V);
 					var _O = pg.Node.create(O);
@@ -2091,7 +2108,7 @@ pg.planner = {
 							var p_node_feature = pg.planner.get_prototype({type:'get_attribute',parem:{key:key}})
 							var node_feature = pg.Node.create({I:toArray(I.ID), P:p_node_feature, V:_.clone(attr_table[key]), position:[0,0]});
 							var node_test = pg.Node.create({I:toArray(node_feature.ID), V:_.clone(true_booleans)});
-							node_test = pg.planner.operations.string_test.generate([node_feature], node_test);
+							node_test = pg.planner.operations.string_test.generate([node_feature], node_test)[0];
 							if(node_test) {
 								node_test.position=[1,0];
 								var p_node_filtered = pg.planner.get_prototype({type:'filter'});
@@ -2102,7 +2119,7 @@ pg.planner = {
 						}
 					} else if(isStringList(I.V)) {
 						var node_test = pg.Node.create({I:toArray(I.ID), V:_.clone(true_booleans)});
-						node_test = pg.planner.operations.string_test.generate([I], node_test);
+						node_test = pg.planner.operations.string_test.generate([I], node_test)[0];
 						if(node_test) {
 							node_test.position=[0,0];
 							var p_node_filtered = pg.planner.get_prototype({type:'filter'});
@@ -2112,7 +2129,7 @@ pg.planner = {
 						}
 					} else if(isNumberList(I.V)) {
 						var node_test = pg.Node.create({I:toArray(I.ID), V:_.clone(true_booleans)});
-						node_test = pg.planner.operations.number_test.generate([I], node_test);
+						node_test = pg.planner.operations.number_test.generate([I], node_test)[0];
 						if(node_test) {
 							node_test.position=[0,0];
 							var p_node_filtered = pg.planner.get_prototype({type:'filter'});
@@ -2151,7 +2168,7 @@ pg.planner = {
 					var true_booleans = get_true_booleans(input1.V, O.V);  // the boolean values to get the correct filtering.
 					if(isStringList(input2.V)) {
 						var string_test_node = pg.Node.create({I:toArray(input2.ID), V:_.clone(true_booleans)});
-						string_test_node = pg.planner.operations.string_test.generate([input2], string_test_node);
+						string_test_node = pg.planner.operations.string_test.generate([input2], string_test_node)[0];
 						if(string_test_node) {
 							string_test_node.position=[0,0];
 							var p_node_filtered = pg.planner.get_prototype({type:'filter'});
@@ -2161,7 +2178,7 @@ pg.planner = {
 						}
 					} else if(isNumberList(input2.V)) {
 						var number_test_node = pg.Node.create({I:toArray(input2.ID), V:_.clone(true_booleans)});
-						number_test_node = pg.planner.operations.number_test.generate([input2], number_test_node);
+						number_test_node = pg.planner.operations.number_test.generate([input2], number_test_node)[0];
 						if(number_test_node) {
 							number_test_node.position=[0,0];
 							var p_node_filtered = pg.planner.get_prototype({type:'filter'});
@@ -2171,13 +2188,13 @@ pg.planner = {
 						}
 					} 
 				});
-				return (solutions.length>0)? solutions:false;		
+				return (valid_solutions.length>0)? valid_solutions:false;		
 			}
 		},
 
 
 		// filter_element: {
-			
+
 		// 	pre: function(Is, O) {
 		// 		try{
 		// 			if(Is && Is.length>0 && isDomList(Is[0].V) && isDomList(O.V)) {
@@ -2460,7 +2477,125 @@ pg.planner = {
 		// 		return booleans;
 		// 	}
 		// }
-	},	// END OF METHODS //
+	},	// END OF TASKS //
+
+	demos: {
+		demo_attach_element: {
+			generate: function(events) { //event: {type:'attach',el:el, target:target, loc:loc}
+				// LOOK FOR TARGET ELEMENTS AMONG EXISTING NODES
+				var n_target, n_source;
+				var target_el = _.map(events, function(ev) { return ev.target; });
+				var source_el = _.map(events, function(ev) { return ev.el; });
+				var location = events[0].loc; // either before, after, within-front, within-back 
+				var matching_target_nodes = pg.panel.enhancement.get_node_by_values(target_el);
+				var matching_source_nodes = pg.panel.enhancement.get_node_by_values(source_el);
+				if(matching_source_nodes.length>0) {
+					var curNode = pg.panel.get_current_node(); 
+					if(matching_source_nodes.indexOf(curNode)==-1) 
+						n_source = _.last(matching_source_nodes);
+					else n_source = curNode;
+				} else {
+					return false;  // source node should exist
+				}
+				// CREATING ATTACH_ELEMENT NODE ONLY, BECAUSE THE TARGET NODE EXIST
+				if(matching_target_nodes.length>0) {
+					n_target = matching_target_nodes[0];
+					n_attachment = pg.Node.create({
+						I:[n_source.ID, n_target.ID],
+						position:[0,0],
+						P: pg.planner.get_prototype({type:'attach_element',location:location})
+					});
+					return {
+						target_position:[n_source.position[0]+1, n_source.position[1]],
+						nodes:[n_attachment]
+					};
+				} else {
+					// CREATE BOTH EXTRACT ELEMENT and ATTACH_ELEMENT
+					// create a new node with the target_el
+					n_target = pg.Node.create({
+						V:target_el,
+						position:[0,0]
+					});
+					n_attachment = pg.Node.create({
+						I:[n_source.ID, n_target.ID],
+						position:[1,0],
+						P: pg.planner.get_prototype({type:'attach_element',location:location})
+					});
+					var n_target_result = pg.planner.operations.extract_element.generate([], n_target);
+					if(n_target_result) {
+						return {
+							target_position:[n_source.position[0]+1, n_source.position[1]],
+							nodes:[n_target_result[0], n_attachment]
+						};
+					} else {	
+						return false;
+					}
+				} 
+			}
+		},
+		demo_set_attribute: {
+			generate: function(events) {
+				var target_el = _.map(events, function(ev) { return ev.target; });
+				var values = _.map(events, function(ev) { return ev.value; });
+				var keys = _.map(events, function(ev) { return ev.key; });
+				if(_.unique(keys).length!=1) return false;
+				// VALUE NODE	
+				var simplified_values = (_.unique(values).length==1)? _.unique(values):values;
+				var jsonValues = JSON.stringify(simplified_values);
+				n_value = pg.Node.create({
+					position:[1,-1],
+					P: pg.planner.get_prototype({type:'literal',param:{source:jsonValues}})
+				});
+				// TARGET NODES
+				var matching_target_nodes = pg.panel.enhancement.get_node_by_values(target_el);
+				if(matching_target_nodes.length>0) {
+					n_target = matching_target_nodes[0];
+					n_value.I=[n_target.ID];
+					n_set_attribute = pg.Node.create({
+						I:[n_target.ID, n_value.ID],
+						position:[0,0],
+						P: pg.planner.get_prototype({type:'set_attribute',param:{key:_.unique(keys), target:"input1", new_value:'input2'}})
+					});
+					n_value.position=[0,-1];
+					return {
+						target_position:false,
+						nodes:[n_value, n_set_attribute]
+					}; 					
+				} else { // when target_node would exist
+					n_target = pg.Node.create({
+						V:target_el,
+						position:[0,0]
+					});
+					var n_target_result = pg.planner.operations.extract_element.generate([], n_target);
+					n_value.I=[n_target.ID];
+					n_set_attribute = pg.Node.create({
+						I:[n_target.ID, n_value.ID],
+						position:[1,0],
+						P: pg.planner.get_prototype({type:'set_attribute',param:{key:_.unique(keys), target:"input1", new_value:'input2'}})
+					});
+					if(n_target_result) {
+						return {
+							target_position:false,
+							nodes:[n_target_result[0], n_value, n_set_attribute]
+						};
+					} else {	
+						return false;
+					}
+				}
+			}
+
+		},
+		demo_trigger:{
+			generate: function(events) {
+				//{type:'trigger',target:target }
+
+				// 1. find path to target
+
+				// 2. attach trigger
+				var trigger_node = pg.Node.create({'type':tri})
+			}
+		}
+	},
 
 	attr_func : function(key) {
 		var matching_attr = _.filter(pg.planner.attr_func_list, function(attr) {
@@ -2534,6 +2669,13 @@ pg.planner = {
 				return proto_copy;
 			}
 		} else return false;
+	},
+	compare_operation : function(op1, op2) { 
+		if(op1.type!==op2.type) return false;
+		for(var i in op1.param) {
+			if(typeof op2.param[i]==='undefined' || op1.param[i]!==op2.param[i]) return false;
+		}
+		return true;
 	},
 	get_options : function(pType, paramKey) {
 		var parameters = pg.planner.operations[pType].parameters;

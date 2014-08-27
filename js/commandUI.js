@@ -164,7 +164,7 @@
 			// 0. infer tasks and operations
 			var Is = _.without(_.map(node.I, function(input_id) {
 				return pg.panel.enhancement.get_node_by_id(input_id, node);
-			}), false, undefined);
+			}));
 			var taskSuggestions = []; var opSuggestions=[]; var opRest = [];
 			// infer tasks matching with the given input and output
 			if(node.V && node.V.length>0) {
@@ -436,6 +436,37 @@
 				var v = V[i]; 	var idx_to_show = parseInt(i)+1;
 				var entryEl = $("<li data_index='"+i+"'></li>"); 
 				if(isDom(v)) {
+					$("<div class='tag'>&lt;"+$(v).prop("tagName")+"&gt;</div>")
+						.draggable({
+							revert: false, // when not dropped, the item will revert back to its initial position
+							helper: "clone",
+							appendTo: "#pg",
+							containment: "DOM",
+							start: $.proxy(function(event,ui) {
+								pg.panel.commandUI.turn_inspector(false);
+								pg.attaching_element = v;
+								var target_elements = $(pg.documentBody).find("> *").not("#pg").find("*");
+								// DROPPABLE START
+								$(target_elements).droppable({
+									accept:"div.tag",
+									addClasses:false,
+									greedy:true,
+									over: function(event, ui) {
+										//$(event.target).addClass("drop-hover");
+									},
+									drop: function(event, ui) {
+										//$(event.target).css("color","blue");
+										pos = {x:event.clientX,  y:event.clientY};
+										pg.panel.commandUI.renderAttacher(event.target, pos);
+									}
+								});
+								// DROPPABLE END
+							},{v:v}),
+							stop: function(event,ui) {
+								//var target_elements = $(pg.documentBody).find("> *").not("#pg");
+								//$(pg.documentBody).find(".drop-hover").removeClass("drop-hover");
+							},
+						}).appendTo(entryEl);
 					var attr_dict = get_attr_dict(v);  // get_attr_dict returns simplified attr->value object
 					_.each(attr_dict, function(value,key) {
 						var attr_el = $("	<div class='attr'>\
@@ -487,6 +518,74 @@
 				$("#pg_command_ui").find("input.new_data_input").focus();
 			}).appendTo(li_new_data);
 			$(target_ul).append(li_new_data);
+		},
+		// ATTACHER FUNCTIONALITY
+		removeAttacher: function() {
+			$(".tandem_backdrop").remove();
+			$(".dialog_attach").remove();
+			if(pg.panel.parent_selection_box) { 	pg.panel.parent_selection_box.hide();	pg.panel.parent_selection_box.destroy();	}
+			if(pg.panel.attaching_target_box) {		pg.panel.attaching_target_box.hide();	pg.panel.attaching_target_box.destroy();	}
+			pg.attaching_element = undefined;
+			pg.panel.commandUI.turn_inspector(true);
+		},
+		renderAttacher: function(target, pos) {
+			var el = pg.attaching_element;
+			if(el===undefined || target===undefined) return;
+			$("div.dialog_attach").remove();
+			$("div.tandem_backdrop").remove();
+			if(pg.panel.parent_selection_box) { 	pg.panel.parent_selection_box.hide();	pg.panel.parent_selection_box.destroy();	}
+			if(pg.panel.attaching_target_box) {		pg.panel.attaching_target_box.hide();	pg.panel.attaching_target_box.destroy();	}
+			var target_txt = ($(target).text()).replace(/ +(?= )/g,'').substring(0,30);
+			var backdrop = $("<div class='tandem_backdrop'></div>")
+				.click(function() { pg.panel.commandUI.removeAttacher(); })
+				.appendTo(pg.documentBody);
+			var dialog = $("<div class='dialog_attach'>\
+					<div class='parents_list'></div>\
+					<div>Attach <span class='el'>&lt;"+$(el).prop("tagName")+"&gt;</span> to \
+					<span class='target'>&lt;"+$(target).prop("tagName")+"&gt;"+target_txt+"</span></div>\
+					<button type='button' role='before'>before</button>\
+					<div class='target_el_border'><button type='button' role='within_front'>front</button>\
+					...<button type='button' role='within_back'>back</button></div>\
+					<button type='button' role='after'>after</button>\
+				</div>");
+			var parents_el = $(dialog).find(".parents_list");
+			pg.panel.attaching_target_box = new pg.SelectionBox(3, '#02aff0');
+			pg.panel.attaching_target_box.highlight(target);
+			_.each($($(target).parentsUntil('html').get().reverse()), function(p) {
+				$("<span>"+$(p).prop("tagName")+"&gt; </span>").click($.proxy(function() {
+					pg.panel.commandUI.renderAttacher(this.p, this.pos);
+					//pg.panel.dataUI.create(this.p, pos);
+				},{p:p, pos:pos}))
+				.hover($.proxy(function(){
+					pg.panel.parent_selection_box = new pg.SelectionBox(1, '#02aff0');
+					pg.panel.parent_selection_box.highlight(this.p);
+				},{p:p}),function(){
+					if(pg.panel.parent_selection_box) {
+						pg.panel.parent_selection_box.hide();
+						pg.panel.parent_selection_box.destroy();	
+					}
+				})
+				.appendTo(parents_el);
+			},this);
+			$(dialog).find("button").click($.proxy(function(e) {
+				pg.panel.commandUI.attachElement(this.target, this.el, $(e.target).attr('role'));
+				pg.panel.commandUI.removeAttacher();
+			},{el:el,target:target}));
+			$(dialog).css("top", pos.y + $(window).scrollTop());
+			$(dialog).css("left", pos.x + $(window).scrollLeft());
+			$(pg.documentBody).append(dialog).show('fast');
+		},
+		attachElement: function(target, el, loc) {
+			console.log(target, el, loc);
+			var cloned_el = $.clone(el);
+			$(cloned_el).addClass("dragged_element");
+			if(loc=='before') $(target).before(cloned_el);
+			if(loc=='after') $(target).after(cloned_el);
+			if(loc=='within_front') $(target).prepend(cloned_el);
+			if(loc=='within_back') $(target).append(cloned_el);
+			// now generate suggestion
+			pg.history.put({type:'attach',el:el, target:target, loc:loc});
+			pg.history.infer();
 		},
 		addData: function(val, _pos, _node) {
 			var node = (_node)? _node: pg.panel.get_current_node();

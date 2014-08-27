@@ -459,6 +459,11 @@ var str2Url = function(str) {
 		return str;
 	}
 };
+// var product = function() {
+//     return Array.prototype.reduce.call(arguments, function(as, bs) {
+//         return [a.concat(b) for each (a in as) for each (b in bs)];
+//     }, [[]]);
+// };
 var productThreeArraysUnion = function(a,b,c) {
 	var result = [];
 	_.each(a,function(ael) {
@@ -820,7 +825,7 @@ function get_attr_dict(elements) {
 	_.each($.makeArray(elements), function(el) {
 		_.each(pg.planner.attr_func_list, function(attr, key) {
 			var value = attr.getter(el);
-			if(value || (el.tagName=='A' && attr.attr_key=='download')) {
+			if(typeof value !== 'undefined'  || (el.tagName=='A' && attr.attr_key=='download')) {
 				if((attr.attr_key in dict) && dict[attr.attr_key]!=value)
 					dict[attr.attr_key] = "(multiple values)";
 				else 
@@ -1019,8 +1024,12 @@ function toTitleCase(str)
 }
 
 function trimText(desc, max) {
-	if(desc.length>max) return desc.substring(0,max)+"...";
-	else return desc;
+	try{
+		if(desc.length>max) return desc.substring(0,max)+"...";
+		else return desc;	
+	} catch(e) { 
+		console.log(e.stack); 
+	}
 }
 
 function pickCombination(items, n_to_pick, combination) {

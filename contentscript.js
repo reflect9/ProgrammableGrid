@@ -1,6 +1,5 @@
 // DOM ready function // 
 
-// hahah //
 
 // wikigram content script //
 

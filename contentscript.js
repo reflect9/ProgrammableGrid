@@ -1,5 +1,7 @@
 // DOM ready function // 
 
+// hahah //
+
 // wikigram content script //
 
 //chrome.extension.sendRequest({}, function(response) {});

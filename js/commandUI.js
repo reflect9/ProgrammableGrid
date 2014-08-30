@@ -335,14 +335,22 @@
 				var key = praw.replace(/\[|\]/g,'');
 				if(typeof node.P.param==='undefined' || !(key in node.P.param)) return;
 				var value = node.P.param[key];
-				//if(value=="") value="___";
 				desc_el = desc_el.replace(praw,"<span contenteditable='true' class='param' paramKey='"+key+"'>"+value+"</span>");
 			});
 			desc_el = $("<span class='description'>"+desc_el+"</span>");	// convert to jQuery element
+			$.each($(desc_el).find("span.param"), function(i, span) {
+				if($(span).text().match(/\s*/g)[0]==$(span).text()) 
+					$(span).css({
+						'display':'inline-block',
+						'vertical-align':'bottom'
+					});
+			});  
 			$(desc_el).find("span.param")
 			.focus($.proxy(function(e) {
+				// restore real value
+				$(e.target).text($(e.target).attr('paramValue'));
 				// when parameter is focused, remember previous value
-				$(e.target).attr("previousValue",$(this).text());
+				$(e.target).attr("previousValue",$(e.target).text());
 				var op_desc_el = $(e.target).closest(".operation_description");
 				// create selectable options
 				param_options = pg.panel.commandUI.renderParamOptions(this.node,$(e.target).attr("paramKey"));
@@ -353,9 +361,9 @@
 			.keypress(function(e) {
 				if ( event.which == 13 ) {
 					var op_desc_el = $(e.target).closest(".operation_description");
-					if($(this).attr("previousValue") != $(this).text()) {
+					if($(e.target).attr("previousValue") != $(e.target).text()) {
 						var node = pg.panel.get_current_node();
-						node.P.param[$(this).attr('paramKey')]=$(this).text();
+						node.P.param[$(e.target).attr('paramKey')]=$(e.target).text();
 						pg.panel.redraw();
 						pg.panel.commandUI.highlightExecuteButton();
 					}
@@ -365,9 +373,9 @@
 			})
 			.blur(function(e) {
 				var op_desc_el = $(e.target).closest(".operation_description");
-				if($(this).attr("previousValue") != $(this).text()) {
+				if($(e.target).attr("previousValue") != $(e.target).text()) {
 					var node = pg.panel.get_current_node();
-					node.P.param[$(this).attr('paramKey')]=$(this).text();
+					node.P.param[$(e.target).attr('paramKey')]=$(e.target).text();
 					pg.panel.redraw();
 					pg.panel.commandUI.highlightExecuteButton();
 				}
@@ -388,8 +396,9 @@
 				.click($.proxy(function(e) {
 					this.node.P.param[this.paramKey]= $(e.target).text();
 					//pg.panel.enhancement.run_node(this.node);
-					pg.panel.enhancement.run_triggered_nodes([node]);
 					pg.panel.redraw();
+					pg.panel.commandUI.highlightExecuteButton();
+					//pg.panel.enhancement.run_triggered_nodes([node]);
 					//pg.panel.commandUI.redraw();  
 				},{node:node, paramKey:paramKey}))
 				.appendTo(ul);

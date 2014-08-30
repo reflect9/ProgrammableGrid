@@ -270,9 +270,12 @@ pg.Enhancement.prototype.get_informative_nodes = function(nodes) {
 pg.Enhancement.prototype.get_prev_nodes = function(node, _allNodes) {	
 	var allNodes = (_allNodes)?_allNodes: this.get_nodes();
 	var prevNodes = [];
-	for(var i=0;i<node.I.length;i++) {
-		prevNodes.push(this.get_node_by_id(node.I[i], node, allNodes));
-	}
+	try{
+		for(var i=0;i<node.I.length;i++) {
+			prevNodes.push(this.get_node_by_id(node.I[i], node, allNodes));
+		}	
+	} catch(e) { 
+		console.log(e.stack); }
 	prevNodes = _.without(prevNodes, false, undefined);
 	return prevNodes;
 };

@@ -126,7 +126,7 @@ pg.planner = {
 						}
 					} else return false;
 					_O.P.param.source = inputDOM.source;
-					if(inputDOM.source=='_current') _O.I=[pg.panel.enhancement.get_page_trigger_node()[0].ID];
+					//if(inputDOM.source=='_current') _O.I=[pg.panel.enhancement.get_page_trigger_node()[0].ID];
 					valid_O.push(_O);
 				},this);
 				return (valid_O.length>0)? valid_O:false;
@@ -1181,7 +1181,7 @@ pg.planner = {
 									}
 									return false;
 								});
-								if (isSameArray(result_boolean, O.V, true)) {
+								if (isSameArray(result_boolean, O.V, false)) {
 									// create _O for single input node case
 									_O.P = pg.planner.get_prototype({type:"string_test"});
 									for(var i=0;i<_Is.length;i++) {
@@ -1299,10 +1299,13 @@ pg.planner = {
 					// 	return cloned_el;
 					// });
 					var elements_to_attach = pg.panel.get_node_by_id(id_source,O).V; 
+					_.each(elements_to_attach,function(e) {
+						$(e).attr("creator_ID",O.ID);
+					},this);
 					var target_elements = pg.panel.get_node_by_id(id_target,O).V;
 					// REMOVE ELEMENTS PREVIOUSLY ATTACHED BY THE SAME NODE
-					$(target_elements).find("*[creator_ID='"+O.ID+"']").remove();
-					$(target_elements).find("*.dragged_element").remove();
+					$(target_elements).parent().find("*[creator_ID='"+O.ID+"']").remove();
+					$(target_elements).parent().find("*.dragged_element").remove();
 					var el_single,ta_single;
 					var new_V = [];
 					if(target_elements.length==1) {
@@ -2144,6 +2147,71 @@ pg.planner = {
 				return (solutions.length>0)? solutions:false;
 			}
 		},
+		filter_element_by_keyword: {
+			// given input1:[original element], input2:[text/number for filtering]
+			// will suggest [extract element]>[get attribute]>[string/number test]>[filter]
+			pre: function(Is, O) {
+				if(!Is || Is.length==0) return false;
+				if(!O || !O.V || O.V.length==0 || !isDomList(O.V)) return false;	
+				var valid_I = [];
+				_.each(Is, function(I) { // checking whether O is filered list of I[i]
+					if(!I.V || I.V.length==0) return false;
+					if(I.V.length<=O.V.length) return false;
+					var IV = _.clone(I.V);
+					for(var i in O.V) {
+						var idx = IV.indexOf(O.V[i]); // idx is the index of the first matching item
+						if(idx==-1) return false;
+						else IV.splice(0,idx);  // remove input items preceding the matching one
+					}
+					valid_I.push(I);
+				});
+				return (valid_I.length>0)? true:false;
+			},
+			generate: function(Is, O) {
+				var _Is = _.clone(Is); // _Is is including empty(false) nodes
+				Is = _.without(Is,false);
+				if(Is.length!=2) return false;   
+				var valid_solutions = [];
+				var input_combinations = pickCombination(Is, 2);
+				_.each(input_combinations, function(input_comb) {
+					var input1 = input_comb[0]; var input2 = input_comb[1];
+					if(!input1.V || !isFiltered(input1.V, O.V)) return false;
+					var true_booleans = get_true_booleans(input1.V, O.V);  // the boolean values to get the correct filtering.
+					var attr_keys = _.keys(get_attr_dict(input1.V));
+					var valid_keys = [];
+					_.each(attr_keys, function(key){
+						var attribute_node = pg.Node.create({I:[input1.ID]});
+						var getter = pg.planner.attr_func(key).getter;
+						attribute_node.P = pg.planner.get_prototype({type:'get_attribute', param:{source:"input1",key:key}});
+						attribute_node.V = _.map(input1.V, function(el) { 
+							return getter(el);
+						},this); 
+						// try String Test using attribute_node and true_booleans
+						var string_test_node = pg.Node.create({I:[attribute_node.ID,input2.ID], V:_.clone(true_booleans)});
+						string_test_node = pg.planner.operations.string_test.generate([attribute_node,input2], string_test_node)[0];
+						if(string_test_node) {
+							attribute_node.position=[0,0];
+							string_test_node.position=[1,0];
+							var p_node_filtered = pg.planner.get_prototype({type:'filter'});
+							var node_filtered = pg.Node.create({I:[input1.ID, string_test_node.ID], P:p_node_filtered, position:[2,0]}); 
+							var solution = _.union(attribute_node, string_test_node, node_filtered); 
+							valid_solutions.push(solution);
+						}
+						var number_test_node = pg.Node.create({I:[attribute_node.ID,input2.ID], V:_.clone(true_booleans)});
+						number_test_node = pg.planner.operations.number_test.generate([attribute_node,input2], number_test_node)[0];
+						if(number_test_node) {
+							attribute_node.position=[0,0];
+							number_test_node.position=[1,0];
+							var p_node_filtered = pg.planner.get_prototype({type:'filter'});
+							var node_filtered = pg.Node.create({I:[input1.ID, number_test_node.ID], P:p_node_filtered, position:[2,0]}); 
+							var solution = _.union(attribute_node, number_test_node, node_filtered); 
+							valid_solutions.push(solution);
+						}
+					},this);
+				});
+				return (valid_solutions.length>0)? valid_solutions:false;		
+			}
+		},
 		filter_by_value_node: {
 			// input1: objects to be filtered, input2: key (number/string) values
 			pre: function(Is, O) {
@@ -2503,7 +2571,7 @@ pg.planner = {
 					n_attachment = pg.Node.create({
 						I:[n_source.ID, n_target.ID],
 						position:[0,0],
-						P: pg.planner.get_prototype({type:'attach_element',location:location})
+						P: pg.planner.get_prototype({type:'attach_element',param:{source:'input1', target:'input2', location:location}})
 					});
 					return {
 						target_position:[n_source.position[0]+1, n_source.position[1]],
@@ -2518,8 +2586,8 @@ pg.planner = {
 					});
 					n_attachment = pg.Node.create({
 						I:[n_source.ID, n_target.ID],
-						position:[1,0],
-						P: pg.planner.get_prototype({type:'attach_element',location:location})
+						position:[0,1],
+						P: pg.planner.get_prototype({type:'attach_element',param:{source:'input1', target:'input2', location:location}})
 					});
 					var n_target_result = pg.planner.operations.extract_element.generate([], n_target);
 					if(n_target_result) {
@@ -2585,16 +2653,26 @@ pg.planner = {
 			}
 
 		},
-		demo_trigger:{
-			generate: function(events) {
-				//{type:'trigger',target:target }
-
-				// 1. find path to target
-
-				// 2. attach trigger
-				var trigger_node = pg.Node.create({'type':tri})
-			}
-		}
+		// demo_trigger:{
+		// 	generate: function(events) {
+		// 		//{'trigger',el:event.target, ID:$(this).attr('creator_ID')}
+		// 		var n_creator, n_trigger;
+		// 		var creator_ID_list = _.map(events, function(ev) { return ev.ID; });
+		// 		if(_.unique(creator_ID_list)!=1) return false;
+		// 		n_creator = pg.panel.get_node_by_id(_.unique(creator_ID_list)[0]);
+		// 		if(n_creator) {
+		// 			n_trigger = pg.Node.create({
+		// 				I:[n_creator.ID],
+		// 				position:[0,0],
+		// 				P: pg.planner.get_prototype({type:'trigger'})
+		// 			});
+		// 		} else { return false; }
+		// 		return {
+		// 			target_position:[n_creator.position[0]+1, n_creator.position[1]],
+		// 			nodes:[n_trigger]
+		// 		};
+		// 	}
+		// }
 	},
 
 	attr_func : function(key) {

@@ -37,12 +37,13 @@ pg.history = {
             //      2a. new values are single and not exist as node
             //      2b. new values exist as node
             demo_action = pg.planner.demos.demo_set_attribute.generate(eventList);
-        } else if(eventList[0].type=='trigger') {  
-            //  Case 3. Triggering UI component
-            //      3a. the UI component is attached by Attach Element
-            //      3b. not exist, should extract from page
-            demo_action = pg.planner.demos.demo_trigger.generate(eventList);
-        }
+        } 
+        // else if(eventList[0].type=='trigger') {  // {'trigger',el:event.target, ID:$(this).attr('creator_ID')}
+        //     //  Case 3. Triggering UI component
+        //     //      3a. the UI component is attached by Attach Element
+        //     //      3b. not exist, should extract from page
+        //     demo_action = pg.planner.demos.demo_trigger.generate(eventList);
+        // }
         validActions.push(demo_action);
         this.inferredActions = validActions;
         pg.toolbox.redraw();

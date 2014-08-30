@@ -204,12 +204,12 @@ pg.panel = {
 ///  Node Input setters and highlighters
 ///////////////////////////////////////////////////////////////////
 	node_select_modal_on: function(i) {
-		$(".node .node_cover .nth-input-text").html("input"+(i+1)).removeClass("hidden");
+		$(".node .node_cover .nth-input-text").html("input"+(i+1)).removeClass("hidden").addClass("select_modal");
 		$(".node .node_cover").show();
 		$(".node .node_cover").removeClass("notClickable");
 		$(".node .node_cover").click($.proxy(function(e) {
 			var _id = $(e.target).parents(".node").attr("id");
-			console.log(_id + " is selected as "+this.i+"-th input");
+			//console.log(_id + " is selected as "+this.i+"-th input");
 			$("#pg_command_ui").find("input[inputNodeIdx='"+this.i+"']").val(_id);
 			(pg.panel.get_current_node()).I[this.i]=_id;
 			e.stopPropagation();
@@ -219,10 +219,11 @@ pg.panel = {
 	},
 	node_select_modal_off: function() {
 		$(".node .node_cover").addClass("notClickable");
-		$(".node .node_cover .nth-input-text").empty().addClass("hidden");
+		$(".node .node_cover .nth-input-text").empty().addClass("hidden").removeClass("select_modal");
 		$(".node .node_cover").hide().unbind('click');
 	},
 	node_show_inputs: function(node) {
+		//$(".node .node_cover .nth-input-text").empty().removeClass("hidden");
 		$("#"+node.ID).find('.nth-input').show();
 		_.each(node.I, function(input_node_id, n_th) {
 			var input_node = pg.panel.enhancement.get_node_by_id(input_node_id, node);
@@ -476,6 +477,7 @@ pg.panel = {
 			}
 		},this);
 		this.attachEventListeners();
+		pg.panel.clearConnector();
 		if(pg.panel.get_current_node()) {
 			var n = pg.panel.get_current_node();
 			pg.panel.deselect();
@@ -783,10 +785,16 @@ pg.panel = {
 				}
 			})
 			.hover(function(){
-				if($(""))
+				if(pg.panel.get_current_node()) return;
+				if($(".node .node_cover .nth-input-text").hasClass("select_modal")) return;
 				var node = pg.panel.get_node_by_id($(this).attr('id'));
+				pg.panel.node_show_inputs(node);
+
 			},function(){
+				if(pg.panel.get_current_node()) return;
+				if($(".node .node_cover .nth-input-text").hasClass("select_modal")) return;
 				var node = pg.panel.get_node_by_id($(this).attr('id'));
+				pg.panel.node_hide_inputs(node);
 			})
 			.dblclick(function(e) {
 				e.stopPropagation();
@@ -838,6 +846,11 @@ pg.panel = {
                 }
             }
 		});
+		// Add click event to every user-attached element in the body
+		// $(document).on("click","*[creator_ID]", function(event) {
+		// 	pg.history.put({type:'trigger',el:event.target, ID:$(this).attr('creator_ID')});
+		// 	pg.history.infer();
+		// });
 		// Double-Click --> create new node
 		var el_tiles = $("#pg").find("#tiles");
 		$(el_tiles).off('click').click(function(e) {
@@ -876,7 +889,7 @@ pg.panel = {
 			drag: function(event, ui) {
 				var top = ui.offset.top - $(window).scrollTop();;
 				var left = ui.offset.left + 10 - $(window).scrollLeft();;
-				console.log(left + " , " + top);
+				//console.log(left + " , " + top);
 				var width = left-$(pg.panel.targetEl).position().left;
 				$(pg.panel.targetEl).width(width);
 				$(pg.documentBody).css("padding-left",left);

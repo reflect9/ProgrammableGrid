@@ -40,6 +40,8 @@
             "js/problems.js",
             "js/selectionBox.js",
             "js/inspector.js",
+            "js/task.js",
+            "js/note.js",
             "contentscript.js"
       		],
       "css": [  

@@ -60,6 +60,10 @@ function reportOnLoad() {
 		// 	// TBD: panel should load specific enhancement or procedure
 		// }
 	});
+
+	// check URL if there's any message for opening PG and load something fuck!
+	if (window.location.search && window.location.search.match(/task=([a-zA-Z0-9_\-]+)/))
+		pg.init();
 }
 
 function executeNodesAtRemoteTab(url, nodes) {

@@ -1,16 +1,17 @@
-pg.Enhancement = function(_title, _nodes) {
-	this.id = makeid();
-	this.title = (_title)? _title: "Tandem-"+this.id;
-	this.description = "description";
-	if(_nodes && isArray(_nodes) && _nodes.length>0) this.nodes = _nodes;
-	else {
-		var default_trigger_node = pg.Node.create({type:'trigger', P:pg.planner.get_prototype({type:"trigger"}), position:[0,1]});
-		default_trigger_node.P.param.event_source = "page";
-		this.nodes = [default_trigger_node];
-		this.title = _title || "Tandem-"+makeid();
-	}
+pg.Enhancement = function(enh) {
+	var random_id = makeid();
+	var default_trigger_node = pg.Node.create({type:'trigger', P:pg.planner.get_prototype({type:"trigger"}), position:[0,1]});
+	default_trigger_node.P.param.event_source = "page";
 	
+	this.id = (enh && typeof enh.id !== 'undefined') ? _.clone(enh.id) : random_id;
+	this.title = (enh && typeof enh.title !== 'undefined') ? _.clone(enh.title) : "Tandem-"+random_id;
+	this.active = (enh && typeof enh.active !== 'undefined') ? _.clone(enh.active) : true;   
+	this.nodes = (enh && typeof enh.nodes !== 'undefined') ? _.clone(enh.nodes) : [default_trigger_node];   
+	this.notes = (enh && typeof enh.notes !== 'undefined') ? _.clone(enh.notes) : [];   
+	this.domain = (enh && typeof enh.domain !== 'undefined') ? _.clone(enh.domain) : [document.URL];   
+	this.timestamp = (enh && typeof enh.timestamp !== 'undefined') ? _.clone(enh.timestamp) : Date.now();   	
 };
+
 pg.Enhancement.prototype.delete = function(node_to_delete) {
 	this.nodes = _.without(this.nodes, node_to_delete);
 };
@@ -31,6 +32,17 @@ pg.Enhancement.prototype.load_json = function(json){
 		return newNode;
 	});
 };
+pg.Enhancement.prototype.serialize = function() {
+	var _enh = _.clone(this);
+	// CLEAN UP NODE VALUES
+	_enh.nodes = _.map(_.clone(this.nodes), function(node) {
+		var _n =  pg.Node.create(node);
+		_n.V = [];	_n.selected = false;
+		return _n;
+	});
+	return JSON.stringify(_enh);
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  Editing methods
@@ -155,11 +167,6 @@ pg.Enhancement.prototype.delete_row = function(row_num) {
 	});
 };
 
-pg.Enhancement.prototype.serialize = function() {
-	return _.map(this.get_nodes(), function(n){
-		return pg.Node.serialize(n);
-	});
-};
 
 ///////////////////////////////////////////////////////////////////
 ///  Node getters
@@ -220,9 +227,7 @@ pg.Enhancement.prototype.get_node_by_values = function(_values) {
 	// return nodes that contain all the values
 	var values = _.union([],_values);
 	return _.filter(this.nodes, function(node) {
-		return _.every(values, function(v) {
-			return node.V.indexOf(v)!== -1;
-		});
+		return isSameArray(node.V,values);
 	});
 };
 pg.Enhancement.prototype.get_page_trigger_node = function() {

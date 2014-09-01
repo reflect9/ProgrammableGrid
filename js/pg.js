@@ -18,9 +18,21 @@ pg = {
 		} else pg.documentBody = $("body")[0];
 		// toggle #pg element
 		if($("#pg").length>0) pg.close();
-		else pg.open();
+		else {
+			pg.open();
+			var task_to_load = (window.location.search && window.location.search.match(/task=([a-zA-Z0-9_\-]+)/))?
+				window.location.search.match(/task=([a-zA-Z0-9_\-]+)/)[1] : false;
+			if(task_to_load && pg.task[task_to_load]) {
+
+				var task_enhancement = pg.task.get_enhancement(task_to_load);
+				pg.open_enhancement(task_enhancement);
+			} else {
+				pg.open_enhancement(pg.latest_enhancement(pg.enhancements));	
+			}
+		}
+		$("#pg").css("width",(300+DEFAULT_GRID_WIDTH)+"px");
+		$(".pg_panel").css("width",DEFAULT_GRID_WIDTH+"px");
 		pg.attachEventHandlers();
-		//
 	},
 	open: function() {
 		if(pg.pg_el) $(pg.pg_el).remove();
@@ -36,18 +48,16 @@ pg = {
 		$(pg.documentBody).append(pg.pg_el);
 		$(pg.documentBody).css({
 			"position":"relative",
-			"padding-left":"600px",
+			"padding-left":"800px",
 			"margin":"0px"
 		});
 		pg.info.init($(pg.pg_el).find("#pg_info"));
 		pg.browser = new pg.Browser($(pg.pg_el.find("#pg_browser")), pg.enhancements);
 		pg.toolbox = new pg.Toolbox($(pg.pg_el.find("#pg_toolbox")), []);
-		var last_enh = pg.latest_enhancement(pg.enhancements);
-		pg.open_enhancement(last_enh);
 	},
 	close: function() {
 		$(pg.pg_el).remove();
-		$(pg.documentBody).css("padding-left","0px");
+		$(pg.documentBody).css("padding-left",DEFAULT_GRID_WIDTH+"px");
 		pg.inspector.off();
 	},
 	toggle_visibility: function() {
@@ -58,7 +68,7 @@ pg = {
 	// 	pg.panel.redraw();
 	// },
 	new_enhancement: function(_title) {
-		var enhancement = new pg.Enhancement(_title);
+		var enhancement = new pg.Enhancement({title:_title});
 		pg.save_enhancement(enhancement);
 		pg.browser.redraw(pg.enhancements);
 	},
@@ -67,7 +77,7 @@ pg = {
 		try {
 			var old_data = localStorage[LOCAL_STORAGE_KEY];
 			if (old_data =="undefined" || old_data == "[object Object]" || old_data == "[]") old_data="{}";
-			enhancement_dictionary = pg.parse(old_data);
+			enhancement_dictionary = pg.parse_enhancements(old_data);
 		} catch(e) {
 			enhancement_dictionary = {};
 		}	
@@ -77,6 +87,7 @@ pg = {
 		enh.nodes = typeof _enh.nodes !== 'undefined' ? clone_nodes : [];
 		enh.timestamp = Date.now();
 		enh.active = typeof _enh.active !== 'undefined' ? _enh.active : true;
+		enh.notes = typeof _enh.notes !== 'undefined' ? _enh.notes : [];
 		enh.domain = typeof _enh.domain !== 'undefined' ? _enh.domain : [document.URL];
 		enh.title = typeof _enh.title !== 'undefined' ? _enh.title : "Tandem-"+makeid();
 		enh.description = typeof _enh.description !== 'undefined' ? _enh.description : "no description";
@@ -97,7 +108,7 @@ pg = {
 		if (localStorage[LOCAL_STORAGE_KEY]==undefined) return false;
 		else {
 			var data = localStorage.getItem(LOCAL_STORAGE_KEY);
-			pg.enhancements = pg.parse(data);
+			pg.enhancements = pg.parse_enhancements(data);
 		}	
 	},
 	// load_enhancement: function(eid) {
@@ -124,7 +135,7 @@ pg = {
 		try {
 			var old_data = localStorage[LOCAL_STORAGE_KEY];
 			if (old_data =="undefined" || old_data == "[object Object]" || old_data == "[]") old_data="{}";
-			programs = pg.parse(old_data);
+			programs = pg.parse_enhancements(old_data);
 		} catch(e) {
 			programs = {};
 		}	
@@ -143,14 +154,19 @@ pg = {
 		});
 		return JSON.stringify(programs);
 	},
-	parse: function(data) {
+	parse_enhancements: function(data) {
 		try {
 			// loaded enhancements are json objects, so we should convert them to Enhancement objects
 			var enhancements_js_obj = JSON.parse(data);  
 			enhancements = {};
 			_.each(enhancements_js_obj, function(enh_json_obj, eid) {
-				var enh = new pg.Enhancement(); // create new Enhancement ojb
-				for (var key in enh_json_obj) { enh[key] = enh_json_obj[key]; } // copy all properties
+				var enh = new pg.Enhancement(enh_json_obj); // create new Enhancement ojb
+				if(enh.notes) {
+					enh.notes = _.map(enh.notes, function(note) {
+				        return new pg.Note(note);
+				    });
+				}
+				//for (var key in enh_json_obj) { enh[key] = enh_json_obj[key]; } // copy all properties
 				// _.each(enh.nodes, function(node) {
 				// 	if(node.P) {
 				// 		node.P.kind = (pg.planner.get_prototype(node.P)).kind;
@@ -165,18 +181,18 @@ pg = {
 		}
 		
 	},
-	generate : function(problem_title){
-		try {
-			var problem_nodes = pg.problems[problem_title]();
-			var plans = pg.planner.plan(problem_nodes[0],problem_nodes[1]);
-			var plansWithI = _.map(plans, function(p) {
-				return _.union(problem_nodes[0], p);
-			},this);
-			return plansWithI;
-		} catch(e) {
-			console.error(e.stack);
-		}
-	},
+	// generate : function(problem_title){
+	// 	try {
+	// 		var problem_nodes = pg.problems[problem_title]();
+	// 		var plans = pg.planner.plan(problem_nodes[0],problem_nodes[1]);
+	// 		var plansWithI = _.map(plans, function(p) {
+	// 			return _.union(problem_nodes[0], p);
+	// 		},this);
+	// 		return plansWithI;
+	// 	} catch(e) {
+	// 		console.error(e.stack);
+	// 	}
+	// },
 	cleanStorage: function() {
 		localStorage[LOCAL_STORAGE_KEY]="{}";
 	},
@@ -221,6 +237,8 @@ pg = {
 DEFAULT_PLATE_DIMENSION = 3000
 DEFAULT_NODE_DIMENSION = 85
 NODE_MARGIN = 2
+
+DEFAULT_GRID_WIDTH = 500
 
 NODE_SIZE_LOW = 30
 NODE_SIZE_MID = 80

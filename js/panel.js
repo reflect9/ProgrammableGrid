@@ -20,14 +20,22 @@ pg.panel = {
 		// this.commandUI.create();  this.commandUI.remove();
 		// this.toolbar.create();
 		// $("#plate_container").dragscrollable({
-		// 	dragSelector:'#tiles',
-		// 	acceptPropagatedEvent:false
 		// });
 		pg.info.update(this.enhancement);
+		// 	dragSelector:'#tiles',
+		// 	acceptPropagatedEvent:false
 		//pg.panel.drawPlate();
+		if(this.enhancement.notes) {
+			_.each(this.enhancement.notes, function(note) {
+				var note_el = note.render();
+				pg.panel.el.find("#tiles").append(note_el);
+			});
+		}
+		
 		console.log("redraw start");
 		pg.panel.redraw();
 		pg.toolbox.redraw(pg.planner.get_all_operations());
+		pg.panel.execute();
 	},
 	close: function() {
 		$(pg.panel.targetEl).empty();
@@ -468,7 +476,7 @@ pg.panel = {
 	redraw: function() {
 		// pg.save_enhancement(pg.panel.title,pg.panel.get_nodes());
 		var nodes = pg.panel.get_nodes();
-		$("#pg_panel > #plate_container > #tiles").empty();
+		$("#pg_panel > #plate_container > #tiles > .node").remove();
 		_.each(nodes, function(n,ni){
 			try{
 				pg.Node.draw(n,this.node_dimension);

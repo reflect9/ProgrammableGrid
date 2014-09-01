@@ -23,7 +23,6 @@ pg = {
 			var task_to_load = (window.location.search && window.location.search.match(/task=([a-zA-Z0-9_\-]+)/))?
 				window.location.search.match(/task=([a-zA-Z0-9_\-]+)/)[1] : false;
 			if(task_to_load && pg.task[task_to_load]) {
-
 				var task_enhancement = pg.task.get_enhancement(task_to_load);
 				pg.open_enhancement(task_enhancement);
 			} else {

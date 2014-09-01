@@ -20,9 +20,9 @@ pg.Note.prototype.render = function() {
     });
     $(el).draggable().css("position","absolute");
     $(el).css({
-        width:DEFAULT_NODE_DIMENSION*this.width, height:DEFAULT_NODE_DIMENSION*this.height,
-        top:DEFAULT_NODE_DIMENSION*this.position[0],
-        left:DEFAULT_NODE_DIMENSION*this.position[1]
+        'width':DEFAULT_NODE_DIMENSION*this.width, 'min-height':DEFAULT_NODE_DIMENSION*this.height,
+        'top':DEFAULT_NODE_DIMENSION*this.position[0],
+        'left':DEFAULT_NODE_DIMENSION*this.position[1]
     });
     return el;
 };

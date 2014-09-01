@@ -1628,7 +1628,7 @@ pg.planner = {
 				if(tag=="span") return $("<span>"+value+"</span>")[0];
 				if(tag=="p") return $("<p>"+value+"</p>")[0];
 				if(tag=="button") return $("<button>"+value+"</button>")[0];
-				if(tag=="text input") return $("<input type='text' style='width:30px;' value='"+value+"'/>")[0];
+				if(tag=="text input") return $("<input type='text' value='"+value+"'/>")[0];
 				if(tag=="checkbox") return $("<input type='checkbox' name='"+value+"'/><span>"+value+"</span>")[0];
 				if(tag=="img") return $("<img src='"+value+"'></img>")[0];
 				return false;
@@ -1868,7 +1868,7 @@ pg.planner = {
 					// Is[0]-(select_representative)-> n_rep -(select_element)-> O
 					var solutions=[];
 					_.each(Is, function(I) {
-						var rep_el = findRepElements(_.union(I.V,O.V));
+						var rep_el = _.first(findRepElements(_.union(I.V,O.V)),I.V.length);
 						if(!rep_el || rep_el.length==0) return false;
 						var n_rep = pg.Node.create({
 							'I':[I.ID],

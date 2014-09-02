@@ -1864,6 +1864,12 @@ pg.planner = {
 				Is = _.without(Is,false);
 				if(Is.length==0  || !Is[0] || !Is[0].V || Is[0].V.length==0 || !isDomList(Is[0].V)) return false;
 				if(!O || !O.V || O.V.length==0 || !isDomList(O.V)) return false;
+				for(var i in Is) {
+					for (var j in O.V) {
+						if(O.V[j]==Is[i].V[j]) return false;
+					}
+				}
+				// return false if O.V has same elements with I.V
 				return true;
 			},
 			generate: function(Is, O) {

@@ -147,10 +147,33 @@ pg.task = {
 
 
     },
-    attach_element : {
-        json: ''
+    attach1 : {
+        json: {"id":"iLpTy","title":"Attach Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"LMrGn","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["LMrGn","_left"],"ID":"AiPao","P":{"kind":"apply","type":"create_element","icon":"magic","param":{"value":"blah","tag":"checkbox"},"description":"Create [tag] elements using the [value].","applicable":false},"V":[],"selected":false,"position":[2,2],"executed":true},{"I":["LMrGn","_left"],"ID":"9aOgd","P":{"kind":"apply","type":"create_element","icon":"magic","param":{"value":"search by keyword","tag":"text input"},"description":"Create [tag] elements using the [value].","applicable":false},"V":[],"selected":false,"position":[6,2],"executed":true}],"notes":[],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=filter1"],"timestamp":1409600397571},
+        notes: [
+            {   description:'Attach the INPUT element in the above node to front of every apple name (Anna, Ariane, ...)',
+                position: [3,2],
+                width:3, height:1
+            },
+            {   description:"Attach the INPUT element in the above node behind the table.",
+                position: [7,2],
+                width:3, height:1
+            },
+        ]
     },
-    set_attribute : {
+    attach2 : {
+        json: {"id":"iLpTy","title":"Attach Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"LMrGn","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["LMrGn","_left"],"ID":"AiPao","P":{"kind":"apply","type":"create_element","icon":"magic","param":{"value":"blah","tag":"checkbox"},"description":"Create [tag] elements using the [value].","applicable":false},"V":[],"selected":false,"position":[2,2],"executed":true},{"I":["LMrGn","_left"],"ID":"9aOgd","P":{"kind":"apply","type":"create_element","icon":"magic","param":{"value":"search by keyword","tag":"text input"},"description":"Create [tag] elements using the [value].","applicable":false},"V":[],"selected":false,"position":[6,2],"executed":true}],"notes":[],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=filter1"],"timestamp":1409600397571},
+        notes: [
+            {   description:'Attach the INPUT element in the above node to front of every apple name (Anna, Ariane, ...)',
+                position: [3,2],
+                width:3, height:1
+            },
+            {   description:"Attach the INPUT element in the above node behind the table.",
+                position: [7,2],
+                width:3, height:1
+            },
+        ]
+    },
+    modify : {
         json: ''
     }
 };
@@ -159,7 +182,7 @@ pg.task.get_enhancement = function(task_key) {
     var enh = new pg.Enhancement(pg.task[task_key].json);
     enh.notes = _.map(pg.task[task_key].notes, function(note, i) {
         var _n = new pg.Note(note);
-        _n.title = "Problem "+i+" of "+pg.task[task_key].notes.length;
+        _n.title = "Problem "+(i+1)+" of "+pg.task[task_key].notes.length;
         return _n;
     });
     return enh;

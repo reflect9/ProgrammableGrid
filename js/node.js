@@ -23,12 +23,16 @@ pg.Node = {
 		}
 		return n;
 	},
-	serialize: function(_n) {
+	serialize: function(_n, _include_value) {
 		var node = pg.Node.create(_n);
-		node.V = _.map(_n.V, function(v) {
-			if(isDom(v)) return dom2jsonML(v);
-			else return v;
-		});
+		if(typeof _include_value == 'undefined' || _include_value==true) {
+			node.V = _.map(_n.V, function(v) {
+				if(isDom(v)) return dom2jsonML(v);
+				else return v;
+			});
+		} else {
+			node.V = [];
+		}
 		node.selected = false;
 		return JSON.stringify(node);
 	},

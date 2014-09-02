@@ -814,6 +814,7 @@ pg.panel = {
 											Math.floor((event.clientX-$(this).offset().left+$(document).scrollLeft()) / pg.panel.node_dimension)	];
 				console.log("dropped at "+position);
 				var existing_node = pg.panel.get_node_by_position(position);
+				pg.log.add({type:'confirm_operation',operation:pg.toolbox.draggingOperation});    
 				if(existing_node) {
 					existing_node.P=pg.toolbox.draggingOperation;
 					pg.panel.redraw();

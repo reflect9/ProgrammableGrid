@@ -1408,9 +1408,10 @@
 }
 #pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_data_container ul.data_ul li i.copy_object {
   position: absolute;
-  right: 0px;
+  right: 10px;
   top: calc(50% - 10px);
   display: none;
+  font-size: 22px;
 }
 #pg #pg_command_ui .data_panel .input_data .input_nodes_container .input_node_info .input_node_data_container ul.data_ul li:hover i.copy_object {
   font-size: 18px;

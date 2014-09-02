@@ -792,25 +792,27 @@ pg.planner = {
 				var connector;
 				try{	// PRECHECLONG
 					if (Is.length<2 ||
-						_.every(Is, function(I){ return isStringList(I.V); }) == false  ||
+						_.every(Is, function(I){ return isStringList(I.V) || isNumberList(I.V); }) == false  ||
 						isStringList(O.V) == false) return false;
 					var valid_O = [];
 					var find_O = function(O,nodeA,nodeB,nth_A,nth_B) {
 						for(i in O.V) {
 							var concat_str = _.clone(O.V[i]);
-							if(concat_str.indexOf(nodeA.V[i])==0) {
-								concat_str = concat_str.replace(nodeA.V[i],"");
+							var strA = ""+nodeA.V[Math.min(i,nodeA.V.length-1)];
+							var strB = ""+nodeB.V[Math.min(i,nodeB.V.length-1)];
+							if(concat_str.indexOf(strA)==0) {
+								concat_str = concat_str.replace(strA,"");
 							} else { return false; }
-							var pos = concat_str.indexOf(nodeB.V[i]);
+							var pos = concat_str.indexOf(strB);
 							connector_temp = concat_str.substring(0,pos);
 							if(typeof connector!=='undefined' && connector!=connector_temp) return false;
 							else connector = connector_temp;								
 							concat_str = concat_str.replace(connector,"");
-							concat_str = concat_str.replace(nodeB.V[i],"");
+							concat_str = concat_str.replace(strB,"");
 							if(concat_str!="") return false;
 						}
 						var _O = pg.Node.create(O);
-						_O.P = jsonClone(this.proto);
+						_O.P = pg.planner.get_prototype({type:'compose_text'});
 						_O.P.param.connector=connector;		
 						_O.P.param.text_A = nth_A; 
 						_O.P.param.text_B = nth_B;
@@ -834,9 +836,12 @@ pg.planner = {
 						var nth_input = parseInt(O.P.param.text_B.match(/input([0-9])/)[1])-1; 
 						nodeB = pg.panel.get_node_by_id(O.I[nth_input],O);
 					}
-					O.V = _.map(_.zip(nodeA.V, nodeB.V), function(AB) {
-						return AB.join(O.P.param.connector);
-					});
+					O.V = [];
+					for(var i=0;i<Math.max(nodeA.V.length,nodeB.V.length);i++) {
+						var strA = ""+nodeA.V[Math.min(i,nodeA.V.length-1)];
+						var strB = ""+nodeB.V[Math.min(i,nodeB.V.length-1)];
+						O.V.push(strA+O.P.param.connector+strB);
+					}
 					return O;
 				} catch(e) { console.log(e.stack); }
 			}
@@ -2586,7 +2591,7 @@ pg.planner = {
 					});
 					n_attachment = pg.Node.create({
 						I:[n_source.ID, n_target.ID],
-						position:[0,1],
+						position:[1,0],
 						P: pg.planner.get_prototype({type:'attach_element',param:{source:'input1', target:'input2', location:location}})
 					});
 					var n_target_result = pg.planner.operations.extract_element.generate([], n_target);
@@ -2608,50 +2613,49 @@ pg.planner = {
 				var keys = _.map(events, function(ev) { return ev.key; });
 				if(_.unique(keys).length!=1) return false;
 				// VALUE NODE	
-				var simplified_values = (_.unique(values).length==1)? _.unique(values):values;
-				var jsonValues = JSON.stringify(simplified_values);
-				n_value = pg.Node.create({
-					position:[1,-1],
-					P: pg.planner.get_prototype({type:'literal',param:{source:jsonValues}})
-				});
+				var matching_value_nodes = pg.panel.enhancement.get_node_by_values(values);
+				if(matching_value_nodes.length==0) {
+					var simplified_values = (_.unique(values).length==1)? _.unique(values):values;
+					var jsonValues = JSON.stringify(simplified_values);
+					n_value = pg.Node.create({
+						position:[1,0],
+						P: pg.planner.get_prototype({type:'literal',param:{source:jsonValues}})
+					});	
+				} else {
+					n_value = pg.Node.create({
+						I:[matching_value_nodes[0].ID],
+						position:[1,0],
+						P: pg.planner.get_prototype({type:'literal',param:{source:'input1'}})
+					});	
+				}
 				// TARGET NODES
 				var matching_target_nodes = pg.panel.enhancement.get_node_by_values(target_el);
 				if(matching_target_nodes.length>0) {
-					n_target = matching_target_nodes[0];
-					n_value.I=[n_target.ID];
-					n_set_attribute = pg.Node.create({
-						I:[n_target.ID, n_value.ID],
+					n_target = pg.Node.create({
+						I:[matching_target_nodes[0].ID],
+						V:target_el,
 						position:[0,0],
-						P: pg.planner.get_prototype({type:'set_attribute',param:{key:_.unique(keys), target:"input1", new_value:'input2'}})
+						P: pg.planner.get_prototype({type:'literal',param:{source:'input1'}})
 					});
-					n_value.position=[0,-1];
-					return {
-						target_position:false,
-						nodes:[n_value, n_set_attribute]
-					}; 					
-				} else { // when target_node would exist
+				} else { // when target_node is required
 					n_target = pg.Node.create({
 						V:target_el,
 						position:[0,0]
 					});
 					var n_target_result = pg.planner.operations.extract_element.generate([], n_target);
-					n_value.I=[n_target.ID];
-					n_set_attribute = pg.Node.create({
-						I:[n_target.ID, n_value.ID],
-						position:[1,0],
-						P: pg.planner.get_prototype({type:'set_attribute',param:{key:_.unique(keys), target:"input1", new_value:'input2'}})
-					});
-					if(n_target_result) {
-						return {
-							target_position:false,
-							nodes:[n_target_result[0], n_value, n_set_attribute]
-						};
-					} else {	
-						return false;
-					}
+					
 				}
+				// SET ATTRIBUTE NODE
+				n_set_attribute = pg.Node.create({
+					I:[n_target.ID, n_value.ID],
+					position:[2,0],
+					P: pg.planner.get_prototype({type:'set_attribute',param:{key:_.unique(keys), target:"input1", new_value:'input2'}})
+				});
+				return {
+					target_position:false,
+					nodes:[n_target, n_value, n_set_attribute]
+				}; 					
 			}
-
 		},
 		// demo_trigger:{
 		// 	generate: function(events) {

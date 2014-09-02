@@ -42,6 +42,7 @@
             "js/inspector.js",
             "js/task.js",
             "js/note.js",
+            "js/log.js",
             "contentscript.js"
       		],
       "css": [  
@@ -64,6 +65,7 @@
     "notifications",
     "storage",
     "unlimitedStorage",
+    "http://tandem-log.appspot.com/",
     "http://*/*", "https://*/*",
     "http://*/", "https://*/"
   ],

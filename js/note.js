@@ -18,7 +18,14 @@ pg.Note.prototype.render = function() {
         $(this).parents(".note").remove();
         e.stopPropagation();
     });
-    $(el).draggable().css("position","absolute");
+    $(el).draggable({
+        start:$.proxy(function(event, ui) {
+            if(typeof $(event.target).attr('clicked')=='undefined') {
+                $(event.target).attr('clicked','true');
+                pg.log.add({type:'problem_start',title:this.title, description:this.description});    
+            }
+        },{title:this.title, description:this.description})
+    }).css("position","absolute");
     $(el).css({
         'width':DEFAULT_NODE_DIMENSION*this.width, 'min-height':DEFAULT_NODE_DIMENSION*this.height,
         'top':DEFAULT_NODE_DIMENSION*this.position[0],

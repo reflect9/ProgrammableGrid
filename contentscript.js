@@ -44,6 +44,11 @@ chrome.runtime.onMessage.addListener(
 			pg.pageLoader.handleHTML(request.message, request.url);
 			// if(request.message) pg.panel.commandUI.paste_nodes(request.message);
 		}
+		if(request.action === 'log_completed') {
+			console.log("logging completed.");
+			console.log(request.message);
+			pg.log.send_completed();
+		}
 		else if(true) {}
 		sendResponse({});
 	}

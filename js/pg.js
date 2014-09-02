@@ -2,6 +2,7 @@ pg = {
 	documentBody: undefined,
 	init: function() {
 		pg.history.init();
+		pg.log.init();
 		pg.load_all_enhancements();
 		// get documentBody
 		if($("body").length==0) { // WHEN BODY IS IN IFRAME
@@ -22,8 +23,12 @@ pg = {
 			pg.open();
 			var task_to_load = (window.location.search && window.location.search.match(/task=([a-zA-Z0-9_\-]+)/))?
 				window.location.search.match(/task=([a-zA-Z0-9_\-]+)/)[1] : false;
+			pg.subject_name = (window.location.search && window.location.search.match(/name=(.+)/))?
+				window.location.search.match(/name=(.+)/)[1] : false;
 			if(task_to_load && pg.task[task_to_load]) {
+				pg.log.active=true;
 				var task_enhancement = pg.task.get_enhancement(task_to_load);
+				pg.log.add({type:'start_task',title:task_enhancement.title});
 				pg.open_enhancement(task_enhancement);
 			} else {
 				pg.open_enhancement(pg.latest_enhancement(pg.enhancements));	

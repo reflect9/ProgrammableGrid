@@ -869,10 +869,10 @@ function jsonML2dom(json) {
   	return JsonML.toHTML(json);
 }
 
-function serialize_nodes(_nodes) {
+function serialize_nodes(_nodes, _include_nodes) {
 	var nodes = $.makeArray(_nodes);
 	return _.map(nodes, function(n){
-		return pg.Node.serialize(n);
+		return pg.Node.serialize(n, _include_nodes);
 	});
 }
 

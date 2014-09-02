@@ -86,6 +86,7 @@ pg.Toolbox.prototype.renderTask = function(nodes) {
 		var currently_selected_node = pg.panel.get_current_node();
 		var current_node_position = currently_selected_node.position;
 		if(currently_selected_node) {
+			pg.log.add({type:'confirm_task',nodes:serialize_nodes(this.nodes,false)});    
 			pg.panel.insert(this.nodes, currently_selected_node);	
 			var node_to_trigger = pg.panel.enhancement.get_node_by_position(current_node_position);
 			pg.panel.enhancement.run_triggered_nodes([node_to_trigger]);
@@ -129,6 +130,7 @@ pg.Toolbox.prototype.renderDemo = function(demo_action) {
 				n.position = [n.position[0]+this.target_position[0], n.position[1]+this.target_position[1]];
 			},this);	
 		}
+		pg.log.add({type:'confirm_demo',nodes:serialize_nodes(this.nodes,false)});    
 		pg.panel.enhancement.insert_at(this.nodes);
 		// TRIGGER
 		var position_to_trigger = (this.target_position)? this.target_position:current_node_position;
@@ -200,6 +202,7 @@ pg.Toolbox.prototype.renderOperation = function(op, _notDraggable) {
 		} else {
 			var node = pg.panel.get_current_node();
 			if(node) {
+				pg.log.add({type:'confirm_operation',operation:this.op});    
 				node.P = this.op;
 				//pg.panel.enhancement.run_triggered_nodes([node]);
 				pg.panel.redraw();	

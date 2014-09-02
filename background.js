@@ -45,6 +45,22 @@ function init() {
 				xhttp.open(method, request.url, true);
 				xhttp.send(request.data);
 			} // end of cross domain loading
+			if(request.action == "log") {
+				var xhttp = new XMLHttpRequest();
+				xhttp.open("POST", "http://tandem-log.appspot.com/add", true);
+				// var method = request.method ? request.method.toUpperCase() : 'GET';
+				xhttp.onreadystatechange = $.proxy(function() {
+					if(xhttp.readyState == 4){
+						console.log(xhttp.responseText);
+						var sender_tabID = this.sender.tab.id;
+						chrome.tabs.sendMessage(sender_tabID, {action:"log_completed", message:xhttp.responseText}, function(){});
+						xhttp.onreadystatechange = xhttp.open = xhttp.send = null;
+						xhttp = null;
+					}
+				},{sender:sender, request:request});
+				xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+				xhttp.send("item="+request.message.item);
+			} // end of logging
 			if(request.action == "openTab") {
 				console.log(request.url + request.script);
 				chrome.tabs.create({url: request.url, active: false, pinned:true}, function(tab) {

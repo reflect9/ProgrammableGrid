@@ -668,8 +668,9 @@ pg.panel = {
 			});	
 
 			// PLACE DATA UI PANEL
-			$(ui_el).css("top", pos.y + $(window).scrollTop());
-			$(ui_el).css("left", pos.x + $(window).scrollLeft());
+			var x = Math.min(pos.x+$(window).scrollLeft(), $(window).width()-300); 
+			$(ui_el).css("top", pos.y + $(window).scrollTop() + 20);
+			$(ui_el).css("left", x);
 			$(pg.documentBody).append(ui_el).show('fast');
 			return ui_el;
 		},
@@ -823,6 +824,7 @@ pg.panel = {
 					new_node.P = pg.toolbox.draggingOperation;	
 					new_node.position = position;
 					pg.panel.enhancement.push_at(new_node, position);
+					pg.panel.select(new_node);
 				} 
 			}
 

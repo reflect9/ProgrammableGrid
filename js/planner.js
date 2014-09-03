@@ -855,7 +855,7 @@ pg.planner = {
 				description: "Calculate [operand_A] [operator] [operand_B]"
 			},
 			parameters: {
-				operator: {type:'text', label:'Operation (e.g. +, -, *, /, %', default:"+", options:["+","-","-","*","/","%"]},
+				operator: {type:'text', label:'Operation (e.g. +, -, *, /, %', default:"+", options:["+","-","*","/","%"]},
 				operand_A: {type:'text', label:'First operand', default:"input1", options:["input1","input2"]},
 				operand_B: {type:'text', label:'Second operand', default:"input2", options:["input1","input2"]}
 			},
@@ -989,12 +989,15 @@ pg.planner = {
 				booleans: {type:'text', label:'Boolean(true/false) values for filtering', default:"input2", options:["input1","input2"]},
 			},
 			pre:function(Is) {
-				if(!Is || Is.length<2 || !isBooleanList(Is[1].V)) return false;
+				if(!Is || _.without(Is,false).length<2 || !isBooleanList(Is[1].V)) return false;
 				return true;
 			},
 			generate: function(Is, O) {
 				var _O = pg.Node.create(O);
 				var valid_O = [];
+				var _Is = _.clone(Is); // _Is is including empty(false) nodes
+				Is = _.without(Is,false);
+				if(Is.length<2) return false;
 				var input_combinations = pickCombination(Is, 2);
 				_.each(input_combinations, function(input_comb) {
 					var input1 = input_comb[0]; var input2 = input_comb[1];
@@ -1008,9 +1011,9 @@ pg.planner = {
 					}
 					// passed all test. O is filtered list of input1 with 2
 					_O.P = jsonClone(this.proto); 	
-					for(var i=0;i<Is.length;i++) {
-						if(Is[i].ID==input1.ID) _O.P.param.items = "input"+(i+1);
-						if(Is[i].ID==input2.ID) _O.P.param.booleans = "input"+(i+1);
+					for(var i=0;i<_Is.length;i++) {
+						if(_Is[i].ID==input1.ID) _O.P.param.items = "input"+(i+1);
+						if(_Is[i].ID==input2.ID) _O.P.param.booleans = "input"+(i+1);
 					}
 					valid_O.push(_O);
 				},this);

@@ -363,7 +363,10 @@
 					var op_desc_el = $(e.target).closest(".operation_description");
 					if($(e.target).attr("previousValue") != $(e.target).text()) {
 						var node = pg.panel.get_current_node();
-						node.P.param[$(e.target).attr('paramKey')]=$(e.target).text();
+						var key = $(e.target).attr('paramKey');
+						var value = $(e.target).text()
+						node.P.param[key]=value;
+						pg.log.add({type:'set_operation_parameter',key:key,value:value, node:serialize_node(node,false)});
 						pg.panel.redraw();
 						pg.panel.commandUI.highlightExecuteButton();
 					}
@@ -376,6 +379,9 @@
 				if($(e.target).attr("previousValue") != $(e.target).text()) {
 					var node = pg.panel.get_current_node();
 					node.P.param[$(e.target).attr('paramKey')]=$(e.target).text();
+					var key = $(e.target).attr('paramKey');
+					var value = $(e.target).text()
+					pg.log.add({type:'set_operation_parameter',key:key,value:value, node:serialize_node(node,false)});
 					pg.panel.redraw();
 					pg.panel.commandUI.highlightExecuteButton();
 				}
@@ -395,6 +401,7 @@
 				var op = $("<li class='param_option_item'>"+options[i]+"</li>")
 				.click($.proxy(function(e) {
 					this.node.P.param[this.paramKey]= $(e.target).text();
+					pg.log.add({type:'set_operation_parameter',key:this.paramKey,value:$(e.target).text(), node:serialize_node(this.node,false)});
 					//pg.panel.enhancement.run_node(this.node);
 					pg.panel.redraw();
 					pg.panel.commandUI.highlightExecuteButton();
@@ -424,6 +431,7 @@
 						$(attr_el).click($.proxy(function() {
 							// var key = $(this).attr('attr_key');
 							pg.panel.commandUI.addData(this.value);
+							pg.log.add({type:'copy_node_value_from_input',value:serialize_values([this.value])});
 						},{value:value})).appendTo(entryEl);
 					});	
 				} else {	// WHEN THE DATA is NOT DOM
@@ -432,6 +440,7 @@
 				// ADD COPY BUTTON
 				$("<i class='fa fa-sign-out copy_object'></i>").click($.proxy(function() {
 					pg.panel.commandUI.addData(this.v);
+					pg.log.add({type:'copy_node_value_from_input',value:serialize_values([this.v])});
 				},{v:v})).appendTo(entryEl);
 				$(target_ul).append(entryEl);
 			}
@@ -502,6 +511,7 @@
 						} else { // when edited object is just value
 							node.V[pos] = txt2var(new_value);
 						}
+						pg.log.add({type:'edit_node_value',value:serialize_values(node.V), node:pg.Node.serialize(n,false)});    
 						//pg.panel.commandUI.renderDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
 						pg.panel.redraw();
 						pg.panel.commandUI.updateSuggestedOperation(node);
@@ -522,9 +532,11 @@
 			var li_new_data = $("<li></li>");
 			$("<input type='text' class='new_data_input' placeholder='Type to add a new value.'/>")
 			.change(function(){
-				pg.panel.commandUI.addData($(this).val());
+				var newValue = $(this).val();
+				pg.panel.commandUI.addData(newValue);
 				$(this).val("");
 				$("#pg_command_ui").find("input.new_data_input").focus();
+				pg.log.add({type:'add_node_value',value:newValue});
 			}).appendTo(li_new_data);
 			$(target_ul).append(li_new_data);
 		},

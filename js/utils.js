@@ -869,13 +869,21 @@ function jsonML2dom(json) {
   	return JsonML.toHTML(json);
 }
 
-function serialize_nodes(_nodes, _include_nodes) {
+function serialize_nodes(_nodes, _include_values) {
 	var nodes = $.makeArray(_nodes);
 	return _.map(nodes, function(n){
-		return pg.Node.serialize(n, _include_nodes);
+		return pg.Node.serialize(n, _include_values);
 	});
 }
-
+function serialize_node(n, _include_values) {
+	return pg.Node.serialize(n,_include_values);
+}
+function serialize_values(V) {
+	return _.map(V, function(v) {
+		if(isDom(v)) return $(v).prop('tagName')+":"+$(v).text();
+		else return v;
+	});
+}
 
 function matchLists(l1, l2, func, option) {	// option:= (min_len|repeat|extend)
 	var real1, real2;

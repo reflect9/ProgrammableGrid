@@ -3,28 +3,28 @@ pg.task = {
         json: {"id":"eWeeA","title":"Task - Calculation","active":true,"nodes":[{"I":["_above","_left"],"ID":"ZJxtq","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["ZJxtq"],"ID":"10UcH","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[1,2,3]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[1,2],"type":"literal","executed":true},{"I":["ZJxtq"],"ID":"tuORp","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[2,0,2]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[2,1],"type":"literal","executed":true},{"I":["ZJxtq","_left"],"ID":"2DQJV","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[1,9,-5]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[13,1],"type":"literal","executed":true},{"I":["ZJxtq","_left"],"ID":"tmDR5","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[5]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[11,1],"type":"literal","executed":true},{"I":["ZJxtq","_left"],"ID":"kLKrk","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[15,5,20]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[10,2],"type":"literal","executed":true},{"I":["ZJxtq","_left"],"ID":"di7Cc","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[4,1,1]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[15,1],"type":"literal","executed":true},{"I":["ZJxtq","_left"],"ID":"vsPER","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[8,7,10]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[4,2],"type":"literal","executed":true},{"I":["ZJxtq","_left"],"ID":"cBJBn","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[2,2,3]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[5,1],"type":"literal","executed":true},{"I":["ZJxtq","_left"],"ID":"njwFK","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[3,6,9]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[7,2],"type":"literal","executed":true}],"notes":[{"id":1,"title":"Problem 1","description":"Add every number in [1,2,3] with [2,0,2]. <br> => The result should be [3,2,5]","position":[2,2],"width":3,"height":1},{"id":2,"title":"Problem 2","description":"Divide numbers [15,5,20] by [5]. <br> => The result should be [3,1,4]","position":[5,2],"width":3,"height":1},{"id":3,"title":"Problem 3","description":"Arrange [1,9,-5] in increasing order. <br> => The result should be [-5,9,1]","position":[7,2],"width":3,"height":1},{"id":4,"title":"Problem 4","description":"Add all numbers in [4,1,1]. <br> => The result should be [6]","position":[9,2],"width":3,"height":1}],"domain":["http://takyeonlee.com/tandem-learn/practice1.html"],"timestamp":1409554669130},
         notes: [
             {   description:"Add every number in [1,2,3] with [2,0,2]. <br> => The result should be [3,2,5]",
-                position: [2,2],
-                width:3, height:1
+                position: [2,3],
+                width:3
             },
             {   description:"Multiply every number in [8,7,10] with [2,2,3]. <br> => The result should be [16,14,30]",
-                position: [5,2],
-                width:3, height:1
+                position: [5,3],
+                width:3
             },
             {   description:"Divide numbers [3,6,9] by 3. <br> => The result should be [1,2,3]",
-                position: [8,2],
-                width:3, height:1
+                position: [8,3],
+                width:3
             },
             {   description:"Divide numbers [15,5,20] by [5]. <br> => The result should be [3,1,4]",
-                position: [11,2],
-                width:3, height:1
+                position: [11,3],
+                width:3
             },
             {   description:"Arrange [1,9,-5] in increasing order. <br> => The result should be [-5,1,9]",
-                position: [13,2],
-                width:3, height:1
+                position: [13,3],
+                width:3
             },
             {   description:"How many numbers are in [4,1,1]? <br> => The result should be [3]",
-                position: [15,2],
-                width:3, height:1
+                position: [15,3],
+                width:3
             }
         ]
     },
@@ -32,28 +32,28 @@ pg.task = {
         json: {"id":"eWeeA","title":"Task - Calculation","active":true,"nodes":[{"I":["_above","_left"],"ID":"ZJxtq","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["ZJxtq"],"ID":"10UcH","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[1,2,3]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[1,2],"type":"literal","executed":true},{"I":["ZJxtq"],"ID":"tuORp","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[2,0,2]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[2,1],"type":"literal","executed":true},{"I":["ZJxtq","_left"],"ID":"2DQJV","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[1,9,-5]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[13,1],"type":"literal","executed":true},{"I":["ZJxtq","_left"],"ID":"tmDR5","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[5]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[11,1],"type":"literal","executed":true},{"I":["ZJxtq","_left"],"ID":"kLKrk","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[15,5,20]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[10,2],"type":"literal","executed":true},{"I":["ZJxtq","_left"],"ID":"di7Cc","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[4,1,1]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[15,1],"type":"literal","executed":true},{"I":["ZJxtq","_left"],"ID":"vsPER","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[8,7,10]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[4,2],"type":"literal","executed":true},{"I":["ZJxtq","_left"],"ID":"cBJBn","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[2,2,3]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[5,1],"type":"literal","executed":true},{"I":["ZJxtq","_left"],"ID":"njwFK","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[3,6,9]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[7,2],"type":"literal","executed":true}],"notes":[{"id":1,"title":"Problem 1","description":"Add every number in [1,2,3] with [2,0,2]. <br> => The result should be [3,2,5]","position":[2,2],"width":3,"height":1},{"id":2,"title":"Problem 2","description":"Divide numbers [15,5,20] by [5]. <br> => The result should be [3,1,4]","position":[5,2],"width":3,"height":1},{"id":3,"title":"Problem 3","description":"Arrange [1,9,-5] in increasing order. <br> => The result should be [-5,9,1]","position":[7,2],"width":3,"height":1},{"id":4,"title":"Problem 4","description":"Add all numbers in [4,1,1]. <br> => The result should be [6]","position":[9,2],"width":3,"height":1}],"domain":["http://takyeonlee.com/tandem-learn/practice1.html"],"timestamp":1409554669130},
         notes: [
             {   description:"Add every number in [1,2,3] with [2,0,2]. <br> => The result should be [3,2,5]",
-                position: [2,2],
-                width:3, height:1
+                position: [2,3],
+                width:3
             },
             {   description:"Multiply every number in [8,7,10] with [2,2,3]. <br> => The result should be [16,14,30]",
-                position: [5,2],
-                width:3, height:1
+                position: [5,3],
+                width:3
             },
             {   description:"Divide numbers [3,6,9] by 3. <br> => The result should be [1,2,3]",
-                position: [8,2],
-                width:3, height:1
+                position: [8,3],
+                width:3
             },
             {   description:"Divide numbers [15,5,20] by [5]. <br> => The result should be [3,1,4]",
-                position: [11,2],
-                width:3, height:1
+                position: [11,3],
+                width:3
             },
             {   description:"Arrange [1,9,-5] in increasing order. <br> => The result should be [-5,1,9]",
-                position: [13,2],
-                width:3, height:1
+                position: [13,3],
+                width:3
             },
             {   description:"How many numbers are in [4,1,1]? <br> => The result should be [3]",
-                position: [15,2],
-                width:3, height:1
+                position: [15,3],
+                width:3
             }
         ]
     },
@@ -62,19 +62,19 @@ pg.task = {
         notes: [
             {   description:"Get text attributes of the input elements <br> => The result should be [Anna, Ariane, ...]",
                 position: [3,1],
-                width:3, height:1
+                width:3
             },
             {   description:"Get link attributes of the input elements <br> => The result should be ['http://...',...]",
                 position: [6,1],
-                width:3, height:1
+                width:3
             },
             {   description:"Get the year numbers of the rows <br> => [1965,2002,1936,...]",
                 position: [9,1],
-                width:3, height:1
+                width:3
             },
             {   description:"Get the apple name columns in the same rows with the cells <br> => [A: Beacon, A: Wealthy]",
                 position: [15,2],
-                width:3, height:1
+                width:3
             }
         ]
     },
@@ -83,19 +83,19 @@ pg.task = {
         notes: [
             {   description:"Get text attributes of the input elements <br> => The result should be [Anna, Ariane, ...]",
                 position: [3,1],
-                width:3, height:1
+                width:3
             },
             {   description:"Get link attributes of the input elements <br> => The result should be ['http://...',...]",
                 position: [6,1],
-                width:3, height:1
+                width:3
             },
             {   description:"Get the year numbers of the rows <br> => [1965,2002,1936,...]",
                 position: [9,1],
-                width:3, height:1
+                width:3
             },
             {   description:"Get the apple name columns in the same rows with the cells <br> => [A: Beacon, A: Wealthy]",
                 position: [15,2],
-                width:3, height:1
+                width:3
             }
         ]
     },
@@ -104,19 +104,19 @@ pg.task = {
         notes: [
             {   description:'Find text values in the list that contains "apple" <br> => The result should be ["apple juice","apple"]',
                 position: [3,1],
-                width:3, height:1
+                width:3
             },
             {   description:"Find even numbers in the list <br> => The result should be [2,4]",
                 position: [6,2],
-                width:3, height:1
+                width:3
             },
             {   description:"Find rows(TR) whose origin is France <br> => The result should be [TR: Ariane.., TR:Musca...]",
                 position: [10,1],
-                width:3, height:1
+                width:3
             },
             {   description:"Find rows(TR) whose usage match with the text in the input box.  For example, if 'Cider' is typed in the box, the result should be[TR: Musca...]",
                 position: [16,4],
-                width:3, height:1
+                width:3
             }
           
         ]
@@ -128,19 +128,19 @@ pg.task = {
         notes: [
             {   description:'Find text values in the list that contains "apple" <br> => The result should be ["apple juice","apple"]',
                 position: [3,1],
-                width:3, height:1
+                width:3
             },
             {   description:"Find even numbers in the list <br> => The result should be [2,4]",
                 position: [6,2],
-                width:3, height:1
+                width:3
             },
             {   description:"Find rows(TR) whose origin is France <br> => The result should be [TR: Ariane.., TR:Musca...]",
                 position: [10,1],
-                width:3, height:1
+                width:3
             },
             {   description:"Find rows(TR) whose usage match with the text in the input box.  For example, if 'Cider' is typed in the box, the result should be[TR: Musca...]",
                 position: [16,4],
-                width:3, height:1
+                width:3
             }
           
         ]
@@ -152,11 +152,11 @@ pg.task = {
         notes: [
             {   description:'Attach the INPUT element in the above node to front of every apple name (Anna, Ariane, ...)',
                 position: [3,2],
-                width:3, height:1
+                width:3
             },
             {   description:"Attach the INPUT element in the above node behind the table.",
                 position: [7,2],
-                width:3, height:1
+                width:3
             },
         ]
     },
@@ -165,11 +165,11 @@ pg.task = {
         notes: [
             {   description:'Attach the INPUT element in the above node to front of every apple name (Anna, Ariane, ...)',
                 position: [3,2],
-                width:3, height:1
+                width:3
             },
             {   description:"Attach the INPUT element in the above node behind the table.",
                 position: [7,2],
-                width:3, height:1
+                width:3
             },
         ]
     },

@@ -1882,11 +1882,19 @@ pg.planner = {
 					// Is[0]-(select_representative)-> n_rep -(select_element)-> O
 					var solutions=[];
 					_.each(Is, function(I) {
-						var rep_el = _.first(findRepElements(_.union(I.V,O.V)),I.V.length);
-						if(!rep_el || rep_el.length==0) return false;
+						// find the closest common parents of I.V[i] and O.V[i]
+						if(!isDomList(I.V)) return false;
+						rep_el_list = [];
+						for(var idx in O.V) {
+							var ca = getCommonAncestor(I.V[idx], O.V[idx]);
+							if(ca==false) return false; 
+							else rep_el_list.push(ca);
+						}
+						// var rep_el = _.first(findRepElements(_.union(I.V,O.V)),I.V.length);
+						// if(!rep_el || rep_el.length==0) return false;
 						var n_rep = pg.Node.create({
 							'I':[I.ID],
-							'V':rep_el
+							'V':rep_el_list
 						});
 						n_rep_list = pg.planner.operations.extract_parent.generate([I],n_rep); // fill parameters
 						if(n_rep_list===false) return false;
@@ -1897,7 +1905,6 @@ pg.planner = {
 						_.each(n_rep_list, function(n){ n.position=[0,0]; });
 						_.each(_O_list, function(o) { o.position = [1,0]; o.I = ['_above']; });
 						solutions.push(_.union(n_rep_list[0], _O_list[0]));
-						// solutions.push(n_rep_list, _O_list));
 					});
 					return (solutions.length>0)? solutions:false;
 				} catch(e) {
@@ -2706,6 +2713,8 @@ pg.planner = {
 		},
 		{	'attr_key': "value",
 			'getter': function(el) { 
+				if($(el).prop('tagName').toLowerCase()=='input' && $(el).prop('type')=='checkbox') 
+					return undefined; // VALUE IS IGNORED FOR CHECKBOXES
 				var attr = _.escape($(el).val());
 				if(isNumberString(attr)) return parseFloat(attr); 
 				else return attr;

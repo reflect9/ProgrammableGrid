@@ -565,8 +565,8 @@
 					<div>Attach <span class='el'>&lt;"+$(el).prop("tagName")+"&gt;</span> to \
 					<span class='target'>&lt;"+$(target).prop("tagName")+"&gt;"+target_txt+"</span></div>\
 					<button type='button' role='before'>before</button>\
-					<div class='target_el_border'><button type='button' role='within_front'>front</button>\
-					...<button type='button' role='within_back'>back</button></div>\
+					<div class='target_el_border'><button type='button' role='within-front'>front</button>\
+					...<button type='button' role='within-back'>back</button></div>\
 					<button type='button' role='after'>after</button>\
 				</div>");
 			var parents_el = $(dialog).find(".parents_list");
@@ -602,8 +602,8 @@
 			$(cloned_el).addClass("dragged_element");
 			if(loc=='before') $(target).before(cloned_el);
 			if(loc=='after') $(target).after(cloned_el);
-			if(loc=='within_front') $(target).prepend(cloned_el);
-			if(loc=='within_back') $(target).append(cloned_el);
+			if(loc=='within-front') $(target).prepend(cloned_el);
+			if(loc=='within-back') $(target).append(cloned_el);
 			// now generate suggestion
 			pg.history.put({type:'attach',el:el, target:target, loc:loc});
 			pg.history.infer();

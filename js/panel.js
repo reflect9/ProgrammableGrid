@@ -824,6 +824,7 @@ pg.panel = {
 					new_node.P = pg.toolbox.draggingOperation;	
 					new_node.position = position;
 					pg.panel.enhancement.push_at(new_node, position);
+					pg.panel.deselect();
 					pg.panel.select(new_node);
 				} 
 			}

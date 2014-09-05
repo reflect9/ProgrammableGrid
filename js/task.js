@@ -101,7 +101,7 @@ pg.task = {
         ]
     },
     filter1 : {
-        json: {"id":"rnibI","title":"Filter Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"hbCYc","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["hbCYc","_left"],"ID":"pcPxg","P":{"kind":"pick","type":"extract_element","icon":"crosshairs","param":{"source":"_current","selector":"> DIV.container-fluid > DIV.main > CENTER > TABLE.table.table-bordered > TBODY > TR"},"description":"Extract elements at [selector] from [source]."},"V":[],"selected":false,"position":[9,1],"type":"extract_element","executed":true},{"I":["hbCYc","_left"],"ID":"OR9xL","P":{"kind":"pick","type":"extract_element","icon":"crosshairs","param":{"source":"_current","selector":"> DIV.container-fluid > DIV.main > CENTER > TABLE.table.table-bordered > TBODY > TR"},"description":"Extract elements at [selector] from [source]."},"V":[],"selected":false,"position":[15,4],"type":"extract_element","executed":true},{"I":["hbCYc","_left"],"ID":"mEMY1","P":{"kind":"apply","type":"create_element","icon":"magic","param":{"value":"Search by use","tag":"text input"},"description":"Create [tag] elements using the [value].","applicable":false},"V":[],"selected":false,"position":[14,1],"executed":true},{"I":["_above","_left"],"ID":"VBRb1","P":{"kind":"pick","type":"extract_element","icon":"crosshairs","param":{"source":"_current","selector":"> DIV:nth-of-type(1) > DIV > CENTER > TABLE"},"description":"Extract elements at [selector] from [source]."},"V":[],"selected":false,"position":[15,1],"executed":true},{"I":["mEMY1","VBRb1"],"ID":"3HDkS","P":{"kind":"apply","type":"attach_element","icon":"gavel","param":{"source":"input1","target":"input2","location":"after"},"description":"Attach [source] to [target] at [location]."},"V":[],"selected":false,"position":[15,2],"executed":true},{"I":["_above","_left"],"ID":"PXdbS","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"input1"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed.","applicable":false},"V":[],"selected":false,"position":[16,2],"executed":false},{"I":["_above","_left"],"ID":"qeiVc","P":{"kind":"pick","icon":"list-alt","type":"get_attribute","param":{"source":"input1","key":"value"},"description":"Get [key] of [source].","applicable":false},"V":[],"selected":false,"position":[17,2],"executed":false},{"I":["hbCYc","_left"],"ID":"HHt95","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[1,2,3,4]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[5,2],"type":"literal","executed":true},{"I":["hbCYc","_left"],"ID":"e9ZXh","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[\"apple juice\",\"banana\",\"apple\",\"peach\"]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[2,1],"type":"literal","executed":true}],"notes":[{"id":"note-fv1o6","title":"Problem 0 of 3","description":"Find years before 1950 <br> => The result should be [1936, 1910, 1750, 1860]","position":[3,1],"width":3,"height":1},{"id":"note-878xw","title":"Problem 1 of 3","description":"Find rows(TR) whose origin is France <br> => The result should be [TR: Ariane.., TR:Musca...]","position":[7,1],"width":3,"height":1},{"id":"note-LVxQK","title":"Problem 2 of 3","description":"Find rows(TR) whose usage match with the text in the input box.  For example, if 'Cider' is typed in the box, the result should be[TR: Musca...]","position":[13,4],"width":3,"height":1}],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=extraction1"],"timestamp":1409562653131},
+        json: {"id":"rnibI","title":"Filter Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"hbCYc","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["hbCYc","_left"],"ID":"HHt95","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[1,2,3,4]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[5,2],"type":"literal","executed":true},{"I":["hbCYc","_left"],"ID":"e9ZXh","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[\"apple juice\",\"banana\",\"apple\",\"peach\"]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[2,1],"type":"literal","executed":true}],"notes":[{"id":"note-0o7fx","title":"Problem 1 of 4","description":"Find text values in the list that contains \"apple\" <br> => The result should be [\"apple juice\",\"apple\"]","position":[3,2],"width":3,"height":1},{"id":"note-LaYAl","title":"Problem 2 of 4","description":"Find even numbers in the list <br> => The result should be [2,4]","position":[6,3],"width":3,"height":1},{"id":"note-tCCuo","title":"Problem 3 of 4","description":"Find rows(TR) whose origin is France <br> => The result should be [TR: Ariane.., TR:Musca...]","position":[10,2],"width":3,"height":1},{"id":"note-DNMmC","title":"Problem 4 of 4","description":"Find rows(TR) whose usage match with the text in the input box.  For example, if 'Cider' is typed in the box, the result should be[TR: Musca...]","position":[16,5],"width":3,"height":1}],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=extraction1"],"timestamp":1409562653131},
         notes: [
             {   title:"String filtering",
                 description:'Find text values in the list that contains "apple" <br> => The result should be ["apple juice","apple"]',
@@ -112,18 +112,7 @@ pg.task = {
                 description:"Find even numbers in the list <br> => The result should be [2,4]",
                 position: [6,3],
                 width:3
-            },
-            {   title:"Filtering elements by sub-element's attribute",
-                description:"Find rows(TR) whose origin is France <br> => The result should be [TR: Ariane.., TR:Musca...]",
-                position: [10,2],
-                width:3
-            },
-            {   title:"Filtering elements with a dynamic keyword",
-                description:"Find rows(TR) whose usage match with the text in the input box.  For example, if 'Cider' is typed in the box, the result should be[TR: Musca...]",
-                position: [16,5],
-                width:3
             }
-          
         ]
 
 
@@ -153,16 +142,12 @@ pg.task = {
 
     },
     attach1 : {
-        json: {"id":"iLpTy","title":"Attach Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"LMrGn","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["LMrGn","_left"],"ID":"AiPao","P":{"kind":"apply","type":"create_element","icon":"magic","param":{"value":"blah","tag":"checkbox"},"description":"Create [tag] elements using the [value].","applicable":false},"V":[],"selected":false,"position":[2,2],"executed":true},{"I":["LMrGn","_left"],"ID":"9aOgd","P":{"kind":"apply","type":"create_element","icon":"magic","param":{"value":"search by keyword","tag":"text input"},"description":"Create [tag] elements using the [value].","applicable":false},"V":[],"selected":false,"position":[6,2],"executed":true}],"notes":[],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=filter1"],"timestamp":1409600397571},
+        json: {"id":"iLpTy","title":"Attach Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"LMrGn","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["LMrGn","_left"],"ID":"9aOgd","P":{"kind":"apply","type":"create_element","icon":"magic","param":{"value":"search by keyword","tag":"text input"},"description":"Create [tag] elements using the [value].","applicable":false},"V":[],"selected":false,"position":[2,2],"executed":true}],"notes":[{"id":"note-ZyYuP","title":"Problem 1 of 2","description":"Attach the TEXT INPUT element in the above node to front of every apple name (Anna, Ariane, ...)","position":[3,2],"width":3,"height":1},{"id":"note-kbDrK","title":"Problem 2 of 2","description":"Attach the TEXT INPUT element in the above node behind the table.","position":[7,2],"width":3,"height":1}],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=filter1"],"timestamp":1409600397571},
         notes: [
-            {   description:'Attach the TEXT INPUT element in the above node to front of every apple name (Anna, Ariane, ...)',
+            {   description:"Attach the TEXT INPUT element in the above node behind the table.",
                 position: [3,2],
                 width:3
-            },
-            {   description:"Attach the TEXT INPUT element in the above node behind the table.",
-                position: [7,2],
-                width:3
-            },
+            }
         ]
     },
     attach2 : {

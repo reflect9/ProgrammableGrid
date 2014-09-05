@@ -25,9 +25,12 @@ pg = {
 				window.location.search.match(/task=([a-zA-Z0-9_\-]+)/)[1] : false;
 			pg.subject_name = (window.location.search && window.location.search.match(/name=(.+)/))?
 				window.location.search.match(/name=(.+)/)[1] : false;
+			pg.firstMethod = window.location.search.match(/modeA/) != null;
+			pg.showSurvey = window.location.search.match(/survey/) != null;
 			if(task_to_load && pg.task[task_to_load]) {
 				pg.log.active=true;
 				var task_enhancement = pg.task.get_enhancement(task_to_load);
+				if(pg.showSurvey) $(pg.documentBody).find(".main").append(pg.task.renderSurvey(task_to_load,pg.firstMethod));
 				pg.log.add({type:'start_task',title:task_enhancement.title});
 				pg.open_enhancement(task_enhancement);
 			} else {
@@ -36,6 +39,7 @@ pg = {
 		}
 		$("#pg").css("width",(300+DEFAULT_GRID_WIDTH)+"px");
 		$(".pg_panel").css("width",DEFAULT_GRID_WIDTH+"px");
+		$(pg.documentBody).css("padding-left",(300+DEFAULT_GRID_WIDTH)+"px");
 		pg.attachEventHandlers();
 	},
 	open: function() {

@@ -47,6 +47,9 @@ chrome.runtime.onMessage.addListener(
 		if(request.action === 'log_completed') {
 			console.log("logging completed.");
 			console.log(request.message);
+			if(request.message.indexOf('"detail":{"type":"survey"')>-1) {
+				$("button#submit_survey").after("<div>Survey submitted.</div><div>"+request.message+"</div>");
+			}
 			pg.log.send_completed();
 		}
 		else if(true) {}

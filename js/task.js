@@ -155,11 +155,13 @@ pg.task = {
     attach1 : {
         json: {"id":"iLpTy","title":"Attach Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"LMrGn","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["LMrGn","_left"],"ID":"AiPao","P":{"kind":"apply","type":"create_element","icon":"magic","param":{"value":"blah","tag":"checkbox"},"description":"Create [tag] elements using the [value].","applicable":false},"V":[],"selected":false,"position":[2,2],"executed":true},{"I":["LMrGn","_left"],"ID":"9aOgd","P":{"kind":"apply","type":"create_element","icon":"magic","param":{"value":"search by keyword","tag":"text input"},"description":"Create [tag] elements using the [value].","applicable":false},"V":[],"selected":false,"position":[6,2],"executed":true}],"notes":[],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=filter1"],"timestamp":1409600397571},
         notes: [
-            {   description:'Attach the TEXT INPUT element in the above node to front of every apple name (Anna, Ariane, ...)',
+            {   title:"Attaching single element before multiple targets",
+                description:'Attach the TEXT INPUT element in the above node to front of every apple name (Anna, Ariane, ...)',
                 position: [3,2],
                 width:3
             },
-            {   description:"Attach the TEXT INPUT element in the above node behind the table.",
+            {   title:"Attaching single element after single target",
+                description:"Attach the TEXT INPUT element in the above node behind the table.",
                 position: [7,2],
                 width:3
             },
@@ -193,14 +195,15 @@ pg.task.get_enhancement = function(task_key) {
     return enh;
 };
 
-pg.task.renderSurvey = function(task_key, auto_first) {
+pg.task.renderSurvey = function(task_key, first_mode) {
     if(!pg.task[task_key]) return false;
     var problems = pg.task[task_key].notes;
     var survey_el = $("<div class='centered survey' task='calculation'>\
           <h1>Survey</h1>\
-        </div>");
-    var firstMethod = (auto_first)? "automatic": "manual";
-    var secondMethod = (auto_first)? "manual": "automatic";
+        </div>");    
+    var firstMethod = (first_mode=="automatic")? "automatic": "manual";
+    var secondMethod = (first_mode=="automatic")? "manual": "automatic";
+    
     for (var i in problems) {
         var el = $("<div class='survey_item' number='"+(parseInt(i)+1)+"'>\
             <h4>Problem "+(parseInt(i)+1)+".  "+problems[i].title+"</h4>\
@@ -212,7 +215,7 @@ pg.task.renderSurvey = function(task_key, auto_first) {
                   <td colspan='4' style='text-align:right;'>Very difficult</td>\
               </tr>\
               <tr class='"+firstMethod+"'>\
-                <td class='survey_header'>Automatic</td>\
+                <td class='survey_header'>"+firstMethod+"</td>\
                 <td><input type='radio' name='"+(parseInt(i)+1)+"_"+firstMethod+"' value='1' /></td>\
                 <td><input type='radio' name='"+(parseInt(i)+1)+"_"+firstMethod+"' value='2' /></td>\
                 <td><input type='radio' name='"+(parseInt(i)+1)+"_"+firstMethod+"' value='3' /></td>\
@@ -222,7 +225,7 @@ pg.task.renderSurvey = function(task_key, auto_first) {
                 <td><input type='radio' name='"+(parseInt(i)+1)+"_"+firstMethod+"' value='7' /></td>\
               </tr>\
               <tr class='"+secondMethod+"'>\
-                <td class='survey_header'>Manual</td>\
+                <td class='survey_header'>"+secondMethod+"</td>\
                 <td><input id='radStart' type='radio' name='"+(parseInt(i)+1)+"_"+secondMethod+"' value='1' /></td>\
                 <td><input type='radio' name='"+(parseInt(i)+1)+"_"+secondMethod+"' value='2' /></td>\
                 <td><input type='radio' name='"+(parseInt(i)+1)+"_"+secondMethod+"' value='3' /></td>\
@@ -246,7 +249,7 @@ pg.task.renderSurvey = function(task_key, auto_first) {
               <td colspan='4' style='text-align:right;'>Very difficult</td>\
           </tr>\
           <tr class='"+firstMethod+"'>\
-            <td class='survey_header'>Automatic</td>\
+            <td class='survey_header'>"+firstMethod+"</td>\
             <td><input type='radio' name='"+"g_"+firstMethod+"' value='1' /></td>\
             <td><input type='radio' name='"+"g_"+firstMethod+"' value='2' /></td>\
             <td><input type='radio' name='"+"g_"+firstMethod+"' value='3' /></td>\
@@ -256,7 +259,7 @@ pg.task.renderSurvey = function(task_key, auto_first) {
             <td><input type='radio' name='"+"g_"+firstMethod+"' value='7' /></td>\
           </tr>\
           <tr class='"+secondMethod+"'>\
-            <td class='survey_header'>Manual</td>\
+            <td class='survey_header'>"+secondMethod+"</td>\
             <td><input id='radStart' type='radio' name='"+"g_"+secondMethod+"' value='1' /></td>\
             <td><input type='radio' name='"+"g_"+secondMethod+"' value='2' /></td>\
             <td><input type='radio' name='"+"g_"+secondMethod+"' value='3' /></td>\
@@ -270,18 +273,26 @@ pg.task.renderSurvey = function(task_key, auto_first) {
     ").appendTo(survey_el);
     var el_submit = $("\
         <div>\
-            <button type='button' class='btn btn-lg btn-success'>Submit</button>\
+            <button type='button' id='submit_survey' class='centered btn btn-lg btn-success'>Submit</button>\
         </div>\
     ");
     $(el_submit).find("button").click($.proxy(function() {
         var survey_result={"task":this.task_key, "firstMethod":this.firstMethod};
+        var all_question_answered = true;
         $("div.survey_item").each(function(i,div) {
             var item_num = $(div).attr("number"); 
             var automatic_value = $(div).find("input[name='"+item_num+"_automatic']:checked").val();   
             var manual_value = $(div).find("input[name='"+item_num+"_manual']:checked").val();   
+            if(typeof automatic_value == 'undefined' || typeof manual_value == 'undefined')
+                all_question_answered = false;
             survey_result[item_num]= {'automatic':automatic_value, 'manual':manual_value};
         });
+        if(!all_question_answered) {
+            $("button#submit_survey").after("<div>Please answer all questions.</div>");
+            return;
+        }
         pg.log.add({type:"survey",survey_result:survey_result});
+        $(this).addClass("disabled");
     },{task_key:task_key,firstMethod:firstMethod}));
 
     $(el_submit).appendTo(survey_el);

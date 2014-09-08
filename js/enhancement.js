@@ -4,7 +4,7 @@ pg.Enhancement = function(enh) {
 	default_trigger_node.P.param.event_source = "page";
 	
 	this.id = (enh && typeof enh.id !== 'undefined') ? _.clone(enh.id) : random_id;
-	this.title = (enh && typeof enh.title !== 'undefined') ? _.clone(enh.title) : "Tandem-"+random_id;
+	this.title = (enh && typeof enh.title !== 'undefined') ? _.clone(enh.title) : "Vespy-"+random_id;
 	this.active = (enh && typeof enh.active !== 'undefined') ? _.clone(enh.active) : true;   
 	this.nodes = (enh && typeof enh.nodes !== 'undefined') ? _.clone(enh.nodes) : [default_trigger_node];   
 	this.notes = (enh && typeof enh.notes !== 'undefined') ? _.clone(enh.notes) : [];   

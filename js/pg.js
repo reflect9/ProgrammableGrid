@@ -25,14 +25,21 @@ pg = {
 				window.location.search.match(/task=([a-zA-Z0-9_\-]+)/)[1] : false;
 			pg.subject_name = (window.location.search && window.location.search.match(/name=([a-zA-Z0-9_\-]+)/))?
 				window.location.search.match(/name=([a-zA-Z0-9_\-]+)/)[1] : false;
+			pg.mode = (window.location.search && window.location.search.match(/mode=([a-zA-Z0-9_\-]+)/))?
+				window.location.search.match(/mode=([a-zA-Z0-9_\-]+)/)[1] : false;				
 			if (window.location.search.match(/which_mode_first=/)!=null) {
 				pg.which_mode_first = window.location.search.match(/which_mode_first=([a-zA-Z0-9_\-]+)/)[1];	
 			} else pg.which_mode_first = "manual";
-			pg.showSurvey = window.location.search.match(/survey/) != null;
+			//pg.showSurvey = window.location.search.match(/survey/) != null;
 			if(task_to_load && pg.task[task_to_load]) {
 				pg.log.active=true;
 				var task_enhancement = pg.task.get_enhancement(task_to_load);
-				if(pg.showSurvey) $(pg.documentBody).find(".main").append(pg.task.renderSurvey(task_to_load,pg.which_mode_first));
+				var main_el = $(pg.documentBody).find(".main");
+				//if(pg.showSurvey) $(pg.documentBody).find(".main").append(pg.task.renderSurvey(task_to_load,pg.which_mode_first));
+				var survey_button = $("<button type=button class='btn btn-lg btn-success'>Open Survey</button>")
+					.click(function() {
+						$(pg.documentBody).find(".main").append(pg.task.renderSurvey(task_to_load,pg.mode));
+					}).appendTo(main_el);
 				pg.log.add({type:'start_task',title:task_enhancement.title});
 				pg.open_enhancement(task_enhancement);
 			} else {

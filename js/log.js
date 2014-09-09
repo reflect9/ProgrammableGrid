@@ -8,6 +8,7 @@ pg.log = {
         if(this.active==false) return;
         var item={};
         item.timestamp = Date.now();
+        item.mode = pg.mode;
         item.detail = detail;
         item.user = (pg.subject_name)? pg.subject_name:'guest';
         // this.items.push(item);

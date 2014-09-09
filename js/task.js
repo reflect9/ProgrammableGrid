@@ -180,50 +180,37 @@ pg.task.get_enhancement = function(task_key) {
     var enh = new pg.Enhancement(pg.task[task_key].json);
     enh.notes = _.map(pg.task[task_key].notes, function(note, i) {
         var _n = new pg.Note(note);
-        _n.title = "Problem "+(i+1)+" of "+pg.task[task_key].notes.length;
+        _n.title = (i+1)+"."+_n.title;
         return _n;
     });
     return enh;
 };
 
-pg.task.renderSurvey = function(task_key, first_mode) {
+pg.task.renderSurvey = function(task_key, mode) {
     if(!pg.task[task_key]) return false;
     var problems = pg.task[task_key].notes;
     var survey_el = $("<div class='centered survey' task='calculation'>\
           <h1>Survey</h1>\
         </div>");    
-    var firstMethod = (first_mode=="automatic")? "automatic": "manual";
-    var secondMethod = (first_mode=="automatic")? "manual": "automatic";
-    
+    // var firstMethod = (first_mode=="automatic")? "automatic": "manual";
+    // var secondMethod = (first_mode=="automatic")? "manual": "automatic";
     for (var i in problems) {
         var el = $("<div class='survey_item' number='"+(parseInt(i)+1)+"'>\
             <h4>Problem "+(parseInt(i)+1)+".  "+problems[i].title+"</h4>\
-            <div class='survey_question'>How easy was it to solve the problem with each method?</div>\
+            <div class='survey_question'>How easy or diffcult was it to solve the problem with this method?</div>\
             <table class='likert'>\
               <tr>\
-                  <td></td>\
                   <td colspan='3' style='text-align:left;'>Very easy</td>\
                   <td colspan='4' style='text-align:right;'>Very difficult</td>\
               </tr>\
-              <tr class='"+firstMethod+"'>\
-                <td class='survey_header'>"+firstMethod+"</td>\
-                <td><input type='radio' name='"+(parseInt(i)+1)+"_"+firstMethod+"' value='1' /></td>\
-                <td><input type='radio' name='"+(parseInt(i)+1)+"_"+firstMethod+"' value='2' /></td>\
-                <td><input type='radio' name='"+(parseInt(i)+1)+"_"+firstMethod+"' value='3' /></td>\
-                <td><input type='radio' name='"+(parseInt(i)+1)+"_"+firstMethod+"' value='4' /></td>\
-                <td><input type='radio' name='"+(parseInt(i)+1)+"_"+firstMethod+"' value='5' /></td>\
-                <td><input type='radio' name='"+(parseInt(i)+1)+"_"+firstMethod+"' value='6' /></td>\
-                <td><input type='radio' name='"+(parseInt(i)+1)+"_"+firstMethod+"' value='7' /></td>\
-              </tr>\
-              <tr class='"+secondMethod+"'>\
-                <td class='survey_header'>"+secondMethod+"</td>\
-                <td><input id='radStart' type='radio' name='"+(parseInt(i)+1)+"_"+secondMethod+"' value='1' /></td>\
-                <td><input type='radio' name='"+(parseInt(i)+1)+"_"+secondMethod+"' value='2' /></td>\
-                <td><input type='radio' name='"+(parseInt(i)+1)+"_"+secondMethod+"' value='3' /></td>\
-                <td><input type='radio' name='"+(parseInt(i)+1)+"_"+secondMethod+"' value='4' /></td>\
-                <td><input type='radio' name='"+(parseInt(i)+1)+"_"+secondMethod+"' value='5' /></td>\
-                <td><input type='radio' name='"+(parseInt(i)+1)+"_"+secondMethod+"' value='6' /></td>\
-                <td><input id='radEnd' type='radio' name='"+(parseInt(i)+1)+"_"+secondMethod+"' value='7' /></td>\
+              <tr>\
+                <td><input type='radio' name='"+(parseInt(i)+1)+"' value='1' /></td>\
+                <td><input type='radio' name='"+(parseInt(i)+1)+"' value='2' /></td>\
+                <td><input type='radio' name='"+(parseInt(i)+1)+"' value='3' /></td>\
+                <td><input type='radio' name='"+(parseInt(i)+1)+"' value='4' /></td>\
+                <td><input type='radio' name='"+(parseInt(i)+1)+"' value='5' /></td>\
+                <td><input type='radio' name='"+(parseInt(i)+1)+"' value='6' /></td>\
+                <td><input type='radio' name='"+(parseInt(i)+1)+"' value='7' /></td>\
               </tr>\
             </table>\
           </div>\
@@ -232,32 +219,20 @@ pg.task.renderSurvey = function(task_key, first_mode) {
     }
     var el_learning = $("<div class='survey_item' number='g'>\
         <h4>General</h4>\
-        <div class='survey_question'>How easy or difficult was it to learn each method?</div>\
+        <div class='survey_question'>How easy or difficult was it to learn this method?</div>\
         <table class='likert'>\
           <tr>\
-              <td></td>\
               <td colspan='3' style='text-align:left;'>Very easy</td>\
               <td colspan='4' style='text-align:right;'>Very difficult</td>\
           </tr>\
-          <tr class='"+firstMethod+"'>\
-            <td class='survey_header'>"+firstMethod+"</td>\
-            <td><input type='radio' name='"+"g_"+firstMethod+"' value='1' /></td>\
-            <td><input type='radio' name='"+"g_"+firstMethod+"' value='2' /></td>\
-            <td><input type='radio' name='"+"g_"+firstMethod+"' value='3' /></td>\
-            <td><input type='radio' name='"+"g_"+firstMethod+"' value='4' /></td>\
-            <td><input type='radio' name='"+"g_"+firstMethod+"' value='5' /></td>\
-            <td><input type='radio' name='"+"g_"+firstMethod+"' value='6' /></td>\
-            <td><input type='radio' name='"+"g_"+firstMethod+"' value='7' /></td>\
-          </tr>\
-          <tr class='"+secondMethod+"'>\
-            <td class='survey_header'>"+secondMethod+"</td>\
-            <td><input id='radStart' type='radio' name='"+"g_"+secondMethod+"' value='1' /></td>\
-            <td><input type='radio' name='"+"g_"+secondMethod+"' value='2' /></td>\
-            <td><input type='radio' name='"+"g_"+secondMethod+"' value='3' /></td>\
-            <td><input type='radio' name='"+"g_"+secondMethod+"' value='4' /></td>\
-            <td><input type='radio' name='"+"g_"+secondMethod+"' value='5' /></td>\
-            <td><input type='radio' name='"+"g_"+secondMethod+"' value='6' /></td>\
-            <td><input id='radEnd' type='radio' name='"+"g_"+secondMethod+"' value='7' /></td>\
+          <tr class='"+mode+"'>\
+            <td><input type='radio' name='g' value='1' /></td>\
+            <td><input type='radio' name='g' value='2' /></td>\
+            <td><input type='radio' name='g' value='3' /></td>\
+            <td><input type='radio' name='g' value='4' /></td>\
+            <td><input type='radio' name='g' value='5' /></td>\
+            <td><input type='radio' name='g' value='6' /></td>\
+            <td><input type='radio' name='g' value='7' /></td>\
           </tr>\
         </table>\
       </div>\
@@ -268,15 +243,14 @@ pg.task.renderSurvey = function(task_key, first_mode) {
         </div>\
     ");
     $(el_submit).find("button").click($.proxy(function() {
-        var survey_result={"task":this.task_key, "firstMethod":this.firstMethod};
+        var survey_result={"task":this.task_key, "mode":this.mode};
         var all_question_answered = true;
         $("div.survey_item").each(function(i,div) {
             var item_num = $(div).attr("number"); 
-            var automatic_value = $(div).find("input[name='"+item_num+"_automatic']:checked").val();   
-            var manual_value = $(div).find("input[name='"+item_num+"_manual']:checked").val();   
-            if(typeof automatic_value == 'undefined' || typeof manual_value == 'undefined')
+            var value = $(div).find("input[name='"+item_num+"']:checked").val();   
+            if(typeof value == 'undefined')
                 all_question_answered = false;
-            survey_result[item_num]= {'automatic':automatic_value, 'manual':manual_value};
+            survey_result[item_num]= {'value':value};
         });
         if(!all_question_answered) {
             $("button#submit_survey").after("<div>Please answer all questions.</div>");
@@ -284,7 +258,7 @@ pg.task.renderSurvey = function(task_key, first_mode) {
         }
         pg.log.add({type:"survey",survey_result:survey_result});
         $(this).addClass("disabled");
-    },{task_key:task_key,firstMethod:firstMethod}));
+    },{task_key:task_key,mode:mode}));
 
     $(el_submit).appendTo(survey_el);
     return survey_el;

@@ -14,7 +14,7 @@ pg.Note.prototype.render = function() {
         <div class='note_description'>"+this.description+"</div>\
         <i class='fa fa-times close_button'></i>\
         <button type='button' class='btn btn-info start_problem'>START</button>\
-        <button type='button' class='btn btn-danger done_problem hidden'>DONE [<span class='timer'>0</span>]</button>\
+        <button type='button' class='btn btn-danger done_problem hidden'>DONE <span class='timer'>0</span></button>\
     </div>");
     $(el).click(function(e) { 
         e.stopPropagation();

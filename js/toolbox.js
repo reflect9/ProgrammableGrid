@@ -58,19 +58,31 @@ pg.Toolbox.prototype.redraw = function(_new_items) {
 	for(var i=0;i<this.items.length;i++) {
 		var item = this.items[i];
 		if(_.isArray(item)) {
-			$(this.ul_task).append(this.renderTask(item));
-			$(this.el_tools).find("div.actions_div").show();
+			if(pg.mode!="manual") {
+				$(this.ul_task).append(this.renderTask(item));
+				$(this.el_tools).find("div.actions_div").show();	
+			} else {
+				// check if the first node type is extract_element
+				if(item[0].P.type=='extract_element') {
+					$(this.ul_task).append(this.renderTask(item));
+					$(this.el_tools).find("div.actions_div").show();	
+				}
+			}
 		} else {
-			$(this.ul_operation).append(this.renderOperation(item));
-			$(this.el_tools).find("div.operation_div").show();
+			if(pg.mode!="automatic") {
+				$(this.ul_operation).append(this.renderOperation(item));
+				$(this.el_tools).find("div.operation_div").show();	
+			}
 		}
 	}
 	// draw demoed actions
-	var demo_actions = pg.history.inferredActions;
-	if(demo_actions.length>0) {
-		for(var i=0;i<demo_actions.length;i++) {
-			$(this.ul_demo).append(this.renderDemo(demo_actions[i]));
-			$(this.el_tools).find("div.demo_div").show();
+	if(pg.mode!="manual") {
+		var demo_actions = pg.history.inferredActions;
+		if(demo_actions.length>0) {
+			for(var i=0;i<demo_actions.length;i++) {
+				$(this.ul_demo).append(this.renderDemo(demo_actions[i]));
+				$(this.el_tools).find("div.demo_div").show();
+			}
 		}
 	}
 };

@@ -876,6 +876,7 @@ pg.panel = {
 								top: Math.floor(mouse_coord.top/pg.panel.node_dimension)};
 				e.stopPropagation();
 				console.log("plate clicked "+ mouse_pos.left + "," +mouse_pos.top);
+				if(pg.mode=="manual") return;
 				var new_node = pg.Node.create();
 				new_node.position = [mouse_pos.top, mouse_pos.left];
 				pg.panel.get_nodes().push(new_node);

@@ -430,8 +430,12 @@
 						// when attribute value is clicked, the value adds to the current node data
 						$(attr_el).click($.proxy(function() {
 							// var key = $(this).attr('attr_key');
-							pg.panel.commandUI.addData(this.value);
-							pg.log.add({type:'copy_node_value_from_input',value:serialize_values([this.value])});
+							if(pg.mode=='manual') {
+								alert("Disabled in manual mode. Use Get Attribute operation instead.");
+							} else {
+								pg.panel.commandUI.addData(this.value);
+								pg.log.add({type:'copy_node_value_from_input',value:serialize_values([this.value])});	
+							}
 						},{value:value})).appendTo(entryEl);
 					});	
 				} else {	// WHEN THE DATA is NOT DOM
@@ -439,6 +443,10 @@
 				}
 				// ADD COPY BUTTON
 				$("<i class='fa fa-sign-out copy_object'></i>").click($.proxy(function() {
+					if(pg.mode=="manual") {
+						alert("Disabled in manual mode. Use Filter operation instead.");
+						return;
+					}
 					pg.panel.commandUI.addData(this.v);
 					pg.log.add({type:'copy_node_value_from_input',value:serialize_values([this.v])});
 				},{v:v})).appendTo(entryEl);
@@ -454,7 +462,8 @@
 				var v = V[i]; 	var idx_to_show = parseInt(i)+1;
 				var entryEl = $("<li data_index='"+i+"'></li>"); 
 				if(isDom(v)) {
-					$("<div class='tag'>&lt;"+$(v).prop("tagName")+"&gt;</div>")
+					if(pg.mode!="manual") {
+						$("<div class='tag'>&lt;"+$(v).prop("tagName")+"&gt;</div>")
 						.draggable({
 							revert: false, // when not dropped, the item will revert back to its initial position
 							helper: "clone",
@@ -485,15 +494,24 @@
 								//$(pg.documentBody).find(".drop-hover").removeClass("drop-hover");
 							},
 						}).appendTo(entryEl);
+					} else  {
+						// no draggable tag name in manual mode;
+						$("<div class='tag'>&lt;"+$(v).prop("tagName")+"&gt;</div>")
+						.click(function() {
+							alert("Cannot drag values in manual mode. Use Attach Element operation instead.");
+						}).appendTo(entryEl); 
+					}
 					var attr_dict = get_attr_dict(v);  // get_attr_dict returns simplified attr->value object
 					_.each(attr_dict, function(value,key) {
+						var isAutomatic = (pg.mode=="manual")? false : true;
 						var attr_el = $("	<div class='attr'>\
 												<span class='attr_key'>"+ key +":\
-												<span class='attr_value' contenteditable='true' attr_key='"+key+"'>"+value+"</span>\
+												<span class='attr_value' contenteditable='"+isAutomatic+"' attr_key='"+key+"'>"+value+"</span>\
 											</div>").appendTo(entryEl);
 					});	
 				} else 	// WHEN THE DATA is NOT DOM
-					$(entryEl).append("	<div class='attr'><span class='attr_value' contenteditable='true'>"+v+"</span></div>");
+					var isAutomatic = (pg.mode=="manual")? false : true;
+					$(entryEl).append("	<div class='attr'><span class='attr_value' contenteditable='"+isAutomatic+"'>"+v+"</span></div>");
 				$(entryEl).find("span.attr_value").focus(function() {
 					$(this).attr("previousValue",$(this).text());
 				})
@@ -530,15 +548,23 @@
 				$(target_ul).append(entryEl);
 			}
 			var li_new_data = $("<li></li>");
-			$("<input type='text' class='new_data_input' placeholder='Type to add a new value.'/>")
-			.change(function(){
-				var newValue = $(this).val();
-				pg.panel.commandUI.addData(newValue);
-				$(this).val("");
-				$("#pg_command_ui").find("input.new_data_input").focus();
-				pg.log.add({type:'add_node_value',value:newValue});
-			}).appendTo(li_new_data);
-			$(target_ul).append(li_new_data);
+			if(pg.mode!="manual") {
+				$("<input type='text' class='new_data_input' placeholder='Type to add a new value.'/>")
+				.change(function(){
+					var newValue = $(this).val();
+					pg.panel.commandUI.addData(newValue);
+					$(this).val("");
+					$("#pg_command_ui").find("input.new_data_input").focus();
+					pg.log.add({type:'add_node_value',value:newValue});
+				}).appendTo(li_new_data);
+				$(target_ul).append(li_new_data);
+			} else {
+				$("<input type='text' class='new_data_input' placeholder='Disabled in manual mode.' disabled/>")
+				.appendTo(li_new_data);
+				$(target_ul).append(li_new_data);
+				// CANNOT ADD nEw values in manual mode
+			}
+			
 		},
 		// ATTACHER FUNCTIONALITY
 		removeAttacher: function() {

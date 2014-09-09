@@ -829,6 +829,7 @@
   margin: 5px;
   font-size: 18px;
   color: #999;
+  line-height: normal;
 }
 #pg .pg_panel .note .note_description {
   margin: 5px;
@@ -857,6 +858,9 @@
   display: block;
   width: 100px;
   margin: auto;
+}
+#pg .pg_panel .note button.done_problem .timer {
+  visibility: hidden;
 }
 #pg .pg_panel .node {
   position: absolute;

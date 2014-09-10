@@ -668,7 +668,7 @@ pg.panel = {
 			});	
 
 			// PLACE DATA UI PANEL
-			var x = Math.min(pos.x+$(window).scrollLeft(), $(window).width()-300); 
+			var x = Math.min(pos.x+$(window).scrollLeft(), $(window).width()-300+$(window).scrollLeft()); 
 			$(ui_el).css("top", pos.y + $(window).scrollTop() + 20);
 			$(ui_el).css("left", x);
 			$(pg.documentBody).append(ui_el).show('fast');
@@ -905,6 +905,7 @@ pg.panel = {
 				//console.log(left + " , " + top);
 				var width = left-$(pg.panel.targetEl).position().left;
 				$(pg.panel.targetEl).width(width);
+				$(pg.pg_el).width(left);
 				$(pg.documentBody).css("padding-left",left);
 				// $(this).css({'right':0, 'top':0});
 			},

@@ -21,7 +21,7 @@ pg = {
 		if($("#pg").length>0) pg.close();
 		else {
 			pg.open();
-			var task_to_load = (window.location.search && window.location.search.match(/task=([a-zA-Z0-9_\-]+)/))?
+			pg.task_name = (window.location.search && window.location.search.match(/task=([a-zA-Z0-9_\-]+)/))?
 				window.location.search.match(/task=([a-zA-Z0-9_\-]+)/)[1] : false;
 			pg.subject_name = (window.location.search && window.location.search.match(/name=([a-zA-Z0-9_\-]+)/))?
 				window.location.search.match(/name=([a-zA-Z0-9_\-]+)/)[1] : false;
@@ -31,24 +31,23 @@ pg = {
 				pg.which_mode_first = window.location.search.match(/which_mode_first=([a-zA-Z0-9_\-]+)/)[1];	
 			} else pg.which_mode_first = "manual";
 			//pg.showSurvey = window.location.search.match(/survey/) != null;
-			if(task_to_load && pg.task[task_to_load]) {
+			if(pg.task_name && pg.task[pg.task_name]) {
 				pg.log.active=true;
-				var task_enhancement = pg.task.get_enhancement(task_to_load);
+				var task_enhancement = pg.task.get_enhancement(pg.task_name);
 				var main_el = $(pg.documentBody).find(".main");
-				//if(pg.showSurvey) $(pg.documentBody).find(".main").append(pg.task.renderSurvey(task_to_load,pg.which_mode_first));
-				var survey_button = $("<button type=button class='btn btn-lg btn-success'>Open Survey</button>")
+				//if(pg.showSurvey) $(pg.documentBody).find(".main").append(pg.task.renderSurvey(pg.task_name,pg.which_mode_first));
+				if(pg.task_name.indexOf("practice")==-1) {
+					var survey_button = $("<button type=button class='btn btn-lg btn-success'>Open Survey</button>")
 					.click(function() {
-						$(pg.documentBody).find(".main").append(pg.task.renderSurvey(task_to_load,pg.mode));
+						$(pg.documentBody).find(".main").append(pg.task.renderSurvey(pg.task_name,pg.mode));
 					}).appendTo(main_el);
-				pg.log.add({type:'start_task',title:task_enhancement.title});
+					pg.log.add({type:'start_task',title:task_enhancement.title});	
+				}	
 				pg.open_enhancement(task_enhancement);
 			} else {
 				pg.open_enhancement(pg.latest_enhancement(pg.enhancements));	
 			}
 		}
-		$("#pg").css("width",(300+DEFAULT_GRID_WIDTH)+"px");
-		$(".pg_panel").css("width",DEFAULT_GRID_WIDTH+"px");
-		$(pg.documentBody).css("padding-left",(300+DEFAULT_GRID_WIDTH)+"px");
 		pg.attachEventHandlers();
 	},
 	open: function() {
@@ -63,19 +62,18 @@ pg = {
 			<div id='pg_panel' class='pg_panel unselectable'></div>\
 		</div>");
 		$(pg.documentBody).append(pg.pg_el);
-		$(pg.documentBody).css({
-			"position":"relative",
-			"padding-left":"800px",
-			"margin":"0px"
-		});
+		$("#pg").css("width",(300+DEFAULT_GRID_WIDTH)+"px");
+		$(".pg_panel").css("width",DEFAULT_GRID_WIDTH+"px");
+		$(pg.documentBody).css("padding-left",(300+DEFAULT_GRID_WIDTH)+"px");
 		pg.info.init($(pg.pg_el).find("#pg_info"));
 		pg.browser = new pg.Browser($(pg.pg_el.find("#pg_browser")), pg.enhancements);
 		pg.toolbox = new pg.Toolbox($(pg.pg_el.find("#pg_toolbox")), []);
 	},
 	close: function() {
 		$(pg.pg_el).remove();
-		$(pg.documentBody).css("padding-left",DEFAULT_GRID_WIDTH+"px");
 		pg.inspector.off();
+		$(pg.documentBody).css("padding-left","20px");
+		
 	},
 	toggle_visibility: function() {
 		$(pg.pg_el).toggle();

@@ -6,9 +6,10 @@ pg.log = {
     },
     add: function(detail) {
         if(this.active==false) return;
+        if(pg.task_name.indexOf("practice") > -1) return;
         var item={};
         item.timestamp = Date.now();
-        item.mode = pg.mode;
+        item.mode = (pg.mode)?pg.mode:"unspecified";
         item.detail = detail;
         item.user = (pg.subject_name)? pg.subject_name:'guest';
         // this.items.push(item);

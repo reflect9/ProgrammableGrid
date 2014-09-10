@@ -69,11 +69,17 @@ pg.Toolbox.prototype.redraw = function(_new_items) {
 				}
 			}
 		} else {
-			if(pg.mode!="automatic") {
+			if(pg.mode=="automatic") {
+				//
+			} else {
 				$(this.ul_operation).append(this.renderOperation(item));
 				$(this.el_tools).find("div.operation_div").show();	
-			}
+			} 
 		}
+	}
+	if(pg.mode=="automatic") {
+		$(this.ul_operation).append("<div style='font-size:20px; color:#aaa; margin:10px; line-height:normal;'>Dragging operation is disabled in Automatic mode. Click Grid UI to create a new node.  </div>");
+		$(this.el_tools).find("div.operation_div").show();	
 	}
 	// draw demoed actions
 	if(pg.mode!="manual") {

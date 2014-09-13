@@ -56,13 +56,17 @@
 				console.log("burger");
 				$("#pg_command_ui").find(".header_panel_tools").toggle("slide", {direction:"right"}, 300);
 			});
-			$(ui_el).find(".operation_execute_button").click(function() {
-				var node = pg.panel.get_current_node();
-				//pg.panel.enhancement.run_node(node);
-				pg.panel.enhancement.run_triggered_nodes([node]);
-				pg.panel.redraw();
-				pg.panel.commandUI.redraw();
-			});
+			// $(ui_el).find(".operation_execute_button").click(function() {
+			// 	// BEFORE EXECUTING, UPDATE CHANGED PARAMETERS
+
+
+
+			// 	var node = pg.panel.get_current_node();
+			// 	//pg.panel.enhancement.run_node(node);
+			// 	pg.panel.enhancement.run_triggered_nodes([node]);
+			// 	pg.panel.redraw();
+			// 	pg.panel.commandUI.redraw();
+			// });
 			$(ui_el).find(".reset_operation").click(function() {
 				var node = pg.panel.get_current_node();
 				node.P=undefined;
@@ -143,6 +147,28 @@
 			pg.panel.commandUI.updateSuggestedOperation(node);
 			pg.panel.commandUI.updateInputNodes(node);
 			pg.panel.commandUI.renderDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
+		},
+		execute: function() {
+			var node = pg.panel.get_current_node();
+			//pg.panel.enhancement.run_node(node);
+			pg.panel.enhancement.run_triggered_nodes([node]);
+			pg.panel.redraw();
+		},
+		updateAllParameters: function() {
+				var params = $("div#pg_command_ui").find("span.param");
+				var op_desc_el = $("div#pg_command_ui").find(".operation_description");
+				var node = pg.panel.get_current_node();
+				$.each(params, function(i,param){
+					//if($(e.target).attr("previousValue") != $(e.target).text()) {
+					node.P.param[$(param).attr('paramKey')]=$(param).text();
+					var key = $(param).attr('paramKey');
+					var value = $(param).text()
+					pg.log.add({type:'set_operation_parameter',key:key,value:value, node:serialize_node(node,false)});
+					//}
+				});
+				//pg.panel.redraw();
+				//pg.panel.commandUI.highlightExecuteButton();
+				$(op_desc_el).find(".param_option_list").remove();
 		},
 		highlightExecuteButton: function() {
 			$("#pg_command_ui").find(".run_operation").addClass("ready");
@@ -313,15 +339,11 @@
 						<i class='fa fa-play-circle'></i>\
 					</div>")
 					.click(function() {
-						var node = pg.panel.get_current_node();
-						//pg.panel.enhancement.run_node(node);
-						pg.panel.enhancement.run_triggered_nodes([node]);
-						pg.panel.redraw();
+						pg.panel.commandUI.updateAllParameters();
+						pg.panel.commandUI.execute();
 					})
 					.appendTo((container_el).find(".operation_description"));
 			}
-
-			
 			return $(container_el).get(0);
 		},
 		renderDescription: function(node) {

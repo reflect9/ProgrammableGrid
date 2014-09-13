@@ -158,14 +158,16 @@
 				var params = $("div#pg_command_ui").find("span.param");
 				var op_desc_el = $("div#pg_command_ui").find(".operation_description");
 				var node = pg.panel.get_current_node();
-				$.each(params, function(i,param){
-					//if($(e.target).attr("previousValue") != $(e.target).text()) {
-					node.P.param[$(param).attr('paramKey')]=$(param).text();
-					var key = $(param).attr('paramKey');
-					var value = $(param).text()
-					pg.log.add({type:'set_operation_parameter',key:key,value:value, node:serialize_node(node,false)});
-					//}
-				});
+				$.each(params, $.proxy(function(i,param){
+					var prevValue = $(param).attr("previousValue");
+					if(typeof  prevValue !== typeof undefined && prevValue != false 
+						&& prevValue != $(param).text()) {
+						this.node.P.param[$(param).attr('paramKey')]=$(param).text();
+						var key = $(param).attr('paramKey');
+						var value = $(param).text()
+						pg.log.add({type:'set_operation_parameter',key:key,value:value, node:serialize_node(this.node,false)});
+					}
+				},{node:node}));
 				//pg.panel.redraw();
 				//pg.panel.commandUI.highlightExecuteButton();
 				$(op_desc_el).find(".param_option_list").remove();

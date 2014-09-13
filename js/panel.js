@@ -66,6 +66,7 @@ pg.panel = {
 		pg.panel.commandUI.turn_inspector(true);
 	},
 	deselect: function() {
+		pg.panel.commandUI.updateAllParameters();
 		pg.inspector.unhighlight_list();
 		pg.inspector.off(pg.panel.dataUI.remove);
 		$("#tiles .node").removeAttr("selected");

@@ -114,7 +114,7 @@ pg.task = {
                 width:3
             },
             {   title:"Finding Path",
-                description:"Find the cells on the right side of the two years <br> => [TD:Cider, TD:Eating]",
+                description:"Find the usages of the cells in the input nodes<br> => [Cooking, Eating]",
                 position: [12,2],
                 width:3
             }
@@ -139,7 +139,7 @@ pg.task = {
                 width:3
             },
             {   title:"Finding path",
-                description:"Get the apple name column in the same rows with the cells <br> => [A: Beacon, A: Wealthy]",
+                description:"Get the apple names for the cells in the input node <br> => [Beacon, Wealthy]",
                 position: [16,3],
                 width:3
             }
@@ -164,17 +164,17 @@ pg.task = {
                 width:3
             },
             {   title:"Finding path",
-                description:"Get the apple name column in the same rows with the cells <br> => [A: Ariane, A:Muscadet de Dieppe]",
+                description:"Get the apple names for the cells in the input node <br> => [Beacon, Wealthy]",
                 position: [16,3],
                 width:3
             }
         ]
     },
     practice_filter : {
-        json: {"id":"rnibI","title":"Filter Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"hbCYc","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["hbCYc","_left"],"ID":"HHt95","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[1,2,3,4]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[5,2],"type":"literal","executed":true},{"I":["hbCYc","_left"],"ID":"e9ZXh","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[\"apple juice\",\"banana\",\"apple\",\"peach juice\"]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[2,1],"type":"literal","executed":true},{"I":["hbCYc","_left"],"ID":"z6LuB","P":{"kind":"pick","type":"extract_element","icon":"crosshairs","param":{"source":"_current","selector":"> DIV.container-fluid.practiceTandem > DIV > TABLE.table.table-bordered > TBODY > TR"},"description":"Extract elements at [selector] from [source]."},"V":[],"selected":false,"position":[9,1],"type":"extract_element","executed":true}],"notes":[{"id":"note-uS3wt","title":"1.String filtering","description":"Find text values in the list that contains \"peach\" <br> => The result should be [\"peach\"]","position":[3,2],"width":3,"height":1},{"id":"note-RqQtc","title":"2.Number filtering","description":"Find numbers bigger than 2 in the list <br> => The result should be [3,4]","position":[6,3],"width":3,"height":1},{"id":"note-Cm0re","title":"3.Element filtering","description":"Find the rows in the table with 'UK' in the Origin column <br> => The result should be [TR: Claygate ...]","position":[10,2],"width":3,"height":1}],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=extraction1"],"timestamp":1409562653131},
+        json: {"id":"ffddff","title":"Filter Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"hbCYc","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["hbCYc","_left"],"ID":"HHt95","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[1,2,3,4]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[5,2],"type":"literal","executed":true},{"I":["hbCYc","_left"],"ID":"e9ZXh","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[\"apple juice\",\"banana\",\"apple\",\"peach juice\"]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[2,1],"type":"literal","executed":true},{"I":["hbCYc","_left"],"ID":"z6LuB","P":{"kind":"pick","type":"extract_element","icon":"crosshairs","param":{"source":"_current","selector":"> DIV.container-fluid.practiceTandem > DIV > TABLE.table.table-bordered > TBODY > TR"},"description":"Extract elements at [selector] from [source]."},"V":[],"selected":false,"position":[9,1],"type":"extract_element","executed":true}],"notes":[{"id":"note-2EVgZ","title":"1.String filtering","description":"Find text values in the list that contains \"peach\" <br> => The result should be [\"peach\"]","position":[3,2],"width":3,"height":1},{"id":"note-FI421","title":"2.Number filtering","description":"Find numbers bigger than 2 in the list <br> => The result should be [3,4]","position":[6,3],"width":3,"height":1},{"id":"note-hEct4","title":"3.Element filtering","description":"Find the rows (TR elements) containing word 'France'<br> => The result should be [TR: Ariane ..., TR: Muscadet ...]","position":[10,2],"width":3,"height":1}],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=extraction1"],"timestamp":1409562653131},
         notes: [
             {   title:"String filtering",
-                description:'Find text values in the list that contains "peach" <br> => The result should be ["peach"]',
+                description:'Find text values in the list that contains "peach" <br> => The result should be ["peach juice"]',
                 position: [3,2],
                 width:3
             },
@@ -184,7 +184,7 @@ pg.task = {
                 width:3
             },
             {   title:"Element filtering",
-                description:"Find the rows in the table with 'UK' in the Origin column <br> => The result should be [TR: Claygate ...]",
+                description:"Find the rows (TR elements) containing word 'France'<br> => The result should be [TR: Ariane ..., TR: Muscadet ...]",
                 position: [10,2],
                 width:3
             }
@@ -193,7 +193,7 @@ pg.task = {
 
     },
     filter1 : {
-        json: {"id":"rnibI","title":"Filter Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"hbCYc","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["hbCYc","_left"],"ID":"HHt95","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[1,2,3,4]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[5,2],"type":"literal","executed":true},{"I":["hbCYc","_left"],"ID":"e9ZXh","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[\"apple juice\",\"banana\",\"apple\",\"peach juice\"]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[2,1],"type":"literal","executed":true},{"I":["hbCYc","_left"],"ID":"z6LuB","P":{"kind":"pick","type":"extract_element","icon":"crosshairs","param":{"source":"_current","selector":"> DIV.container-fluid.practiceTandem > DIV > TABLE.table.table-bordered > TBODY > TR"},"description":"Extract elements at [selector] from [source]."},"V":[],"selected":false,"position":[9,1],"type":"extract_element","executed":true}],"notes":[{"id":"note-uS3wt","title":"1.String filtering","description":"Find text values in the list that contains \"peach\" <br> => The result should be [\"peach\"]","position":[3,2],"width":3,"height":1},{"id":"note-RqQtc","title":"2.Number filtering","description":"Find numbers bigger than 2 in the list <br> => The result should be [3,4]","position":[6,3],"width":3,"height":1},{"id":"note-Cm0re","title":"3.Element filtering","description":"Find the rows in the table with 'UK' in the Origin column <br> => The result should be [TR: Claygate ...]","position":[10,2],"width":3,"height":1}],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=extraction1"],"timestamp":1409562653131},
+        json: {"id":"rnibI","title":"Filter Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"hbCYc","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["hbCYc","_left"],"ID":"HHt95","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[1,2,3,4]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[5,2],"type":"literal","executed":true},{"I":["hbCYc","_left"],"ID":"e9ZXh","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[\"apple juice\",\"banana\",\"apple\",\"peach juice\"]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[2,1],"type":"literal","executed":true},{"I":["hbCYc","_left"],"ID":"z6LuB","P":{"kind":"pick","type":"extract_element","icon":"crosshairs","param":{"source":"_current","selector":"> DIV.container-fluid > DIV.main > CENTER > TABLE.table.table-bordered > TBODY > TR"},"description":"Extract elements at [selector] from [source]."},"V":[],"selected":false,"position":[9,1],"type":"extract_element","executed":true}],"notes":[{"id":"note-ejMGh","title":"1.String filtering","description":"Find text values in the list that contains \"juice\" <br> => The result should be [\"apple juice\",\"peach juice\"]","position":[3,2],"width":3,"height":1},{"id":"note-nbnEQ","title":"2.Number filtering","description":"Find odd numbers in the list <br> => The result should be [1,3]","position":[6,3],"width":3,"height":1},{"id":"note-W5eIk","title":"3.Element filtering","description":"Find the rows (TR elements) containing word 'France'<br> => The result should be [TR: Ariane ..., TR: Muscadet ...]","position":[10,2],"width":3,"height":1}],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=extraction1"],"timestamp":1409562653131},
         notes: [
             {   title:"String filtering",
                 description:'Find text values in the list that contains "apple" <br> => The result should be ["apple juice","apple"]',
@@ -206,7 +206,7 @@ pg.task = {
                 width:3
             },
             {   title:"Element filtering",
-                description:"Find the rows in the table with 'Eating' in the use column <br> => The result should be [TR: Anna ..., TR: Ariane ..., TR: Wealthy ...]",
+                description:"Find the rows (TR elements) containing word 'US'<br> => The result should be [TR: Beacon..., TR: Weathy...]",
                 position: [10,2],
                 width:3
             }
@@ -215,7 +215,7 @@ pg.task = {
 
     },
     filter2 : {
-       json: {"id":"rnibI","title":"Filter Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"hbCYc","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["hbCYc","_left"],"ID":"HHt95","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[1,2,3,4]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[5,2],"type":"literal","executed":true},{"I":["hbCYc","_left"],"ID":"e9ZXh","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[\"apple juice\",\"banana\",\"apple\",\"peach juice\"]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[2,1],"type":"literal","executed":true},{"I":["hbCYc","_left"],"ID":"z6LuB","P":{"kind":"pick","type":"extract_element","icon":"crosshairs","param":{"source":"_current","selector":"> DIV.container-fluid.practiceTandem > DIV > TABLE.table.table-bordered > TBODY > TR"},"description":"Extract elements at [selector] from [source]."},"V":[],"selected":false,"position":[9,1],"type":"extract_element","executed":true}],"notes":[{"id":"note-uS3wt","title":"1.String filtering","description":"Find text values in the list that contains \"peach\" <br> => The result should be [\"peach\"]","position":[3,2],"width":3,"height":1},{"id":"note-RqQtc","title":"2.Number filtering","description":"Find numbers bigger than 2 in the list <br> => The result should be [3,4]","position":[6,3],"width":3,"height":1},{"id":"note-Cm0re","title":"3.Element filtering","description":"Find the rows in the table with 'UK' in the Origin column <br> => The result should be [TR: Claygate ...]","position":[10,2],"width":3,"height":1}],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=extraction1"],"timestamp":1409562653131},
+       json: {"id":"rnibI","title":"Filter Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"hbCYc","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["hbCYc","_left"],"ID":"HHt95","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[1,2,3,4]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[5,2],"type":"literal","executed":true},{"I":["hbCYc","_left"],"ID":"e9ZXh","P":{"kind":"transform","type":"literal","icon":"quote-right","param":{"source":"[\"apple juice\",\"banana\",\"apple\",\"peach juice\"]"},"description":"Directly set the current node data to [source]."},"V":[],"selected":false,"position":[2,1],"type":"literal","executed":true},{"I":["hbCYc","_left"],"ID":"z6LuB","P":{"kind":"pick","type":"extract_element","icon":"crosshairs","param":{"source":"_current","selector":"> DIV.container-fluid > DIV.main > CENTER > TABLE.table.table-bordered > TBODY > TR"},"description":"Extract elements at [selector] from [source]."},"V":[],"selected":false,"position":[9,1],"type":"extract_element","executed":true}],"notes":[{"id":"note-ejMGh","title":"1.String filtering","description":"Find text values in the list that contains \"juice\" <br> => The result should be [\"apple juice\",\"peach juice\"]","position":[3,2],"width":3,"height":1},{"id":"note-nbnEQ","title":"2.Number filtering","description":"Find odd numbers in the list <br> => The result should be [1,3]","position":[6,3],"width":3,"height":1},{"id":"note-W5eIk","title":"3.Element filtering","description":"Find the rows (TR elements) containing word 'France'<br> => The result should be [TR: Ariane ..., TR: Muscadet ...]","position":[10,2],"width":3,"height":1}],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=extraction1"],"timestamp":1409562653131},
         notes: [
             {   title:"String filtering",
                 description:'Find text values in the list that contains "juice" <br> => The result should be ["apple juice","peach juice"]',
@@ -228,37 +228,37 @@ pg.task = {
                 width:3
             },
             {   title:"Element filtering",
-                description:"Find the rows in the table with 'France' in the origin column <br> => The result should be [TR: Ariane ..., TR: Muscadet ...]",
+                description:"Find the rows (TR elements) containing word 'Cooking'<br> => The result should be [TR:Beacon...]",
                 position: [10,2],
                 width:3
             }
         ]
     },
     practice_attach : {
-        json: {"id":"iLpTy","title":"Attach Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"LMrGn","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["LMrGn","_left"],"ID":"9aOgd","P":{"kind":"apply","type":"create_element","icon":"magic","param":{"value":"search by keyword","tag":"text input"},"description":"Create [tag] elements using the [value].","applicable":false},"V":[],"selected":false,"position":[2,2],"executed":true}],"notes":[{"id":"note-ZyYuP","title":"Problem 1 of 2","description":"Attach the TEXT INPUT element in the above node to front of every apple name (Anna, Ariane, ...)","position":[3,2],"width":3,"height":1},{"id":"note-kbDrK","title":"Problem 2 of 2","description":"Attach the TEXT INPUT element in the above node behind the table.","position":[7,2],"width":3,"height":1}],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=filter1"],"timestamp":1409600397571},
+        json: {"id":"iLpTy","title":"Attach Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"LMrGn","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["LMrGn","_left"],"ID":"9aOgd","P":{"kind":"apply","type":"create_element","icon":"magic","param":{"value":"Eat me!","tag":"button"},"description":"Create [tag] elements using the [value].","applicable":false},"V":[],"selected":false,"position":[2,2],"executed":true}],"notes":[{"id":"note-XoWis","title":"1.Attaching single element before multiple targets","description":"Attach the TEXT INPUT element in the above node to front of every apple name (Anna, Ariane, ...)","position":[3,3],"width":3,"height":1}],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=filter1"],"timestamp":1409600397571},
         notes: [
-            {   title:"Attaching single element before multiple targets",
-                description:'Attach the TEXT INPUT element in the above node to front of every apple name (Anna, Ariane, ...)',
+            {   title:"Attaching elements",
+                description:'Attach the BUTTON element to the back of every apple name (Anna, Ariane, ...)',
                 position: [3,3],
                 width:3
             }
         ]
     },
     attach1 : {
-        json: {"id":"iLpTy","title":"Attach Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"LMrGn","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["LMrGn","_left"],"ID":"9aOgd","P":{"kind":"apply","type":"create_element","icon":"magic","param":{"value":"search by keyword","tag":"text input"},"description":"Create [tag] elements using the [value].","applicable":false},"V":[],"selected":false,"position":[2,2],"executed":true}],"notes":[{"id":"note-ZyYuP","title":"Problem 1 of 2","description":"Attach the TEXT INPUT element in the above node to front of every apple name (Anna, Ariane, ...)","position":[3,2],"width":3,"height":1},{"id":"note-kbDrK","title":"Problem 2 of 2","description":"Attach the TEXT INPUT element in the above node behind the table.","position":[7,2],"width":3,"height":1}],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=filter1"],"timestamp":1409600397571},
+        json: {"id":"iLpTy","title":"Attach Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"LMrGn","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["LMrGn","_left"],"ID":"9aOgd","P":{"kind":"apply","type":"create_element","icon":"magic","param":{"value":"check","tag":"checkbox"},"description":"Create [tag] elements using the [value].","applicable":false},"V":[],"selected":false,"position":[2,2],"executed":true}],"notes":[{"id":"note-fXGMV","title":"1.Attaching single element before multiple targets","description":"Attach the TEXT INPUT element in the above node to front of every origin (Israel, France, ...)","position":[3,3],"width":3,"height":1}],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=filter1"],"timestamp":1409600397571},
         notes: [
-            {   title:"Attaching single element before multiple targets",
-                description:'Attach the TEXT INPUT element in the above node to front of every origin (Israel, France, ...)',
+            {   title:"Attaching elements",
+                description:'Attach the CHECKBOX element to the front of every origin (Israel, France, ...)',
                 position: [3,3],
                 width:3
             }
         ]
     },
     attach2 : {
-        json: {"id":"iLpTy","title":"Attach Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"LMrGn","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["LMrGn","_left"],"ID":"AiPao","P":{"kind":"apply","type":"create_element","icon":"magic","param":{"value":"blah","tag":"text input"},"description":"Create [tag] elements using the [value].","applicable":false},"V":[],"selected":false,"position":[2,2],"executed":true}],"notes":[{"id":"note-6ynac","title":"Problem 1 of 1","description":"Attach the TEXT INPUT element in the above node above the table.","position":[3,3],"width":3,"height":1}],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=filter1"],"timestamp":1409600397571},
+        json: {"id":"iLpTy","title":"Attach Tasks","active":true,"nodes":[{"I":["_above","_left"],"ID":"LMrGn","P":{"kind":"flow","type":"trigger","icon":"bell","param":{"event_source":"page"},"description":"Trigger the following nodes when [event_source] is loaded, clicked, or changed."},"V":[],"selected":false,"position":[0,1],"type":"trigger","executed":false},{"I":["LMrGn","_left"],"ID":"9aOgd","P":{"kind":"apply","type":"create_element","icon":"magic","param":{"value":"check","tag":"checkbox"},"description":"Create [tag] elements using the [value].","applicable":false},"V":[],"selected":false,"position":[2,2],"executed":true}],"notes":[{"id":"note-fXGMV","title":"1.Attaching single element before multiple targets","description":"Attach the TEXT INPUT element in the above node to front of every origin (Israel, France, ...)","position":[3,3],"width":3,"height":1}],"domain":["http://takyeonlee.com/tandem-learn/task.html?task=filter1"],"timestamp":1409600397571},
         notes: [
-            {   title:"Attaching single element before multiple targets",
-                description:"Attach the TEXT INPUT element in the above node to back of every use (EAting, Cooking, ...)",
+            {   title:"Attaching elements",
+                description:"Attach the CHECKBOX element to the back of every origin (Israel, France, ...)",
                 position: [3,3],
                 width:3
             }

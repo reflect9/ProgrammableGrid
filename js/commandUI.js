@@ -364,7 +364,7 @@
 					if($(e.target).attr("previousValue") != $(e.target).text()) {
 						var node = pg.panel.get_current_node();
 						var key = $(e.target).attr('paramKey');
-						var value = $(e.target).text()
+						var value = $(e.target).text();
 						node.P.param[key]=value;
 						pg.log.add({type:'set_operation_parameter',key:key,value:value, node:serialize_node(node,false)});
 						pg.panel.redraw();
@@ -515,7 +515,28 @@
 				$(entryEl).find("span.attr_value").focus(function() {
 					$(this).attr("previousValue",$(this).text());
 				})
-				.blur(function() {
+				.keypress(function(e) {
+					if ( event.which == 13 ) {
+						var node = pg.panel.get_current_node();
+						var new_value = $(this).text();
+						var pos = parseInt($(this).closest("li").attr("data_index"));
+						if($(this).attr('attr_key')) {  // when edited value is element attribute
+							var attr_key = $(this).attr('attr_key');
+							var attr_func = pg.planner.attr_func(attr_key);
+							if(attr_func==false) return;
+							var attr_setter = attr_func['setter'];
+							attr_setter(node.V[pos], new_value); 
+						} else { // when edited object is just value
+							node.V[pos] = txt2var(new_value);
+						}
+						pg.log.add({type:'edit_node_value',value:serialize_values(node.V), node:pg.Node.serialize(node,false)});    
+						//pg.panel.commandUI.renderDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
+						pg.panel.redraw();
+						pg.panel.commandUI.updateSuggestedOperation(node);
+						event.preventDefault();
+					}
+				})
+				.blur(function() {   //blahblah
 					if($(this).attr("previousValue") != $(this).text()) {
 						var node = pg.panel.get_current_node();
 						var new_value = $(this).text();
@@ -529,7 +550,7 @@
 						} else { // when edited object is just value
 							node.V[pos] = txt2var(new_value);
 						}
-						pg.log.add({type:'edit_node_value',value:serialize_values(node.V), node:pg.Node.serialize(n,false)});    
+						pg.log.add({type:'edit_node_value',value:serialize_values(node.V), node:pg.Node.serialize(node,false)});    
 						//pg.panel.commandUI.renderDataTable(node.V, $("#pg_command_ui").find(".output_data").find("ul.data_ul"));
 						pg.panel.redraw();
 						pg.panel.commandUI.updateSuggestedOperation(node);

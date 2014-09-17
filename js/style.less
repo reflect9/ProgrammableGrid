@@ -49,6 +49,20 @@
 	}
 }
 
+#pg[position='left'] {
+	left:0px;
+	#pg_nav {	left:0px;	}
+	#pg_panel {	left:300px;	}
+	#resize_handle_panel {	right:-10px;	}
+}
+#pg[position='right'] {
+	right:0px;
+	#pg_nav {	right:0px;	}
+	#pg_panel {	right:300px;	}
+	#resize_handle_panel {	left:-10px;	}
+}
+
+
 #pg{
 	position:fixed; 
 	height:100%;
@@ -63,7 +77,7 @@
     vertical-align:baseline;
     background:transparent;
 	position:fixed;
-	top:0px; left:0px;
+	top:0px; 
 	z-index:9999;
 	color:black;
 	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -202,7 +216,7 @@
 	position:absolute;
 	width:300px;
 	height:100%;
-	top:0px; left:0px;
+	top:0px;
 	z-index:999;
 	background:white;
 	overflow:auto;
@@ -608,8 +622,6 @@
 	
 }
 
-
-
 #resize_handle_panel {
 	position : absolute;
 	z-index:10000;
@@ -627,6 +639,22 @@
 		margin:1px;
 	}
 }
+#switch_panel_position {
+	position : absolute;
+	z-index:10000;
+	bottom: 10px;
+	left: 10px;
+	i {
+		padding: 5px 10px;
+		border:1px solid #aaa;
+		border-radius: 4px;
+		background-color: #fff;
+		color:#aaa;
+		margin:5px;
+		cursor:pointer;
+	}
+}
+
 
 
 .pg_panel {
@@ -634,7 +662,7 @@
 	width:500px;
 	height:100%;
 	z-index:999;
-	top:0px; left:300px;
+	top:0px;
 	background:#eee;
 	overflow:inherit;
 	font-size:13px;
@@ -1889,6 +1917,10 @@ div.pg_data_table {
 
 }
 
+
+.pg_created_element {
+	max-width:100%;
+}
 
 
 

@@ -323,7 +323,7 @@ var isNumberList = function(list) {
 	}).length===0;
 };
 var isNumberString = function(str) {
-	return _.isString(str) && (str===""+parseInt(str));
+	return _.isString(str) && (!isNaN(parseInt(str)));	
 };
 var isBooleanList = function(list) {
 	var toCheck = (_.isArray(list))? list: [list];

@@ -41,6 +41,30 @@
   font-size: 11px;
   font-family: "Times New Roman", Georgia, Serif;
 }
+#pg[position='left'] {
+  left: 0px;
+}
+#pg[position='left'] #pg_nav {
+  left: 0px;
+}
+#pg[position='left'] #pg_panel {
+  left: 300px;
+}
+#pg[position='left'] #resize_handle_panel {
+  right: -10px;
+}
+#pg[position='right'] {
+  right: 0px;
+}
+#pg[position='right'] #pg_nav {
+  right: 0px;
+}
+#pg[position='right'] #pg_panel {
+  right: 300px;
+}
+#pg[position='right'] #resize_handle_panel {
+  left: -10px;
+}
 #pg {
   height: 100%;
   width: 800px;
@@ -55,7 +79,6 @@
   background: transparent;
   position: fixed;
   top: 0px;
-  left: 0px;
   z-index: 9999;
   color: black;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -204,7 +227,6 @@
   width: 300px;
   height: 100%;
   top: 0px;
-  left: 0px;
   z-index: 999;
   background: white;
   overflow: auto;
@@ -683,13 +705,27 @@
   color: black;
   margin: 1px;
 }
+#pg #switch_panel_position {
+  position: absolute;
+  z-index: 10000;
+  bottom: 10px;
+  left: 10px;
+}
+#pg #switch_panel_position i {
+  padding: 5px 10px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #aaa;
+  margin: 5px;
+  cursor: pointer;
+}
 #pg .pg_panel {
   position: absolute;
   width: 500px;
   height: 100%;
   z-index: 999;
   top: 0px;
-  left: 300px;
   background: #eee;
   overflow: inherit;
   font-size: 13px;
@@ -1985,6 +2021,9 @@ div.pg_data_table div.dt_inst label {
   -khtml-user-select: none;
   -webkit-user-select: none;
   -o-user-select: none;
+}
+.pg_created_element {
+  max-width: 100%;
 }
 .blink_me {
   -webkit-animation-name: blinker;

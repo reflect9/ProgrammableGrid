@@ -335,7 +335,7 @@ pg.planner = {
 			pre: function(Is) {
 				try {
 					if(Is.length==0) return false;
-					if(!isStringList(Is[0].V)) return false;
+					if(!isStringList(Is[0].V) && !isNumberList(Is[0].V)) return false;
 					return true; 	
 				} catch(e) {
 					console.log(e.stack);
@@ -344,7 +344,8 @@ pg.planner = {
 			},
 			generate: function(Is, O) {
 				// PRECHECKING: all ooutput must exist in input
-				if(!O || !O.V || !isStringList(O.V) || O.V.length==0) return false;
+				if(!O || !O.V || O.V.length==0) return false;
+				if(!isStringList(Is[0].V) && !isNumberList(Is[0].V)) return false;
 				var valid_O = [];
 				_.each(Is, function(I, I_index) {
 					if(!I || !isStringList(I.V) || I.V.length==0) return false;
@@ -431,8 +432,12 @@ pg.planner = {
 					var nth_input = parseInt(O.P.param.source.match(/input([0-9])/)[1])-1; 
 					if(!O || !O.I || !O.I[nth_input]) return O; 
 					var I = pg.panel.get_node_by_id(O.I[nth_input], O);
-					if(!I || !I.V || !isStringList(I.V) || I.V.length==0 ) return O; 
-					O.V = _.map(I.V, function(input) { 
+					if(!I || !I.V || (!isStringList(I.V) && !isNumberList(I.V)) || I.V.length==0 ) return O; 
+					var sourceV;
+					if (isNumberList(I.V)) {
+						sourceV = _.map(I.V, function(v){ return ""+v; });
+					} else sourceV = I.V;
+					O.V = _.map(sourceV, function(input) { 
 						var start_pos, end_pos;
 						start_pos = (O.P.param.include_from)? input.indexOf(O.P.param.from): input.indexOf(O.P.param.from)+O.P.param.from.length;
 						if(input.indexOf(O.P.param.to,start_pos+1)==-1) end_pos = input.length;
@@ -620,12 +625,13 @@ pg.planner = {
 				kind:'transform',
 				type:'sort',
 				icon:'sort-alpha-asc',
-				param:{direction:'up', source:"input1"},
-				description: "Sort [source] in [direction]-order."
+				param:{direction:'decreasing', source:"input1", score:"input1"},
+				description: "Sort [source] by [score] in [direction]-order."
 			},
 			parameters: {
-				'direction': {type:'text', label:'up or down', default:'up', options:["up","down"]},
-				'source': {type:'text', label:'list to sort', default:'input1', options:["input1","input2"] }
+				'source': {type:'text', label:'list to sort', default:'input1', options:["input1","input2"] },
+				'score': {type:'text', label:'score to sort by', default:'input1', options:["input1","input2"] },
+				'direction': {type:'text', label:'increasing or decreasing', default:'increasing', options:["increasing","decreasing"]},
 			},
 			pre:function(Is) {
 				if(!Is || !Is[0] || !Is[0].V || !isValueList(Is[0].V)) return false;
@@ -643,6 +649,7 @@ pg.planner = {
 						var _O = pg.Node.create(O);
 						_O.P = jsonClone(this.proto);
 						_O.P.param.source = "input"+(I_index+1); 	
+						_O.P.param.score = "input"+(I_index+1); 	
 						valid_O.push(_O);
 					} else {
 						sorted.reverse();
@@ -651,6 +658,7 @@ pg.planner = {
 							_O.P = jsonClone(this.proto); 	
 							_O.P.param.direction = 'down';
 							_O.P.param.source = "input"+(I_index+1);
+							_O.P.param.score = "input"+(I_index+1); 	
 							valid_O.push(_O);
 						}
 					}
@@ -659,15 +667,22 @@ pg.planner = {
 			},
 			execute: function(O) {
 				if(!O || !O.I) return false;
-				if(O.P.param.source.match(/input[0-9]/)!==null)  {
-					var trimmed_v;
-					var nth_input = parseInt(O.P.param.source.match(/input([0-9])/)[1])-1; 
-					var I = pg.panel.get_node_by_id(O.I[nth_input],O);
-					if(!I.V) return false;
-					if(isStringList(I.V)) trimmed_v = _.map(I.V, function(v) { return v.trim(); });
-					else trimmed_v = I.V;
-					O.V = _.sortBy(trimmed_v, function(v){return v;});
-					if(O.P.param.direction=='down') O.V.reverse();
+				var id_source_node = pg.Node.getParamNodeID(O, 'source');
+				var id_score_node = pg.Node.getParamNodeID(O, 'score');
+				if(id_source_node===false || id_score_node===false) return O;
+				var source_v = pg.panel.get_node_by_id(id_source_node,O).V;
+				var score_v = pg.panel.get_node_by_id(id_score_node,O).V;
+
+				//if(isStringList(score_v)) trimmed_v = _.map(score_v, function(v) { return v.trim(); });
+				//else trimmed_v = score_v;
+				O.V = _.sortBy(source_v, function(v,i){
+					return score_v[i];
+				});
+				if(O.P.param.direction=='decreasing') O.V.reverse();
+				// append to the enclosing element if the V is elements
+				if(isDomList(O.V)) {
+					var parent_el = $(O.V[0]).parent();
+					$(O.V).appendTo(parent_el);	
 				}
 				return O;
 			}
@@ -953,24 +968,24 @@ pg.planner = {
 			},
 			helper_arithmetic: {
 				"+": {		
-					execute:function(op1, op2) { return op1+op2; },
+					execute:function(op1, op2) { return parseFloat(op1)+parseFloat(op2); },
 					inverse:function(op1, output) { return output-op1; }
 				},
 				"-": {		
-					execute:function(op1, op2) { return op1-op2; },
-					inverse:function(op1, output) { return op1-output; }
+					execute:function(op1, op2) { return parseFloat(op1)-parseFloat(op2); },
+					inverse:function(op1, output) { return parseFloat(op1)-parseFloat(output); }
 				},
 				"*": {		
-					execute:function(op1, op2) { return op1*op2; },
+					execute:function(op1, op2) { return parseFloat(op1)*parseFloat(op2); },
 					inverse:function(op1, output) { return output/op1; }
 				},
 				"/": {		
-					execute:function(op1, op2) { return op1/op2; },
-					inverse:function(op1, output) { return op1/output; }
+					execute:function(op1, op2) { return parseFloat(op1)/parseFloat(op2); },
+					inverse:function(op1, output) { return parseFloat(op1)/parseFloat(output); }
 				},
 				"%": {		
-					execute:function(op1, op2) { return op1%op2; },
-					inverse:function(op1, output) { return op1-output; }
+					execute:function(op1, op2) { return parseFloat(op1)%parseFloat(op2); },
+					inverse:function(op1, output) { return parseFloat(op1)-parseFloat(output); }
 				}
 			}
 
@@ -1156,7 +1171,7 @@ pg.planner = {
 				type:"string_test",
 				icon:'columns',
 				param: { source:'input1', key:'input2', isIn:'in' },
-				description: "Distinguish whether [key] is [isIn] [source] ."
+				description: "Test whether [key] is [isIn] [source] ."
 			},
 			parameters: {
 				source:{ type:'text', label:"String set to look at", default:'input1', options:["input1","input2"]},
@@ -1633,12 +1648,12 @@ pg.planner = {
 				}
 			}, 
 			helper_create_element: function(tag,value) {
-				if(tag=="span") return $("<span>"+value+"</span>")[0];
-				if(tag=="p") return $("<p>"+value+"</p>")[0];
-				if(tag=="button") return $("<button>"+value+"</button>")[0];
-				if(tag=="text input") return $("<input type='text' value='"+value+"'/>")[0];
-				if(tag=="checkbox") return $("<input type='checkbox' name='"+value+"'/><span>"+value+"</span>")[0];
-				if(tag=="img") return $("<img src='"+value+"'></img>")[0];
+				if(tag=="span") return $("<span class='pg_created_element'>"+value+"</span>")[0];
+				if(tag=="p") return $("<p class='pg_created_element'>"+value+"</p>")[0];
+				if(tag=="button") return $("<button class='pg_created_element'>"+value+"</button>")[0];
+				if(tag=="text input") return $("<input type='text' class='pg_created_element' value='"+value+"'/>")[0];
+				if(tag=="checkbox") return $("<input  class='pg_created_element' type='checkbox' name='"+value+"'/><span>"+value+"</span>")[0];
+				if(tag=="img") return $("<img class='pg_created_element' src='"+value+"'></img>")[0];
 				return false;
 			},
 			// helper_extract_value: function(element) {

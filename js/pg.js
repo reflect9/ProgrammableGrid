@@ -52,11 +52,12 @@ pg = {
 	},
 	open: function() {
 		if(pg.pg_el) $(pg.pg_el).remove();
-		pg.pg_el = $("<div id='pg'>\
+		pg.pg_el = $("<div id='pg' position='"+PANEL_POSITION+"'>\
 			<div id='pg_nav' class='pg_nav unselectable'>\
 				<div id='pg_browser' class='unselectable'></div>\
 				<div id='pg_info' class='unselectable'></div>\
 				<div id='pg_toolbox' class='unselectable'></div>\
+				<div id='switch_panel_position'><i class='fa fa-step-backward'></i><i class='fa fa-step-forward'></i></div>\
 			</div>\
 			<div id='resize_handle_panel'><i class='fa fa-caret-left'></i><i class='fa fa-caret-right'></i></div>\
 			<div id='pg_panel' class='pg_panel unselectable'></div>\
@@ -64,7 +65,13 @@ pg = {
 		$(pg.documentBody).append(pg.pg_el);
 		$("#pg").css("width",(300+DEFAULT_GRID_WIDTH)+"px");
 		$(".pg_panel").css("width",DEFAULT_GRID_WIDTH+"px");
-		$(pg.documentBody).css("padding-left",(300+DEFAULT_GRID_WIDTH)+"px");
+		if(PANEL_POSITION=="left") {
+			$(pg.documentBody).css("padding-left",(300+DEFAULT_GRID_WIDTH)+"px");
+			$(pg.documentBody).css("padding-right","0px");
+		} else {
+			$(pg.documentBody).css("padding-left","20px");
+			$(pg.documentBody).css("padding-right",(300+DEFAULT_GRID_WIDTH)+"px");
+		}
 		pg.info.init($(pg.pg_el).find("#pg_info"));
 		pg.browser = new pg.Browser($(pg.pg_el.find("#pg_browser")), pg.enhancements);
 		pg.toolbox = new pg.Toolbox($(pg.pg_el.find("#pg_toolbox")), []);
@@ -72,8 +79,9 @@ pg = {
 	close: function() {
 		$(pg.pg_el).remove();
 		pg.inspector.off();
-		$(pg.documentBody).css("padding-left","20px");
-		
+		if(PANEL_POSITION=="left") {
+			$(pg.documentBody).css("padding-left","20px");
+		}
 	},
 	toggle_visibility: function() {
 		$(pg.pg_el).toggle();
@@ -248,6 +256,7 @@ pg = {
 
 // pg.backup_page = $(pg.documentBody).clone().get(0);
 
+PANEL_POSITION = "left";
 
 DEFAULT_PLATE_DIMENSION = 3000
 DEFAULT_NODE_DIMENSION = 85

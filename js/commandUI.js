@@ -496,7 +496,7 @@
 							start: $.proxy(function(event,ui) {
 								pg.panel.commandUI.turn_inspector(false);
 								pg.attaching_element = v;
-								var target_elements = $(pg.documentBody).find("> *").not("#pg").find("*");
+								var target_elements = $(pg.documentBody).find("> *").not("#pg").find("*").addBack();
 								// DROPPABLE START
 								$(target_elements).droppable({
 									accept:"div.tag",

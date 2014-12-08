@@ -35,7 +35,7 @@ pg.panel = {
 		console.log("redraw start");
 		pg.panel.redraw();
 		pg.toolbox.redraw(pg.planner.get_all_operations());
-		pg.panel.execute();
+		//pg.panel.execute();
 	},
 	close: function() {
 		$(pg.panel.targetEl).empty();

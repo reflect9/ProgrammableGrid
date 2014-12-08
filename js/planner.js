@@ -1224,7 +1224,10 @@ pg.planner = {
 						var input_list = _.map(input1.V, function(v){ return v.toString(); });
 						var item_length = Math.min(input1.V.length, O.V.length);
 						var bagOfWords = _.uniq(_.flatten(_.map(_.first(input_list,item_length), function(item) {	return item.split(" ");	})));
-						
+						// for performance issue, limite bagOfWords to 10.
+						bagOfWords = _.first(bagOfWords,10);
+
+
 						// find the words that may be filter criteria
 						// p_key_words = [];   n_key_words = [];	// p is words for string_contain case,  n is words for strong_not_contain
 						var valid_words_in = _.filter(bagOfWords, function(word) {

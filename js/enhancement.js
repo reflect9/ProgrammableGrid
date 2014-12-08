@@ -72,22 +72,6 @@ pg.Enhancement.prototype.insert = function(new_nodes, target_node) {
 		var max_y = _.max(this.get_nodes(), function(n){ return n.position[0];}).position[0]+1;
 		target_position = [max_y,1];
 	}
-	// convert absolute input connections to relative positions
-	_.each(new_nodes, function(nd) {
-		nd.I = _.map(nd.I, function(input_id) {	// replace nd.I with <left> if the left node is the input node.
-			if(input_id === "_pageLoad") {
-				var trigger_page_load = _.filter(this.get_nodes(), function(n) {
-					return n.P && n.P.type=='trigger' && n.P.param && n.P.param.event_source==="page";
-				});
-				if(trigger_page_load.length>0) return trigger_page_load[0].ID;
-			}
-			if(input_id === this.get_node_by_id("_left",nd)) return "_left";
-			else if(input_id === this.get_node_by_id("_above",nd)) return "_above";
-			else if(input_id === this.get_node_by_id("_right",nd)) return "_right";
-			else if(input_id === this.get_node_by_id("_below",nd)) return "_below";
-			else return input_id;
-		}, this);
-	},this);
 	// set positions of the new nodes and push to enhancements.
 	for(var ni=0; ni<new_nodes.length;ni++) {
 		var nd = new_nodes[ni]; 	
@@ -101,6 +85,22 @@ pg.Enhancement.prototype.insert = function(new_nodes, target_node) {
 		this.delete_at(nd.position);
 		this.get_nodes().push(nd);
 	}
+	// convert absolute input connections to relative positions
+	_.each(new_nodes, function(nd) {
+		nd.I = _.map(nd.I, function(input_id) {	// replace nd.I with <left> if the left node is the input node.
+			if(input_id === "_pageLoad") {
+				var trigger_page_load = _.filter(this.get_nodes(), function(n) {
+					return n.P && n.P.type=='trigger' && n.P.param && n.P.param.event_source==="page";
+				});
+				if(trigger_page_load.length>0) return trigger_page_load[0].ID;
+			}
+			if(input_id === this.get_node_by_id("_left",nd).ID) return "_left";
+			else if(input_id === this.get_node_by_id("_above",nd).ID) return "_above";
+			else if(input_id === this.get_node_by_id("_right",nd).ID) return "_right";
+			else if(input_id === this.get_node_by_id("_below",nd).ID) return "_below";
+			else return input_id;
+		}, this);
+	},this);
 };
 pg.Enhancement.prototype.insert_at = function(new_nodes) {
 	// all new nodes must have absolute positions

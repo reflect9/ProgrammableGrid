@@ -2024,6 +2024,8 @@ div.pg_data_table div.dt_inst label {
 }
 .pg_created_element {
   max-width: 100%;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: smaller;
 }
 .blink_me {
   -webkit-animation-name: blinker;

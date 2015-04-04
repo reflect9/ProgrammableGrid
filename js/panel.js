@@ -408,41 +408,11 @@ pg.panel = {
 		pg.panel.run_triggered_nodes(triggered, false, false);
 	},
 	run_node: function(nodeObj, skip_redraw) {
-		// if(nodeObj.P && nodeObj.P.type!="trigger") nodeObj.executed = true;
-		// if(!nodeObj) return false;
-		// if(!nodeObj.P) return false;
-		// pg.planner.execute(nodeObj);
 		pg.panel.enhancement.run_node(nodeObj);
 		if(skip_redraw){  }
 		else pg.panel.redraw();
 	},
 	run_triggered_nodes: function(starting_nodes, _nodes, skip_redraw) {
-		// reset 'executed' property of every node
-		//console.log("===================================");
-		// var nodes = (_nodes)? _.clone(_nodes): _.clone(pg.panel.get_nodes());
-		// var nodesToExecute = pg.panel.get_reachable_nodes(starting_nodes, nodes, true); // including starting nodes
-		// _.each(nodesToExecute, function(n) { n.executed = false; });	
-		// if(nodesToExecute==undefined || nodesToExecute.length==0 ) return;
-		// var queue = starting_nodes;
-		// //console.log("starting nodes : "+pg.panel.print(starting_nodes));
-		// var executed = [];
-		// // nodes = _.difference(nodes, queue);
-		// var count=0;
-		// while(queue.length>0 && count<nodes.length){
-		// 	//console.log("---");
-		// 	var n = queue.pop();
-		// 	pg.panel.run_node(n, true);
-		// 	executed = _.union(executed, n);
-		// 	//console.log("run : "+pg.panel.print([n]));
-		// 	// nodes = _.difference(nodes, queue);
-		// 	var nodes_ready = pg.panel.get_ready_nodes(nodesToExecute, nodes);
-		// 	var nodes_ready_not_yet_run = _.difference(nodes_ready, executed);
-		// 	queue = _.union(queue, nodes_ready_not_yet_run);
-		// 	//console.log("queue : "+pg.panel.print(queue));
-		// 	//console.log("nodes : "+pg.panel.print(nodes));
-		// 	//console.log("---");
-		// 	count++;
-		// }
 		pg.panel.enhancement.run_triggered_nodes(starting_nodes, _nodes, skip_redraw);
 		pg.panel.redraw();
 	},
@@ -460,11 +430,6 @@ pg.panel = {
 			// 	return [];
 			// }
 		}
-		// var solution_nodes = pg.planner.plan(Is,output_node);
-		// this.commandUI.update(solution_nodes);
-		// console.log(solution_nodes);
-		// if(!solution_nodes || solution_nodes==[]) alert("no solution found");
-		// return solution_nodes;
 	},
 
 
@@ -944,12 +909,13 @@ pg.panel = {
 		$(pg.pg_el).find("#switch_panel_position").find(".fa-step-backward").click(function() {
 			//PANEL_POSITION = (PANEL_POSITION=="left")?"right":"left";
 			PANEL_POSITION = "left";
-			pg.init();
+			// pg.init();
+			pg.refresh_layout();
 		});	
 		$(pg.pg_el).find("#switch_panel_position").find(".fa-step-forward").click(function() {
 			//PANEL_POSITION = (PANEL_POSITION=="left")?"right":"left";
 			PANEL_POSITION = "right";
-			pg.init();
+			pg.refresh_layout();
 		});	
 
 		

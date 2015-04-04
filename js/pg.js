@@ -63,15 +63,7 @@ pg = {
 			<div id='pg_panel' class='pg_panel unselectable'></div>\
 		</div>");
 		$(pg.documentBody).append(pg.pg_el);
-		$("#pg").css("width",(300+DEFAULT_GRID_WIDTH)+"px");
-		$(".pg_panel").css("width",DEFAULT_GRID_WIDTH+"px");
-		if(PANEL_POSITION=="left") {
-			$(pg.documentBody).css("padding-left",(300+DEFAULT_GRID_WIDTH)+"px");
-			$(pg.documentBody).css("padding-right","0px");
-		} else {
-			$(pg.documentBody).css("padding-left","20px");
-			$(pg.documentBody).css("padding-right",(300+DEFAULT_GRID_WIDTH)+"px");
-		}
+		pg.refresh_layout();
 		pg.info.init($(pg.pg_el).find("#pg_info"));
 		pg.browser = new pg.Browser($(pg.pg_el.find("#pg_browser")), pg.enhancements);
 		pg.toolbox = new pg.Toolbox($(pg.pg_el.find("#pg_toolbox")), []);
@@ -81,6 +73,18 @@ pg = {
 		pg.inspector.off();
 		if(PANEL_POSITION=="left") {
 			$(pg.documentBody).css("padding-left","20px");
+		}
+	},
+	refresh_layout: function() { 
+		$("#pg").attr("position",PANEL_POSITION);
+		$("#pg").css("width",(300+DEFAULT_GRID_WIDTH)+"px");
+		$(".pg_panel").css("width",DEFAULT_GRID_WIDTH+"px");
+		if(PANEL_POSITION=="left") {
+			$(pg.documentBody).css("padding-left",(300+DEFAULT_GRID_WIDTH)+"px");
+			$(pg.documentBody).css("padding-right","0px");
+		} else {
+			$(pg.documentBody).css("padding-left","20px");
+			$(pg.documentBody).css("padding-right",(300+DEFAULT_GRID_WIDTH)+"px");
 		}
 	},
 	toggle_visibility: function() {
@@ -144,6 +148,7 @@ pg = {
 		})[0];
 	},
 	open_enhancement: function(enhancement) {
+		if (typeof enhancement=="undefined") return;
 		var target_el = $(pg.pg_el).find(".pg_panel");
 		pg.panel.init(target_el, enhancement);
 		pg.browser.close();

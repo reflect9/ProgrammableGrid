@@ -3,8 +3,30 @@
 // HELPER METHODS ///
 ///////////////////////////////////////////////////////////////////////////
 
+jQuery.fn.findPropertyQuery = function(elements) {
+	// Instead of DOM paths, this function tries to use class and id of elements
+	// Input: this,   Output: elements
+	list_of_queries = [];
+	_.each(elements, function(el,i){
+		queries = [];
+		// add combination of classes
+		var tagName = $(el).prop("tagName");
+		queries.push(tagName);
+		var classes = (typeof $(el).attr("class")=="undefined") ? [] : $(el).attr("class").split(" ");
+		for (var i=1;i<=classes.length;i++) {
+			var class_comb = pickCombination(classes, i);
+			_.each(class_comb,function(cc) {
+				queries.push(tagName+"."+cc.join("."));
+			});
+		}
+		console.log(queries);
+		list_of_queries.push(queries);
+	});
+	common_queries = _.intersection.apply(this,list_of_queries);
+	return common_queries;
+};
 
-jQuery.fn.findQuerySelector = function(elements) {
+jQuery.fn.findPathQuery = function(elements) {
 	if(elements.length==1) {
 		var exact_path = $(elements).pathWithNth(this);	// finding path from this(enclosing el) to the single element
 		return exact_path;

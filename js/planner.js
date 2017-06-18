@@ -100,35 +100,47 @@ pg.planner = {
 				// try to find extraction query for every inputDOM
 				_.each(inputDOM_list, function(inputDOM) {
 					var n_extracted_el, n_filtered_el;
-					var _O = pg.Node.create(O);
-					_O.P = jsonClone(this.proto); 	
 					if(inputDOM.domList.length > 1) { // n-to-n extraction
 						var paths = []; 
-						for(var i in _O.V)
-							if($.contains(inputDOM.domList[i],_O.V[i])==false) return false;
-							if(_O.V[i])	paths.push($(inputDOM.domList[i]).findQuerySelector([O.V[i]]));
-						var commonPath = _.uniq(paths);	
-						if(commonPath.length==1) {	// if all the path are same, it's easy
-							_O.P.param.selector = commonPath[0];	
-						} else {  // if some paths are different, then follow the majority
-							var shortestPath = _.first(commonPath.sort());
-							_O.P.param.selector = shortestPath;
-						}
-						if(_O.P.param.selector==="") return false; // reject null path 
-					} else if(inputDOM.domList.length==1) {
-						// 1-to-n extraction
-						for(var i in _O.V) 
-							if($.contains(inputDOM.domList[0],_O.V[i])==false) return false;
-						var path = $(inputDOM.domList[0]).findQuerySelector(_O.V);
-						if(path===null || path==="") return false;
-						else {
-							_O.P.param.selector = path;
-						}
+						for(var i in O.V) // trying with available output examples
+							if($.contains(inputDOM.domList[i],O.V[i])==false) return false;
+							var property_queries = $(inputDOM.domList[i]).findPropertyQuery([O.V[i]]);
+							var path_queries = $(inputDOM.domList[i]).findPathQuery([O.V[i]]);
+							paths.push(_.union(property_queries, path_queries));
+						console.log("Potential paths: "+paths);
+						var common_paths = _.intersection.apply(this,paths); // get common paths;						
+						_.each(common_paths, function(path) {
+							// for each common path, add a valid_O
+							var _O = pg.Node.create(O);		_O.P = jsonClone(this.proto); 	
+							_O.P.param.selector = path;	_O.P.param.source = inputDOM.source;
+							valid_O.push(_O);
+						},this);
+						// PREVIOUS VERSION
+							// var commonPath = _.uniq(paths);	
+							// if(commonPath.length==1) {	// if all the path are same, it's easy
+							// 	_O.P.param.selector = commonPath[0];	
+							// } else {  // if some paths are different, then follow the majority
+							// 	console.log("Found multiple paths");
+							// 	console.log(commonPath);
+							// 	var shortestPath = _.first(commonPath.sort());
+							// 	_O.P.param.selector = shortestPath;
+							// }
+							// if(_O.P.param.selector==="") return false; // reject null path 
+					} else if(inputDOM.domList.length==1) {   // 1-TO-N EXTRACTION: Extracting output elements from a single input element
+						for(var i in O.V)  // CHECK EXISTENCE OF OUTPUT IN INPUT ELEMENT
+							if($.contains(inputDOM.domList[0],O.V[i])==false) return false;
+						var property_queries = $(inputDOM.domList[0]).findPropertyQuery(O.V);
+						var path_queries = $(inputDOM.domList[0]).findPathQuery(O.V);
+						var paths = _.union(property_queries, path_queries);
+						if(paths.length==0) return false;
+						_.each(paths, function(path) {
+							var _O = pg.Node.create(O);		_O.P = jsonClone(this.proto); 	
+							_O.P.param.selector = path;	_O.P.param.source = inputDOM.source;
+							valid_O.push(_O);
+						},this);
 					} else return false;
-					_O.P.param.source = inputDOM.source;
-					//if(inputDOM.source=='_current') _O.I=[pg.panel.enhancement.get_page_trigger_node()[0].ID];
-					valid_O.push(_O);
 				},this);
+				console.log(valid_O);
 				return (valid_O.length>0)? valid_O:false;
 			},
 			execute: function(O) {
@@ -1831,7 +1843,7 @@ pg.planner = {
 					});
 				}
 			}			
-		},
+		}
 	},
 
 	tasks: {

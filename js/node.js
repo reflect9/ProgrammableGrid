@@ -1,4 +1,3 @@
-
 pg.Node = {
 	create: function(p) {
 		var n = {
@@ -79,13 +78,6 @@ pg.Node = {
 		if(node.selected) n.attr("selected",true);
 		if(node.P && node.P.kind) $(n).attr("kind",node.P.kind);
 		var n_content = $(n).find(".node_content");
-		// DRAW INPUT ARROW
-		// if (node.I.indexOf('_left') !== -1) 
-		// 	$(this.getInputTriangle('right',[7,22]))
-		// 		.css({position:'absolute', top:node_size/2-11, left:0}).appendTo(n);
-		// if (node.I.indexOf('_above') !== -1) 
-		// 	$(this.getInputTriangle('down',[22,7]))
-		// 		.css({position:'absolute', left:node_size/2-11, top:0}).appendTo(n);
 
 		// NODE HEAD: OPERATION
 		var n_head_el; var n_data;
@@ -171,26 +163,6 @@ pg.Node = {
 		} else {
 			icon = $("<div class='node-icon node-icon-mid'></div>");	
 		}
-		// TILE_TYPES = ['Trigger','Page','Element','Variable','Operation'];
-		/* icon for tile types */
-		// var png_name= "glyphicons_153_unchecked";
-		// if(node.P == undefined) {
-		// 	 //
-		// } else if(node.P.type=='extract_element' || node.P.type=='select_representative') {
-		// 	png_name= "glyphicons_377_riflescope";
-		// } else if(node.P.type=='get_attribute') {
-		// 	png_name= "glyphicons_027_search";
-		// } else if(node.P.type=='create') {
-		// 	png_name= "glyphicons_009_magic";
-		// } else if(node.P.type=='substring' || node.P.type=='compose_text') {
-		// 	png_name= "glyphicons_164_iphone_transfer";
-		// } else if(node.P.type=='set_attribute') {
-		// 	png_name= "glyphicons_280_settings";
-		// } else if(node.P.type=='call') {
-		// 	png_name= "glyphicons_205_electricity";
-		// } else if(node.P.type=='loadPage') {
-		// 	png_name= "glyphicons_371_global";
-		// }
 
 		if(node.P == undefined) { 
 			$(icon).attr("operation","unknown");
@@ -207,54 +179,9 @@ pg.Node = {
 			} else {
 				if(node.P.icon) $(icon).append("<i class='fa fa-"+node.P.icon+" fa-lg'></i>");	
 			}
-			// if(node.P.kind=="pick")	$(icon).append("<i class='fa fa-search fa-2x'></i>");
-			// if(node.P.kind=="transform")	$(icon).append("<i class='fa fa-share fa-2x'></i>");
-			// if(node.P.kind=="apply")	$(icon).append("<i class='fa fa-magic fa-2x'></i>");
 		}
-		
-		// var url = chrome.extension.getURL("js/lib/glyphicons/"+ png_name + ".png");
-		// $(icon).css('background-image', 'url('+ url + ')');
-		
-		// var clickEventHandler = $.proxy(function() {
-			// var nodes = pg.panel.infer(this);
-			// if(nodes && nodes.length>0) {
-			// 	pg.panel.insert(nodes[0],node);
-			// 	pg.panel.redraw();
-			// }
-			// event.stopPropagation();
-		// },node);
-		// $(icon).click(clickEventHandler);
 		return icon;		
 
-		// if(node.type=='trigger') {
-		// 	// if the trigger is for page-loading event
-		// 	$(icon).addClass('node-icon-trigger');
-		// 	// TBD. if the trigger for mouse click events
-		// 	// TBD. if the trigger for mouse over events
-		// } else if(node.type=='page') {
-		// 	$(icon).addClass('node-icon-page');
-		// } else if(node.type=='element') {
-		// 	$(icon).addClass('node-icon-element');
-		// } else if(node.type=='variable') {
-		// 	$(icon).addClass('node-icon-variable');
-		// } else if(node.type=='P') {
-		// 	if(node.P.type=='pick') {
-		// 		$(icon).addClass('node-icon-pick');
-		// 	} else if(node.P.type=='inspect') {
-		// 		$(icon).addClass('node-icon-inspect');
-		// 	} else if(node.P.type=='create') {
-		// 		$(icon).addClass('node-icon-create');
-		// 	} else if(node.P.type=='transform') {
-		// 		$(icon).addClass('node-icon-transform');
-		// 	} else if(node.P.type=='modify') {
-		// 		$(icon).addClass('node-icon-modify');
-		// 	} else if(node.P.type=='call') {
-		// 		$(icon).addClass('node-icon-call');
-		// 	} else if(node.P.type=='loadURL') {
-		// 		$(icon).addClass('node-icon-loadURL');
-		// 	}
-		// }
-		// execute the node P and update the node value when the icon is clicked
 
 	},
 	getInputTriangle: function(direction, arrow_size) {
@@ -265,15 +192,6 @@ pg.Node = {
 		if(direction=='up') svg_html += "<polygon points='"+arrow_size[1]+",0 "+arrow_size[1]+","+arrow_size[0]+" "+arrow_size[0]/2+",0' style='fill:white;' />";
 		svg_html += "</svg>";
 		return $(svg_html);
-
-		// var triangleSize = node_size/5;
-		// var svg = $('<svg height='"+triangleSize+"'' width='"+triangleSize+"' xmlns='http://www.w3.org/2000/svg' version='1.1'></svg> ");
-		// if(direction=='left') {
-		// 	$(svg).append("<polygon points='0,0,0,20,15,10' style='fill:black;stroke:white;stroke-width:0'/>");	
-		// } else if(direction='top') {
-		// 	$(svg).append("<polygon points='0,0,0,20,15,10' style='fill:black;stroke:white;stroke-width:0'/>");
-		// }
-		// return svg;
 	}
 
 

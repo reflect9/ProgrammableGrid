@@ -209,18 +209,6 @@ pg = {
 		}
 		
 	},
-	// generate : function(problem_title){
-	// 	try {
-	// 		var problem_nodes = pg.problems[problem_title]();
-	// 		var plans = pg.planner.plan(problem_nodes[0],problem_nodes[1]);
-	// 		var plansWithI = _.map(plans, function(p) {
-	// 			return _.union(problem_nodes[0], p);
-	// 		},this);
-	// 		return plansWithI;
-	// 	} catch(e) {
-	// 		console.error(e.stack);
-	// 	}
-	// },
 	cleanStorage: function() {
 		localStorage[LOCAL_STORAGE_KEY]="{}";
 	},
@@ -255,12 +243,6 @@ pg = {
 };
 
 
-
-
-
-
-// pg.backup_page = $(pg.documentBody).clone().get(0);
-
 PANEL_POSITION = "left";
 
 DEFAULT_PLATE_DIMENSION = 3000
@@ -274,7 +256,6 @@ NODE_SIZE_MID = 80
 NODE_SIZE_HIGH = 150
 
 TILE_TYPES = ['Trigger','Page','Element','Variable','Operation'];
-
 
 MAX_INFERENCE_STEPS = 3;
 MAX_CONTEXT_NODES = 20;

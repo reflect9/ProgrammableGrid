@@ -158,12 +158,6 @@ pg.Toolbox.prototype.renderDemo = function(demo_action) {
 		pg.panel.redraw();
 	},{nodes:nodes, target_position:demo_action.target_position});
 	$(demo_li).click(func_apply);
-	// var curNode = pg.panel.get_current_node();
-	// if(curNode && curNode.P && nodes.length==1) {
-	// 	if(pg.planner.compare_operation(nodes[0].P,curNode.P)) {
-	// 		$(demo_li).addClass("sameToCurrentNode");
-	// 	}
-	// } 
 	return demo_li;
 };
 
@@ -232,14 +226,6 @@ pg.Toolbox.prototype.renderOperation = function(op, _notDraggable) {
 		// show documentation page
 		event.stopPropagation();
 	});
-	// if(pg.panel.get_current_node()) {
-	// 	$(op_li).find(".apply_button").show().click($.proxy(function(e) {
-	// 		var node = pg.panel.get_current_node();
-	// 		node.P = this.op;
-	// 		pg.panel.enhancement.run_triggered_nodes([node]);
-	// 		pg.panel.redraw();
-	// 	},{op:op}));
-	// }
 	$(op_li).find(".doc_button").click(function(event) {
 		// open reference page
 	});

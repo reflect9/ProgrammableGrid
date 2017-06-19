@@ -55,18 +55,6 @@ pg.Enhancement.prototype.insert = function(new_nodes, target_node) {
 	if(target_node) {
 		target_position = target_node.position;
 		this.delete(target_node);
-		if(new_nodes.length>1) {
-			// push nodes right or below
-			// _.each(this.get_nodes(), function(node) {
-			// 	if(node.position[1]>target_position[1]) {
-			// 		// for nodes on the right side of the target node
-			// 		node.position[1] = node.position[1] + nodes_range.columns-1;
-			// 	} else if(node.position[1]==target_position[1] && node.position[0]>target_position[0]) {
-			// 		// for nodes that are below the target
-			// 		node.position[0] = node.position[0] + nodes_range.rows - 1; 
-			// 	}
-			// });
-		} 
 	} else {
 		// when there's no target node, append at the bottom
 		var max_y = _.max(this.get_nodes(), function(n){ return n.position[0];}).position[0]+1;
@@ -171,15 +159,11 @@ pg.Enhancement.prototype.delete_row = function(row_num) {
 ///////////////////////////////////////////////////////////////////
 ///  Node getters
 ///////////////////////////////////////////////////////////////////
-pg.Enhancement.prototype.get_selected_nodes = function() {
-
-
-};
+pg.Enhancement.prototype.get_selected_nodes = function() { };
 
 pg.Enhancement.prototype.get_nodes = function() {
 	return this.nodes;
 };
-
 
 pg.Enhancement.prototype.get_adjacent_node = function(direction, node, _allNodes) {
 	var allNodes = (_allNodes)?_allNodes: this.get_nodes();

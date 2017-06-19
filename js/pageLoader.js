@@ -197,6 +197,7 @@ pg.pageLoader = {
 			return q.url + "," + q.status + "," + $(q.body).text().trim().slice(0,30);
 		});
 	},
+	/*
 	testTab: function() {
 		var urls = ['https://www.coursera.org/amnh',
 		'https://www.coursera.org/brown',
@@ -266,6 +267,6 @@ pg.pageLoader = {
 		});
 
 	},
-
+	*/
 
 }

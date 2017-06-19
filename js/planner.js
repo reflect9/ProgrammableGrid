@@ -55,12 +55,10 @@ pg.planner = {
 		ops['apply'] = _.sortBy(ops['apply'], function(op) {  return op.type; });
 		ops['flow'] = _.sortBy(ops['flow'], function(op) {  return op.type; });
 		ops = _.union(ops['pick'],ops['transform'],ops['apply'],ops['flow']);
-		// ops = _.sortBy(ops, function(op) { return op.type; });
 		for(var i in ops) {  ops[i].applicable = false; }
 		return ops;
 	},
 	operations: {
-
 		// PICK
 		extract_element: {
 			proto: {
@@ -115,17 +113,6 @@ pg.planner = {
 							_O.P.param.selector = path;	_O.P.param.source = inputDOM.source;
 							valid_O.push(_O);
 						},this);
-						// PREVIOUS VERSION
-							// var commonPath = _.uniq(paths);	
-							// if(commonPath.length==1) {	// if all the path are same, it's easy
-							// 	_O.P.param.selector = commonPath[0];	
-							// } else {  // if some paths are different, then follow the majority
-							// 	console.log("Found multiple paths");
-							// 	console.log(commonPath);
-							// 	var shortestPath = _.first(commonPath.sort());
-							// 	_O.P.param.selector = shortestPath;
-							// }
-							// if(_O.P.param.selector==="") return false; // reject null path 
 					} else if(inputDOM.domList.length==1) {   // 1-TO-N EXTRACTION: Extracting output elements from a single input element
 						for(var i in O.V)  // CHECK EXISTENCE OF OUTPUT IN INPUT ELEMENT
 							if($.contains(inputDOM.domList[0],O.V[i])==false) return false;
@@ -227,44 +214,7 @@ pg.planner = {
 				O.V = new_V;
 				return O;
 			}
-		},
-		// select_representative: {
-		// 	// it selects representatibe nodes from the input 
-		// 	// no generation, only executes
-		// 	proto: {
-		// 		kind:'pick',
-		// 		type:'select_representative',
-		// 		icon:'crosshairs',
-		// 		param:{ 'target':'input1'},
-		// 		description:"Find non-overlapping parents of [target]."
-		// 	},
-		// 	parameters: {
-		// 		'target': {type:'text', label:"Elements to find parrents of", default:"input1", options:["input1","input2"]},
-		// 	},
-		// 	pre: function(Is) {
-		// 		return false;
-		// 	},
-		// 	generate: function(I,O) {
-		// 		return false;	// DEPRECATED :  use extract_parent
-		// 		// if(!Is || !Is[0] || !Is[0].V || !isDomList([0].V)) return false;
-		// 		// if(!O || !O.V || O.V.length==0 || !isDomList(O.V)) return false;
-		// 		// if(O.V[0] != Is[0].V.length) return false;
-		// 		// if(O) {	
-		// 		// 	var _O = pg.Node.create(O);
-		// 		// 	_O.P = jsonClone(this.proto); 
-		// 		// 	return _O;	
-		// 		// } else {
-		// 		// 	return false;
-		// 		// }
-		// 	},
-		// 	execute: function(O) {
-		// 		var I_id = (_.isArray(O.I))?O.I[0]:O.I;
-		// 		var I = pg.panel.get_node_by_id(I_id, O);
-		// 		var rep_el = findRepElements(I.V);  // rep_el is the top-most non-overlapping elements of modified elements
-		// 		O.V = rep_el;
-		// 		return O;
-		// 	}
-		// },		
+		},	
 		get_attribute: {	// from elements, extract one of its attributes
 			proto: {
 				kind:'pick',
@@ -509,13 +459,11 @@ pg.planner = {
 			pre:function(Is) {
 				try{
 					return true;
-					// return isStringList(Is[0].V);
 				} catch(e) { console.log(e.stack); return false; }
 			},
 			generate: function(Is,O) {
 				return false;
-				// TBD. 
-				// if(!O || O.V==[]) {	O.P = jsonClone(this.proto); return O;	}
+				
 			},
 			execute: function(O) {
 				try{
@@ -712,11 +660,6 @@ pg.planner = {
 			},
 			pre: function(Is) {
 				return false;
-				// var _Is = _.clone(Is); // _Is is including empty(false) nodes
-				// Is = _.without(Is,false);
-				// if(!Is || !Is[0] || !Is[0].V) return false;
-				// if (_.unique(Is[0].V).length == Is[0].V.length) return false; // if it's already unique
-				// return true;
 			},
 			generate: function(Is, O) {
 				var _Is = _.clone(Is); // _Is is including empty(false) nodes
@@ -1330,12 +1273,6 @@ pg.planner = {
 				try{
 					var id_source = pg.Node.getParamNodeID(O,"source");
 					var id_target = pg.Node.getParamNodeID(O,"target");
-
-					// var elements_to_attach = _.map(pg.panel.get_node_by_id(id_source,O).V, function(el) {
-					// 	var cloned_el = $.clone(el);
-					// 	$(cloned_el).attr("creator_ID",O.ID);
-					// 	return cloned_el;
-					// });
 					var elements_to_attach = pg.panel.get_node_by_id(id_source,O).V; 
 					_.each(elements_to_attach,function(e) {
 						$(e).attr("creator_ID",O.ID);
@@ -1463,37 +1400,6 @@ pg.planner = {
 			}, 
 			generate: function(Is, O) {
 				return false;
-				// try{ // CHECK
-				// 	var _Is = _.clone(Is); // _Is is including empty(false) nodes
-				// 	Is = _.without(Is,false);
-				// 	if(!_.isArray(Is) || Is.length<2) return false;
-				// 	if(!isDomList(Is[0].V)) return false;
-				// 	var original_el = Is[0].V;
-				// 	var new_attribute = Is[1].V;
-				// 	var modified_el = O.V;
-				// 	if (original_el.length != modified_el.length) return false; 
-				// 	if ( new_attribute.length != 1 || new_attribute.length == original_el.length) return false;
-				// 	for(var i=0; i<original_el.length; i++) {
-				// 		if($(original_el[i]).fingerprint() != $(modified_el[i]).fingerprint()) return false;
-				// 	}
-				// } catch(e) { console.log(e.stack); return false; }
-
-				// // GENERATE
-				// var _O = pg.Node.create(O);
-				// if(!O || O.V==[]) {	_O.P = jsonClone(this.proto); return _O;	}
-				// else {	// when O is also provided
-				// 	if(!_.isArray(Is) || Is.length<2) return false;
-				// 	var original_el = Is[0].V;
-				// 	var new_values = Is[1].V;
-				// 	var attr_func = _.filter(pg.planner.attr_func_list, function(func) {
-				// 		if (new_values[0] == func.getter(O.V[0])) return true;
-				// 		else return false;
-				// 	},this)[0];
-				// 	if (!attr_func) return false;
-				// 	_O.I=toArray(Is[0].ID, Is[1].ID);  _O.P=pg.planner.operations.set_attribute.proto; 
-				// 	_O.P.param.key = attr_func.attr_key;
-				// 	return _O;	
-				// }
 			},
 			execute: function(O) {
 				try{
@@ -1615,27 +1521,10 @@ pg.planner = {
 			},
 			// if I[0] is text or number, then suggest creating span.  
 			pre:function(Is) {
-				// if(Is.length==0) return false;
-				// if(_.isString(Is[0].V[0]) || _.isNumber(Is[0].V[0]) ) return true;
 				return false;
 			},
 			generate: function(Is, O) {
 				return false;
-				// if(!Is || Is.length==0 || !Is[0].V || !Is[0].V.length==0) return false;
-				// if(!O || !O.V || O.V.length==0 || !isDomList(O.V)) return false;
-				// var tagList = [];
-				// for(var i in O.V) {
-				// 	var outputTag = $(O.V[i]).prop("tagName");
-				// 	var allowedTags = pg.planner.operations.create_element.parameters.tag.options;
-				// 	if(allowedTags.indexOf(outputTag)>=0) {
-				// 		tagList.push(outputTag);
-				// 	} else return false;
-				// 	if(pg.planner.operations.create_element.helper_extract_value(O.V[i])
-				// 		!=Is[0].V[i]) return false;
-				// }
-				// var _O = pg.Node.create(O);
-				// _O.P = jsonClone(this.proto);
-				// return _O;	
 			},
 			execute: function(O) {
 				var tagName = O.P.param.tag;
@@ -1671,16 +1560,6 @@ pg.planner = {
 				if(tag=="img") return $("<img class='pg_created_element' src='"+value+"'></img>")[0];
 				return false;
 			},
-			// helper_extract_value: function(element) {
-			// 	var tagName = $(element).prop("tagName");
-			// 	if(tagName=="span") return $(element).text();
-			// 	if(tagName=="p") return $(element).text();
-			// 	if(tagName=="button") return $(element).text();
-			// 	if(tagName=="text input") return $(element).val();
-			// 	if(tagName=="checkbox") return $(element).prop('checked');
-			// 	if(tagName=="img") return $(element).attr('src');
-			// 	return false;
-			// }
 		},
 		click: {
 			// when I[0] is DOM elements.  
@@ -1698,10 +1577,9 @@ pg.planner = {
 			generate: function(Is, O) {
 				return false;
 				//not accessible through generate
-
-				var _O = pg.Node.create(O);
-				_O.P = jsonClone(this.proto);
-				return [_O];	
+				// var _O = pg.Node.create(O);
+				// _O.P = jsonClone(this.proto);
+				// return [_O];	
 			},
 			execute: function(O) {
 				var I_id = (_.isArray(O.I))?O.I[0]:O.I;
@@ -1735,9 +1613,9 @@ pg.planner = {
 			generate: function(Is, O) {
 				return false;
 				//not accessible through generate
-				var _O = pg.Node.create(O);
-				_O.P = jsonClone(this.proto);
-				return _O;	
+				// var _O = pg.Node.create(O);
+				// _O.P = jsonClone(this.proto);
+				// return _O;	
 			},
 			execute: function(O) {
 				try{
@@ -1780,11 +1658,11 @@ pg.planner = {
 				///
 				///	not accessible via generate
 				///
-				if(Is.length==0) return false;
-				if(isDomList(Is[0].V[0])) return false;
-				var _O = pg.Node.create(O);
-				_O.P = jsonClone(this.proto);
-				return _O;	
+				// if(Is.length==0) return false;
+				// if(isDomList(Is[0].V[0])) return false;
+				// var _O = pg.Node.create(O);
+				// _O.P = jsonClone(this.proto);
+				// return _O;	
 			},
 			execute: function(O) {
 				// store data in localStorage
@@ -1847,50 +1725,6 @@ pg.planner = {
 	},
 
 	tasks: {
-		// page_modified: {
-		// 	pre: function(Is,O) { // I and O must be single Body tags.
-		// 		if(Is.length==0) return false;
-		// 		try{
-		// 			if(Is[0].V.length!=1 || O.V.length!=1) return false;
-		// 			var pI = Is[0].V[0];  var pO = O.V[0];
-		// 			if(!isDom(pI) || !isDom(pO)) return false;
-		// 			if(pI.tagName!="BODY" || pO.tagName!="BODY") return false;
-		// 			return true; 
-		// 		} catch(e) { console.log(e.stack); return false;} 
-		// 	},
-		// 	generate: function(Is,O){	// I -> original_el -> modified (O)
-		// 		// find differences
-		// 		Is[0].P={type:'load_page',param:''};
-		// 		var pI = Is[0].V[0];  var pO = O.V[0];
-		// 		var all_el_I = $(pI).find("*").toArray(); 	var all_el_O = $(pO).find("*").toArray();
-		// 		var el_differ_I = [];
-		// 		var el_differ_O = [];
-		// 		for(var i in all_el_I) {
-		// 			if(html_differ_without_children(all_el_I[i], all_el_O[i])) {
-		// 				el_differ_I.push(all_el_I[i]);
-		// 				el_differ_O.push(all_el_O[i]);
-		// 			}
-		// 		}
-		// 		var n_original_el = pg.Node.create();
-		// 			n_original_el.I = toArray(Is[0].ID);   n_original_el.V=el_differ_I;
-		// 		var n_modified_el = pg.Node.create();
-		// 			n_modified_el.I = [];   n_modified_el.V=el_differ_O;
-		// 		// infering element extractor from original page to original elements node
-		// 		var program_extract_original_elements = pg.planner.operations.extract_element.generate([I],n_original_el);
-		// 		// trick to replace I with loadpage node
-		// 		if (n_original_el.V.length > n_modified_el.V.length) {
-		// 			// if filtering is required. 
-		// 			var n_original_filtered_el = {I:toArray(n_original_el), V: el_differ_I, P:undefined};
-		// 			var program_filter_original_elements = pg.planner.tasks.filter_element.generate([n_original_el], n_original_filtered_el);
-		// 			var program_modify_element_attribute = pg.planner.tasks.modify_element_attribute.generate([n_original_filtered_el], n_modified_el);
-		// 			return _.union(program_extract_original_elements,program_filter_original_elements, program_modify_element_attribute);	
-		// 		} else {
-		// 			// if filtering is unnecessary
-		// 			var program_modify_element_attribute = pg.planner.tasks.modify_element_attribute.generate(n_original_el, n_modified_el);
-		// 			return _.union(program_extract_original_elements,program_modify_element_attribute);	
-		// 		}
-		// 	}
-		// },
 		find_path: {
 			pre: function(Is, O) {
 				var _Is = _.clone(Is); // _Is is including empty(false) nodes
@@ -2008,127 +1842,6 @@ pg.planner = {
 			// no need for execution
 
 		},
-		// modify_element_attribute: {	//  
-		// 	pre: function(Is, O) {
-		// 		// I and O must be same-structure elements with modified attributes
-		// 		// check they have same finger-print but different html
-		// 		// Initial_node value must contails all the goal_node values 
-		// 		if(Is.length==0) return false;
-		// 		var I = Is[0];
-		// 		if (!isDomList(I.V) || !isDomList(O.V)) return false;
-		// 		if (I.V.length!=O.V.length) return false;
-		// 		for(var i=0;i<I.V.length;i++) {
-		// 			var eI = I.V[i];  var eO = O.V[i];
-		// 			if ($(eI).fingerprint() != $(eO).fingerprint()) return false;
-		// 			if (!html_differ_without_children($(eI),$(eO))) return false;
-		// 		}
-		// 		return true;
-		// 	},
-		// 	helper_attribute_func: function(I,O) {
-		// 		// find which attribute is modified and returns getter and setter functions
-		// 		return _.filter(pg.planner.attr_func_list, function(attr_func) {
-		// 			var org_attr = _.map(I.V, attr_func['getter']);
-		// 			var mod_attr = _.map(O.V, attr_func['getter']);
-		// 			return !isSameArray(org_attr,mod_attr);
-		// 		});
-		// 	},
-		// 	generate: function(Is, O) {
-		// 		var I = Is[0];
-		// 		var _O = pg.Node.create(O);
-
-		// 		return false;
-		// 		// retrieve the original page DOM 
-		// 		// var backup_I = (pg.backup_page)? pg.backup_page: $("html").get(0);
-
-		// 		// var JQuery_path_generalized = $("html").findQuerySelector(O.V); 
-		// 		// var JQuery_path_strict = _.map(O.V, function(o) {
-		// 		// 	return $(o).pathWithNth("html");  // get exact JQuery selector paths to those output elements in the modified page
-		// 		// });
-				
-		// 		// FIND OUT WHICH ATTRIBUTE IS MODIFIED AND FIND GETTER and SETTER
-		// 		var valid_attr_func_list = pg.planner.tasks.modify_element_attribute.helper_attribute_func(I,O);	
-		// 		if(valid_attr_func_list.length==0) return false;	// TBD: handle when multiple attributes are modified
-		// 		var attr_key = valid_attr_func_list[0]['attr_key'];
-		// 		var attr_getter = valid_attr_func_list[0]['getter'];
-		// 		var attr_setter = valid_attr_func_list[0]['setter'];   
-				
-		// 		var original_attr = _.map(I.V, attr_getter);
-		// 		var modified_attr = _.map(O.V, attr_getter);
-		// 		// if(!_.every(modified_attr, function(t){return t!==undefined && t!=="" && t!==null;})) return false;
-		// 		// var n_inter_1 = {I:I, V:original_el, P:undefined};
-				
-		// 		var n_original_attr = pg.Node.create();
-		// 			n_original_attr.I = toArray(I.ID); 	n_original_attr.V = original_attr;
-		// 		var n_modified_attr = pg.Node.create();
-		// 			n_modified_attr.I = toArray(n_original_attr.ID); n_modified_attr.V = modified_attr; 
-				
-		// 		var rep_el = findRepElements(O.V);  // rep_el is the top-most non-overlapping elements of modified elements
-		// 		var n_rep_el = pg.Node.create();
-		// 			n_rep_el.I = toArray(I.ID);  n_rep_el.V = rep_el;  
-		// 			n_rep_el.P = pg.planner.operations.select_representative.proto;
-		// 		// first, try to find the entire modified_attr in the rep_el 
-		// 		var mt_exist_in_rep_el = _.every(modified_attr, function(mt, i) {
-		// 			if( $(rep_el[i]).text().indexOf(mt) == -1) {
-		// 				return false;
-		// 			} else return true;
-		// 		});
-		// 		if (mt_exist_in_rep_el) {	// if every modified-text text of single (consistent) element in rep_el, 
-		// 			var program_extracting_text_from_rep = pg.planner.tasks.extract_attribute.generate([n_rep_el], n_modified_attr);
-		// 			_O = pg.planner.operations.set_attribute.generate([I,n_modified_attr], O);
-		// 			// O = {I:[I, n_modified_attr], V:O.V, P:{type:"set_attribute",param:"text"}};
-		// 			return _.union(n_rep_el, program_extracting_text_from_rep, _O);
-		// 		} else if (_.unique(modified_attr).length==1) {  // case of LITERAL VALUE : if all the new attribute values are same
-		// 			n_modified_attr.I = [];  n_modified_attr.V = _.unique(modified_attr); 
-		// 			n_modified_attr.P = pg.planner.operations.proto; 
-		// 			n_modified_attr.P.param.value = _.unique(modified_attr);
-		// 			_O = pg.planner.operations.set_attribute.generate([I,n_modified_attr], O);
-		// 			return _.union(n_modified_attr, _O);
-		// 		} else {
-		// 			// we need to try decomposing modified_attr
-		// 			// try to find a way to generate modified_attr from I
-		// 			return false;
-
-		// 			// TBD: need some fixes
-		// 			// var separator = getSeparator(modified_attr);
-		// 			// var num_parts = modified_attr[0].split(separator).length;
-		// 			// var modified_attr_unzip = [];
-		// 			// try{
-		// 			// 	for (var i in num_parts) {
-		// 			// 		var list = [];
-		// 			// 		for (var j in modified_attr) {
-		// 			// 			var splitted = modified_attr[j].split(separator);
-		// 			// 			list.push(splitted[i]);
-		// 			// 		}
-		// 			// 		modified_attr_unzip.push(list);
-		// 			// 	}
-		// 			// 	var nodes_modified_attr_unzip = _.map(modified_attr_unzip, function(mt) {
-		// 			// 		return {I:undefined, V:mt, P:undefined};
-		// 			// 	});
-		// 			// 	// for each decomposed word group, find an extraction program
-		// 			// 	var extraction_programs = _.map(nodes_modified_attr_unzip, function(node_mt, i) {
-		// 			// 		var I=n_rep_el;
-		// 			// 		var O=node_mt;
-		// 			// 		return extract-text(I,O);
-		// 			// 	},this);
-		// 			// } catch(e) {
-		// 			// 	console.log(e.stack);
-		// 			// }
-		// 			// // compose extracted text lists
-		// 			// var all_extraction_nodes = _.union(extraction_programs);
-		// 			// var last_nodes = _.map(extraction_programs, function(p) {
-		// 			// 	return _.last(p);
-		// 			// })
-		// 			// // now assemble all
-		// 			// // var nodes_extract_original_el = pg.planner.tasks.extract_element.generate(I, I);			
-		// 			// var nodes_extract_rep_el = [n_rep_el];
-		// 			// var list_of_nodes_extracting_parts = extraction_programs;
-		// 			// var nodes_compose = compose-text(last_nodes, n_modified_attr);
-		// 			// O = pg.Node.create({I:[I,n_modified_attr], V:O.V, P:{type:"set_attribute",param:"download"}};
-		// 			// return _.union(nodes_extract_rep_el, list_of_nodes_extacting_parts, nodes_compose, O);
-		// 		}
-		// 	}
-		// 	// no need for execution
-		// },		
 		filter_object_by_property: { 
 			// filtering one of Is by its content without any auxilary inputs
 			pre: function(Is, O) {
@@ -2310,292 +2023,6 @@ pg.planner = {
 				return (valid_solutions.length>0)? valid_solutions:false;		
 			}
 		},
-
-
-		// filter_element: {
-
-		// 	pre: function(Is, O) {
-		// 		try{
-		// 			if(Is && Is.length>0 && isDomList(Is[0].V) && isDomList(O.V)) {
-		// 				if(Is[0].V.length <= O.V.length) return false;
-		// 				if (!_.every(O.V, function(el) {return Is[0].V.indexOf(el) != -1;})) return false;
-		// 				return true;
-		// 			} else return false;
-		// 		} catch(e) { console.log(e.stack); return false; }
-		// 	},
-		// 	generate: function(Is, O) {
-		// 		var _O = pg.Node.create(O);
-		// 		I = (_.isArray(Is))?Is[0]:Is;
-		// 		var i_texts = _.map(I.V, function(item, index) {
-		// 			// To Do: parse string into number
-		// 			return $(item).text();
-		// 		});
-		// 		var o_texts = _.map(O.V, function(item, index) {
-		// 			// To Do: parse string into number
-		// 			return $(item).text();
-		// 		});
-		// 		var i_inter = pg.Node.create({I:toArray(I.ID), V:i_texts});
-		// 		var o_inter = pg.Node.create({V:o_texts});	
-		// 		if (pg.planner.tasks.filter.pre([i_inter], o_inter)) {
-		// 			var result = pg.planner.tasks.filter.generate([i_inter], o_inter);
-		// 			if (result) {
-		// 				i_inter = result[0];
-		// 				i_inter.P = pg.planner.get_prototype({type:'get_attribute', param:{key:'text'}});
-		// 				i_inter.I = toArray(I);
-
-		// 				o_inter = result[1];
-		// 				_O.I = [I.ID, i_inter.ID];
-		// 				_O.P = pg.planner.get_prototype({type:"filter_element", param:o_inter.P.param});
-		// 				return _.union(I, i_inter, _O);
-						
-		// 			} 
-		// 		}
-		// 		return false;
-		// 		// I = (_.isArray(I))?I[0]:I;
-		// 		// // get all the sub elements
-		// 		// var all_sub_elements = $(I.V[0]).find("*");
-		// 		// var sub_elements = all_sub_elements.filter(function(el) {
-		// 		// 	return $(el).text() != null;
-		// 		// });
-		// 		// // get element path
-		// 		// var el_paths = _.map(sub_elements, function(el, index) {
-		// 		// 	return $(el).pathWithNth(I.V[0]);
-		// 		// })
-		// 		// // use path to all the list items
-		// 		// for (var i in el_paths) {
-		// 		// 	var path = el_paths[i];
-		// 		// 	var i_els = _.map(I.V, function(item, index) {
-		// 		// 		// To Do: parse string into number
-		// 		// 		return $(item).find(path);
-		// 		// 	});
-		// 		// 	var o_els = _.map(O.V, function(item, index) {
-		// 		// 		// To Do: parse string into number
-		// 		// 		return $(item).find(path);
-		// 		// 	});
-		// 		// 	var i_texts = _.map(i_els, function(item, index) {
-		// 		// 		// To Do: parse string into number
-		// 		// 		return $(item).text();
-		// 		// 	});
-		// 		// 	var o_texts = _.map(o_els, function(item, index) {
-		// 		// 		// To Do: parse string into number
-		// 		// 		return $(item).text();
-		// 		// 	});
-
-		// 		// 	// create intermediate nodes
-		// 		// 	var i_inter = {I:toArray(I), V:i_texts, P:undefined};
-		// 		// 	var o_inter = {I:undefined, V:o_texts, P:undefined};
-		// 		// 	if (pg.planner.tasks.filter.pre(i_inter, o_inter)) {
-		// 		// 		var result = pg.planner.tasks.filter.generate(i_inter, o_inter);
-		// 		// 		if (result) {
-		// 		// 			var el_node = {I:toArray(I), V:i_els, P:{type:"extract_element", param:path}};
-
-		// 		// 			i_inter = result[0];
-		// 		// 			i_inter.P = {type:"get_attribute", param:"text"};
-		// 		// 			i_inter.I = el_node;
-
-		// 		// 			o_inter = result[1];
-		// 		// 			O.I = [I, i_inter];
-		// 		// 			O.P = {type:"filter_element", param:o_inter.P.param};
-		// 		// 			return _.union(I, el_node, i_inter, O);
-							
-		// 		// 		} else {
-		// 		// 			continue;
-		// 		// 		}
-		// 		// 	}
-		// 		// }
-				
-				
-		// 	}
-		// },
-
-
-		// filter: {
-		// 	// (list of object) -> (list of subtexts)  
-		// 	pre: function(Is, O) {
-		// 		if(Is.length==0) return false;
-		// 		if (Is[0].V.length == 0 || O.V.length == 0) return false;
-		// 		if (!_.isString(Is[0].V[0]) && !_.isNumber(Is[0].V[0])) return false;
-		// 		if(isNumberList(Is[0].V) && isNumberList(O.V)) {
-		// 			var parsedInput = _.map(Is[0].V, function(v) { return parseFloat(v); });
-		// 			var parsedOutput = _.map(O.V, function(v) { return parseFloat(v); });
-		// 			if (!_.every(parsedOutput, function(el) {return parsedInput.indexOf(el) != -1;})) return false;					
-		// 		} else {
-		// 			if (!_.every(O.V, function(el) {return Is[0].V.indexOf(el) != -1;})) return false;	
-		// 		}
-		// 		return true;
-		// 	},
-		// 	generate: function(Is, O) {
-		// 		return false;
-		// 		///
-		// 		///
-
-
-		// 		var goal_node;
-		// 		if (_.isString(Is[0].V[0])) {	// CASE 1.  STRING FILTER : try every possible bagOfWords to get the right filter 
-		// 			// the index of input values corresponding to the output values
-		// 			var indexs = _.map(O.V, function(item, index) {
-		// 				return Is[0].V.indexOf(item);
-		// 			});
-		// 			indexs.sort();
-		// 			// get bag of word
-		// 			var bagOfWords = {};
-		// 			_.each(Is[0].V, function(item, index) {
-		// 				var words = item.split(" ");
-		// 				_.each(words, function(word, index) {
-		// 					if (!(word in bagOfWords)) {
-		// 						bagOfWords[word] = word;
-		// 					}
-		// 				});
-		// 			});
-		// 			// find the words that may be filter criteria
-		// 			p_key_words = [];   n_key_words = [];	// p is words for string_contain case,  n is words for strong_not_contain
-		// 			_.each(bagOfWords, function(word, index) {
-		// 				var word = bagOfWords[word];
-		// 				// finding positive keyword
-		// 				match_indexs = []
-		// 				for (var i = 0; i < Is[0].V.length; i++) {
-		// 					if (Is[0].V[i].indexOf(word) != -1) {
-		// 						match_indexs.push(i);
-		// 					}
-		// 				}
-		// 				match_indexs.sort();
-		// 				if (JSON.stringify(indexs) == JSON.stringify(match_indexs)) {
-		// 					p_key_words.push(word)
-		// 				}
-		// 				// finding negative keyword
-		// 				match_indexs = []
-		// 				for (var i = 0; i < Is[0].V.length; i++) {
-		// 					if (Is[0].V[i].indexOf(word) == -1) {
-		// 						match_indexs.push(i);
-		// 					}
-		// 				}
-		// 				match_indexs.sort();
-		// 				if (JSON.stringify(indexs) == JSON.stringify(match_indexs)) {
-		// 					n_key_words.push(word)
-		// 				}
-		// 			});
-		// 			// p_key_words have higher-priority
-		// 			if (p_key_words.length>0) 
-		// 				node_goal = pg.Node.create({V:O.V, I:[Is[0].ID], P:pg.planner.get_prototype({type:'filter',param:{type: "string_contain", param: p_key_words[0]}})   });	
-		// 			else if (n_key_words.length>0) 
-		// 				node_goal = pg.Node.create({V:O.V, I:[Is[0].ID], P:pg.planner.get_prototype({type:'filter',param:{type: "string_not_contain", param: n_key_words[0]}}) });	
-		// 			else return false;
-		// 		} else {
-		// 			// numeric test case
-		// 			unique = O.V[0];
-		// 			fail = false;
-		// 			for (var i in O.V) {
-		// 				if (O.V[i] !== unique) {
-		// 					fail = true;
-		// 				}
-		// 			}
-		// 			if (!fail) {
-		// 				node_goal = pg.Node.create({V:O.V, I:[Is[0].ID], P:pg.planner.get_prototype({type:'filter',param:{type: "==", param: oV[0]}}) }); 						
-		// 			}
-		// 			// check inequality
-		// 			iV = I.V.sort();
-		// 			oV = O.V.sort();
-		// 			iL = iV.length;
-		// 			oL = oV.length;
-
-		// 			if (JSON.stringify(iV.splice(0,oL)) == JSON.stringify(oV)) {
-		// 				// less and equal
-		// 				var P = pg.planner.get_prototype({type:'filter',param:{type: "<=", param: oV[oV.length - 1]}});
-		// 				node_goal = pg.Node.create({V:O.V, I:toArray(I), A:null, P: P});
-		// 			} else if (JSON.stringify(iV.splice(iL - oL,iL)) == JSON.stringify(oV)) {
-		// 				// greater and equal
-		// 				var P = pg.planner.get_prototype({type:'filter',param:{type: ">=", param: oV[0]}});
-		// 				node_goal = pg.Node.create({V:O.V, I:toArray(I), A:null, P: P});
-		// 			}
-
-		// 			// check odd and even
-		// 			// odd_count = 0;
-		// 			// even_count = 0;
-		// 			// for (var i in oV) {
-		// 			// 	if (oV[i] % 2 == 1) {
-		// 			// 		odd_count++;
-		// 			// 	} else {
-		// 			// 		even_count++;
-		// 			// 	}
-		// 			// }
-		// 			// if (odd_count == oL) {
-		// 			// 	// Odd number filter
-		// 			// 	node_goal = {V:O.V, I:toArray(I), A:null, P:{type:'filter',param:{type: "odd", param: null}} };
-		// 			// }
-
-		// 			// if (even_count == oL) {
-		// 			// 	// Even number filter
-		// 			// 	node_goal = {V:O.V, I:toArray(I), A:null, P:{type:'filter',param:{type: "even", param: null}} };
-		// 			// }
-		// 		}
-		// 		var nodes = _.union(I, node_goal);
-		// 		return nodes;	
-		// 	},	
-		// 	execute: function(O) {
-		// 		if (O.P.type !== 'filter') return false;
-		// 		var booleans = filter.execute_helper(O);
-		// 		if (booleans.length !== O.V.length) console.log(e.track);
-		// 		var filtered = []
-		// 		for (var i = 0; i < booleans.length; i++) {
-		// 			if (booleans[i]) {
-		// 				filtered.push(O.V[i]);
-		// 			}
-		// 		}
-		// 		O.V = filtered;
-		// 		return O;
-		// 	},
-		// 	execute_helper: function(O) {
-		// 		if (O.P.type !== 'filter') return false;
-		// 		var I = pg.panel.get_node_by_id(O.I[0], O);
-		// 		var arg = O.P.param.param;
-		// 		var booleans = [];
-		// 		switch(O.P.param.type) {
-		// 			case 'string_contain':
-		// 				_.each(I.V, function(item, index) {
-		// 					if (item.indexOf(arg) >= 0) booleans.push(true);
-		// 					else booleans.push(false);
-		// 				})
-		// 				break;
-		// 			case 'string_not_contain':
-		// 				_.each(I.V, function(item, index) {
-		// 					if (item.indexOf(arg) == -1) booleans.push(true);
-		// 					else booleans.push(false);
-		// 				})
-		// 				break;						
-		// 			case '==':
-		// 				_.each(I.V, function(item, index) {
-		// 					if (item == arg) booleans.push(true);
-		// 					else booleans.push(false);
-		// 				})
-		// 				break;
-		// 			case '<=':
-		// 				_.each(I.V, function(item, index) {
-		// 					if (item <= arg) booleans.push(true);
-		// 					else booleans.push(false);
-		// 				})
-		// 				break;
-		// 			case '>=':
-		// 				_.each(I.V, function(item, index) {
-		// 					if (item <= arg) booleans.push(true);
-		// 					else booleans.push(false);
-		// 				})
-		// 				break;
-		// 			case 'odd':
-		// 				_.each(I.V, function(item, index) {
-		// 					if (item % 2 == 1) booleans.push(true);
-		// 					else booleans.push(false);
-		// 				})
-		// 				break;
-		// 			case 'even':
-		// 				_.each(I.V, function(item, index) {
-		// 					if (item % 2 == 0) booleans.push(true);
-		// 					else booleans.push(false);
-		// 				})
-		// 				break;
-		// 		}
-		// 		return booleans;
-		// 	}
-		// }
 	},	// END OF TASKS //
 
 	demos: {
@@ -2703,26 +2130,6 @@ pg.planner = {
 				}; 					
 			}
 		},
-		// demo_trigger:{
-		// 	generate: function(events) {
-		// 		//{'trigger',el:event.target, ID:$(this).attr('creator_ID')}
-		// 		var n_creator, n_trigger;
-		// 		var creator_ID_list = _.map(events, function(ev) { return ev.ID; });
-		// 		if(_.unique(creator_ID_list)!=1) return false;
-		// 		n_creator = pg.panel.get_node_by_id(_.unique(creator_ID_list)[0]);
-		// 		if(n_creator) {
-		// 			n_trigger = pg.Node.create({
-		// 				I:[n_creator.ID],
-		// 				position:[0,0],
-		// 				P: pg.planner.get_prototype({type:'trigger'})
-		// 			});
-		// 		} else { return false; }
-		// 		return {
-		// 			target_position:[n_creator.position[0]+1, n_creator.position[1]],
-		// 			nodes:[n_trigger]
-		// 		};
-		// 	}
-		// }
 	},
 
 	attr_func : function(key) {

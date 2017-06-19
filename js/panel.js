@@ -15,27 +15,16 @@ pg.panel = {
 						<div id='plate'></div>\
 					</div>").appendTo(target);
 		$("#pg_spacer").height($(this.el).height());
-		// attach editUI and commandUI
-		// this.editUI.create();
-		// this.commandUI.create();  this.commandUI.remove();
-		// this.toolbar.create();
-		// $("#plate_container").dragscrollable({
-		// });
 		pg.info.update(this.enhancement);
-		// 	dragSelector:'#tiles',
-		// 	acceptPropagatedEvent:false
-		//pg.panel.drawPlate();
 		if(this.enhancement.notes) {
 			_.each(this.enhancement.notes, function(note) {
 				var note_el = note.render();
 				pg.panel.el.find("#tiles").append(note_el);
 			});
 		}
-		
 		console.log("redraw start");
 		pg.panel.redraw();
 		pg.toolbox.redraw(pg.planner.get_all_operations());
-		//pg.panel.execute();
 	},
 	close: function() {
 		$(pg.panel.targetEl).empty();
@@ -50,11 +39,9 @@ pg.panel = {
 		// convert position to coordinate on plate element
 		return [position[0]*this.node_dimension, 
 				position[1]*this.node_dimension];
-		// return [position[0]*this.node_dimension - this.offset[0], 
-		// 		position[1]*this.node_dimension - this.offset[1]];
 	},
 	select: function(node) {
-		window.curnode = node; // for debugging
+		window.curnode = node;
 		var node_el = $("#"+node.ID).get(0);
 		$(node_el).attr("selected",true);
 		_.each(pg.panel.get_nodes(), function(n) { n.selected=false; });
@@ -71,7 +58,6 @@ pg.panel = {
 		pg.inspector.off(pg.panel.dataUI.remove);
 		$("#tiles .node").removeAttr("selected");
 		_.each(pg.panel.get_nodes(), function(n) { n.selected=false; pg.panel.node_hide_inputs(n);});
-		// pg.panel.hide_show_inputs(node);
 		pg.panel.commandUI.remove();
 		pg.panel.commandUI.turn_inspector(false);
 		pg.panel.node_select_modal_off();
@@ -79,15 +65,12 @@ pg.panel = {
 		pg.toolbox.redraw(pg.planner.get_all_operations());
 	},
 	delete: function(target_nodeObj) {
-		console.log("delete start");
 		pg.inspector.unhighlight_list();
 		pg.inspector.off(pg.panel.dataUI.remove);
 		if(!target_nodeObj) target_nodeObj = pg.panel.get_current_node();
 		pg.panel.enhancement.delete(target_nodeObj);
 		this.commandUI.remove();
-		console.log("redraw start");
 		this.redraw();
-		console.log("redraw end");
 	},
 	clear: function(target_nodeObj) {
 		if(!target_nodeObj) target_nodeObj = pg.panel.get_current_node();
@@ -99,15 +82,6 @@ pg.panel = {
 		target_nodeObj.V=[];
 		pg.panel.redraw();
 	},
-	// edit_data: function(target_nodeObj) {
-	// 	if(!target_nodeObj) target_nodeObj = pg.panel.get_current_node();
-	// 	var dataUI;
-	// 	if($("#pg_data_ui").length==0) 
-	// 		dataUI = pg.panel.dataUI.create(target_nodeObj);
-	// 	elsecreate			dataUI = $("#pg_data_ui");
-	// 	pg.panel.dataUI.loadData(target_nodeObj.V);
-	// 	$(dataUI).appendTo($("#pg").get(0));
-	// },
 	insert: function(new_nodes, target_node) {
 		pg.panel.enhancement.insert(new_nodes, target_node);
 
@@ -257,23 +231,6 @@ pg.panel = {
 		$(".node .node_cover").removeClass('notClickable').hide();
 		pg.panel.clearConnector();
 	},
-	// get_left_node:function(node) {
-	// 	try{
-	// 		return node && pg.panel.get_node_by_position([node.position[0], node.position[1]-1]);			
-	// 	} catch(e) {
-	// 		console.log(e.stack);
-	// 	}
-
-	// },
-	// get_right_node:function(node) {
-	// 	return node && pg.panel.get_node_by_position([node.position[0], node.position[1]+1]);
-	// },
-	// get_above_node:function(node) {
-	// 	return node && pg.panel.get_node_by_position([node.position[0]-1, node.position[1]]);
-	// },
-	// get_below_node:function(node) {
-	// 	return node && pg.panel.get_node_by_position([node.position[0]+1, node.position[1]]);
-	// },
 	get_current_node:function() {
 		return _.map($("#tiles .node[selected]").toArray(), function(nodeEl) {
 			return pg.panel.get_node_by_id($(nodeEl).prop('id'));
@@ -281,119 +238,33 @@ pg.panel = {
 	},
 	get_adjacent_node:function(direction, node, _allNodes) {
 		return pg.panel.enhancement.get_adjacent_node(direction, node, _allNodes);
-		// var allNodes = (_allNodes)?_allNodes: pg.panel.get_nodes();
-		// if(!direction || !node) return false;
-		// if(direction=="_left") return pg.panel.get_node_by_position([node.position[0], node.position[1]-1], allNodes);			
-		// if(direction=="_right") return pg.panel.get_node_by_position([node.position[0], node.position[1]+1], allNodes);			
-		// if(direction=="_above") return pg.panel.get_node_by_position([node.position[0]-1, node.position[1]], allNodes);			
-		// if(direction=="_below") return pg.panel.get_node_by_position([node.position[0]+1, node.position[1]], allNodes);							
-		// return false;
 	},
 	get_node_by_id: function(node_id, reference_output_node, _allNodes) {
 		return pg.panel.enhancement.get_node_by_id(node_id, reference_output_node, _allNodes);
-		// var allNodes = (_allNodes)?_allNodes: pg.panel.get_nodes();
-		// // if (reference_output_node==undefined) reference_output_node = pg.panel.get_current_node();
-
-		// if(node_id.substring(0,5) == '_left' && reference_output_node) {
-		// 	var new_node_id = node_id.substring(5); var old_node_id = node_id.substring(0,5);
-		// 	if(new_node_id.length>0) return this.get_adjacent_node("_left", pg.panel.get_node_by_id(new_node_id,reference_output_node), allNodes);
-		// 	else return this.get_adjacent_node("_left", reference_output_node, allNodes);	
-		// } else if(node_id.substring(0,6) == '_above' && reference_output_node)  {
-		// 	var new_node_id = node_id.substring(6); var old_node_id = node_id.substring(0,6);
-		// 	if(new_node_id.length>0) return this.get_adjacent_node("_above", pg.panel.get_node_by_id(new_node_id,reference_output_node), allNodes);
-		// 	else return this.get_adjacent_node("_above", reference_output_node, allNodes);	
-		// } else if(node_id.substring(0,6) == '_right' && reference_output_node)  {
-		// 	var new_node_id = node_id.substring(6); var old_node_id = node_id.substring(0,6);
-		// 	if(new_node_id.length>0) return this.get_adjacent_node("_right", pg.panel.get_node_by_id(new_node_id,reference_output_node), allNodes);
-		// 	else return this.get_adjacent_node("_right", reference_output_node, allNodes);	
-		// } else if(node_id.substring(0,6) == '_below' && reference_output_node)  {
-		// 	var new_node_id = node_id.substring(6); var old_node_id = node_id.substring(0,6);
-		// 	if(new_node_id.length>0) return this.get_adjacent_node("_below", pg.panel.get_node_by_id(new_node_id,reference_output_node), allNodes);
-		// 	else return this.get_adjacent_node("_below", reference_output_node, allNodes);	
-		// }
-		// //
-		// for(var i in allNodes) {
-		// 	if (allNodes[i].ID == node_id) return allNodes[i];
-		// }	return false;
 	},
 	get_node_by_position: function(position, _allNodes) {
 		return pg.panel.enhancement.get_node_by_position(position, _allNodes);	
-		// var allNodes = (_allNodes)?_allNodes: pg.panel.get_nodes();
-		// for(var i in allNodes) {
-		// 	if (allNodes[i].position[0] == position[0] && allNodes[i].position[1] == position[1]) return allNodes[i];
-		// }	return false;
 	},	
 	get_next_nodes:function(node, _reachableNodes, _allNodes) {
 		return pg.panel.enhancement.get_next_nodes(node, _reachableNodes, _allNodes);		
-		// find next node among _reachableNodes.  _allNodes is the entire set of nodes
-		// var allNodes = (_allNodes)?_allNodes: pg.panel.get_nodes();
-		// var reachableNodes = (_reachableNodes)?_reachableNodes: allNodes;
-		// return _.filter(reachableNodes, function(n) {
-		// 	return pg.panel.get_prev_nodes(n, allNodes).indexOf(node)!=-1;
-		// });
 	},
 	get_reachable_nodes: function(_starting_nodes, _allNodes, _include_triggers) {
 		return pg.panel.enhancement.get_reachable_nodes(_starting_nodes, _allNodes, _include_triggers);
-		// var allNodes = (_allNodes)? _.clone(_allNodes): _.clone(pg.panel.get_nodes());
-		// var remaining_nodes = _.clone(allNodes);
-		// var reachable_nodes = [];
-		// var queue = _.clone(_starting_nodes);
-		// while(queue.length>0 && remaining_nodes.length>0 ) {
-		// 	var n = queue.pop();
-		// 	reachable_nodes =  _.union(reachable_nodes, n);
-		// 	if (!_include_triggers && n.P && n.P.type=="trigger") {  }
-		// 	else {
-		// 		var new_reachable_nodes = pg.panel.get_next_nodes(n,remaining_nodes,allNodes);
-		// 		if(new_reachable_nodes.length>0) {
-		// 			queue = _.union(queue, new_reachable_nodes);
-		// 			remaining_nodes = _.difference(remaining_nodes, new_reachable_nodes);
-		// 		}
-		// 	}
-		// }
-		// console.log("reachable nodes : "+pg.panel.print(reachable_nodes));
-		// return reachable_nodes;
 	},
 	get_informative_nodes:function(nodes) {
 		return pg.panel.enhancement.get_informative_nodes(nodes);
-		// var all_prev_nodes = _.union(_.flatten(_.map(nodes, function(n) {
-		// 	return pg.panel.get_prev_nodes(n, pg.panel.get_nodes());
-		// })));
-		// var informative_nodes = _.difference(all_prev_nodes,nodes);
-		// return informative_nodes;
 	},
 	get_prev_nodes:function(node, _allNodes) {	
 		return pg.panel.enhancement.get_prev_nodes(node, _allNodes);
-		// var allNodes = (_allNodes)?_allNodes: pg.panel.get_nodes();
-		// return _.without(_.map(node.I, function(input_id) {
-		// 	return pg.panel.get_node_by_id(input_id, node, allNodes);
-		// }),false,undefined);	
 	},
 	get_ready_nodes:function(_candidateNodes, _allNodes) {
 		return pg.panel.enhancement.get_ready_nodes(_candidateNodes, _allNodes);
-		// var allNodes = (_allNodes)?_allNodes: pg.panel.get_nodes();
-		// var candidateNodes = (_candidateNodes)? _candidateNodes: allNodes;
-		// var ready_nodes = _.filter(candidateNodes, function(n) {
-		// 	if(n.executed) return false;
-		// 	var prev_nodes = pg.panel.get_prev_nodes(n, allNodes);
-		// 	if (	prev_nodes.length>0 &&
-		// 			_.filter(prev_nodes, function(n) { return n.executed==false; }).length==0 ) 
-		// 		return true;
-		// 	else return false;	
-		// });
-		// return ready_nodes;
 	},
 	el_to_obj:function(el) {
 		return pg.panel.enhancement.get_node_by_id($(el).prop('id'));
 	},
 	print: function(nodes) {
 		return pg.panel.enhancement.print(nodes);
-		// var str = "";
-		// try{
-		// 	_.each(nodes, function(n) {
-		// 		if(n.P) { str += n.P.type + "["+n.position[0]+","+n.position[1]+"]("+n.executed+"), "; }
-		// 	});
-		// 	return str;	
-		// } catch(e) { console.error(e.stack); }
 	},
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//  executions methods
@@ -431,9 +302,6 @@ pg.panel = {
 			// }
 		}
 	},
-
-
-
 
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -654,91 +522,6 @@ pg.panel = {
 			$("#pg_data_ui").remove();
 		}
 	},
-
-	// toolbar: {
-	// 	create: function() {
-	// 		var ui_el = $("<div id='control_ui'>		\
-	// 				<input type='checkbox' class='active_checkbox'>\
-	// 				<span class='pg_title'></span>\
-	// 				<select id='script_selector'>	<option selected disabled>Load script</option>\
-	// 				</select>	\
-	// 				<button id='button_remove'>remove</button>\
-	// 				<button id='button_clear'>clear</button>\
-	// 				<button id='button_new'>new</button>\
-	// 				<button id='button_save'>save</button>\
-	// 				<button id='button_execute'>execute</button>\
-	// 				<label>ZOOM:</label>\
-	// 				<button class='zoom_button' id='zoom_to_low'  node_size=50>small</button>\
-	// 				<button class='zoom_button' id='zoom_to_mid'  node_size=150>medium</button>\
-	// 				<button class='zoom_button' id='zoom_to_high' node_size=300>large</button>\
-	// 				<button class='zoom_button' id='zoom_to_high' node_size='showAll'>show all</button>\
-	// 				<label>&nbsp;SCRIPT:</label>\
-	// 				<button class='button_copy_script' id='button_copy_script'>copy</button>\
-	// 				<button class='button_paste_script' id='button_paste_script'>paste</button>\
-	// 			</div>\
-	// 		");
-	// 		$(ui_el).find(".pg_title").text(pg.panel.title);
-	// 		_.each(pg.load_all_enhancement(), function(script,title) {
-	// 			var option = $("<option></option")
-	// 				.attr('value',title)
-	// 				.text(title).appendTo($(ui_el).find("#script_selector"));
-	// 		},this);
-	// 		$(ui_el).find("#script_selector").change(function() {
-	// 			$("#script_selector option:selected").each(function() {
-	// 				var title = $(this).attr('value');
-	// 				pg.load_enhancement(title);
-	// 			});
-	// 		});
-	// 		$(ui_el.find("#button_remove")).click(function() {
-	// 			pg.remove_enhancement(pg.panel.title);
-	// 			var programs = pg.load_all_enhancement();
-	// 			for(var k in programs) {
-	// 				pg.load_enhancement(k);
-	// 				break;
-	// 			}
-	// 		});
-	// 		$(ui_el.find("#button_clear")).click(function() {
-	// 			pg.panel.enhancement.clear();
-	// 		});
-	// 		$(ui_el.find("#button_new")).click(function() {
-	// 			// use modal to get title of new script
-	// 			var diag_content = $("	<div class='dialog_content'> \
-	// 	  					<p> New Script </p>\
-	// 	  					<p> Please enter a name for the script. </p> \
-	// 	  					<p><input type='text' id='new_script_title'></input></p> \
-	// 	  					<p><button class='button_ok'>OK</button> \
-	// 	  						<button class='button_cancel'>Cancel</button> \
-	// 	  					</p> \
-	// 					</div>");
-	// 			$(diag_content).find(".button_ok").click(function() {
-	// 				pg.new_enhancement($("#new_script_title").val());
-	// 				pg.close_dialog();
-	// 			});
-	// 			$(diag_content).find(".button_cancel").click(pg.close_dialog);
-	// 			pg.open_dialog(diag_content);
-	// 		});
-	// 		$(ui_el.find("#button_save")).click(function() {
-	// 			var active = $(pg.documentBody).find("#control_ui").find(".active_checkbox").prop('checked');
-	// 			pg.save_enhancement(pg.panel.enhancement);
-	// 		});
-	// 		$(ui_el.find("#button_execute")).click(pg.panel.execute);
-	// 		$(ui_el).find('button.zoom_button').click(function() {
-	// 			pg.panel.zoom($(this).attr('node_size'));
-	// 		});
-	// 		// $(ui_el).find("#delete_node").click(function() {
-	// 		// 	pg.panel.delete("selected_node");
-	// 		// 	pg.panel.redraw();
-	// 		// });
-	// 		$(ui_el).find("#button_copy_script").click(function() {
-	// 			pg.panel.copy_script();
-	// 		});
-	// 		$(ui_el).find("#button_paste_script").click(function() {
-	// 			pg.panel.paste_script();
-	// 		});
-	// 		$("#pg > #pg_panel").append(ui_el);
-	// 	}
-	// },
-
 	attachEventListeners: function() {
 		$(".node")
 			.off()
@@ -824,12 +607,6 @@ pg.panel = {
                 }
             }
 		});
-		// Add click event to every user-attached element in the body
-		// $(document).on("click","*[creator_ID]", function(event) {
-		// 	pg.history.put({type:'trigger',el:event.target, ID:$(this).attr('creator_ID')});
-		// 	pg.history.infer();
-		// });
-		// Double-Click --> create new node
 		var el_tiles = $("#pg").find("#tiles");
 		$(el_tiles).off('click').click(function(e) {
 			if(pg.panel.get_current_node()) {
@@ -851,11 +628,6 @@ pg.panel = {
 				pg.panel.select(new_node);
 			}
 		});
-		// Click tile -> deselect node
-		// $(el_tiles).off('click').click(function(e) {
-		// 	pg.panel.deselect();
-		// });
-		// resizable panel
 		$(pg.pg_el).find("#resize_handle_panel").draggable({
 			axis: "x",
 			containment: [$(pg.panel.targetEl).position().left - 8, 0, $(window).width(), $(window).height()],
@@ -890,13 +662,6 @@ pg.panel = {
 					pg.panel.commandUI.turn_inspector(true);
 					pg.panel.inspector_suspended = undefined;
 				}
-				// console.log($(window).height()-$(this).offset().top);
-				// console.log($(this).offset());
-				// $(pg.panel.el).height(window.innerHeight-top);
-				
-				// $("#pg_spacer").height($(pg.panel.el).height());
-				// var new_padding = $(pg.browser.target_el).width
-				// $(pg.documentBody).css("padding-left","")
 			}
 		});
 		// Prevent scrolling body when mouse is over panel element.
